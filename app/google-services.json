@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "555096211894",
+    "project_id": "noize-ab61c",
+    "storage_bucket": "noize-ab61c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:555096211894:android:fc1ad790f6e6b64d994117",
+        "android_client_info": {
+          "package_name": "com.megamaker.noize"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdiqi0q7WKfWJC6xuu-TJWhdHNkWJ08js"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:555096211894:android:9af61362d441ef2c994117",
+        "android_client_info": {
+          "package_name": "com.project.mynoize"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdiqi0q7WKfWJC6xuu-TJWhdHNkWJ08js"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
