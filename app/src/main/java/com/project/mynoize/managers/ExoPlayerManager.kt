@@ -9,13 +9,13 @@ import androidx.media3.exoplayer.ExoPlayer
 class ExoPlayerManager(private val context: Context) {
     private var exoPlayer: ExoPlayer? = null
 
-    fun initializePlayer(url: String) {
+    fun initializePlayer(url: String, play: Boolean = true) {
         releasePlayer()
         exoPlayer = ExoPlayer.Builder(context).build().apply {
             val mediaItem = MediaItem.fromUri(url)
             setMediaItem(mediaItem)
             prepare()
-            playWhenReady = true
+            playWhenReady = play
         }
     }
 

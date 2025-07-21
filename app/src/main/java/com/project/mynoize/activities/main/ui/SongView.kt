@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Slider
@@ -22,6 +20,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,65 +33,95 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import coil.compose.AsyncImage
 import com.project.mynoize.R
+import com.project.mynoize.data.Song
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 @Composable
 fun SongView(
     exoPlayer: ExoPlayer,
-    songName: String = "",
-    songArtist: String = "",
-    imageUrl: String = "",
+    song: Song,
+    onPrevSong: (Song) -> Unit,
+    onNextSong: (Song) -> Unit,
     modifier: Modifier = Modifier
 ){
+    var sliderPosition by remember { mutableStateOf(exoPlayer.currentPosition / exoPlayer.duration.toFloat() ) }
+    var duration by remember { mutableStateOf(0L) }
+
+
+    val scope = rememberCoroutineScope()
+
+    DisposableEffect(exoPlayer) {
+        val listener = object : Player.Listener {
+            override fun onEvents(player: Player, events: Player.Events) {
+                duration = player.duration
+            }
+        }
+
+        exoPlayer.addListener(listener)
+
+        val job = scope.launch {
+            while (isActive) {
+                if (exoPlayer.isPlaying && exoPlayer.duration > 0) {
+                    sliderPosition = exoPlayer.currentPosition / exoPlayer.duration.toFloat()
+                }
+                delay(500)
+            }
+        }
+
+        onDispose {
+            exoPlayer.removeListener(listener)
+            job.cancel()
+        }
+    }
+
     Column(modifier.fillMaxWidth().background(Color.DarkGray), Arrangement.Top, Alignment.CenterHorizontally) {
 
-
-
-
         AsyncImage(
-            model = imageUrl,
+            model = song.imageUrl,
             contentDescription = "Image",
             Modifier.size(320.dp).padding(top = 50.dp)
         )
 
 
-        Text(songName, modifier.padding(start = 12.dp, top = 12.dp, bottom = 1.dp), fontWeight = Bold, fontSize = 21.sp)
+        Text(song.title, modifier.padding(start = 12.dp, top = 12.dp, bottom = 1.dp), fontWeight = Bold, fontSize = 21.sp)
 
-        Text(songArtist, Modifier.padding(start = 12.dp, top = 8.dp, bottom = 1.dp), fontSize = 15.sp)
+        Text(song.subtitle, Modifier.padding(start = 12.dp, top = 8.dp, bottom = 1.dp), fontSize = 15.sp)
 
-        Slider(
-            value = 0.5f,
-            onValueChange = {},
-            valueRange = 0f..1f
-        )
+        Column {
+            Slider(
+                value = sliderPosition,
+                onValueChange = { sliderPosition = it},
+                enabled = exoPlayer.duration > 0,
+                onValueChangeFinished = { exoPlayer.seekTo((sliderPosition * exoPlayer.duration).toLong())},
+                valueRange = 0f..1f,
+                modifier = Modifier.padding(horizontal = 15.dp)
+            )
 
-        SongViewButtons(exoPlayer)
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement =  Arrangement.SpaceBetween
+            ){
+                Text(formatMillis(exoPlayer.currentPosition), Modifier.padding(start = 12.dp))
+                Text(formatMillis(exoPlayer.duration), Modifier.padding(end = 12.dp))
+            }
+        }
+
+
+        SongViewButtons(exoPlayer, {onPrevSong(song)}, {onNextSong(song)})
 
     }
 }
 
 @Composable
-fun SongViewButtons(exoPlayer: ExoPlayer){
-    var isPlaying by remember { mutableStateOf(exoPlayer.isPlaying) }
-
-    DisposableEffect(exoPlayer) {
-        val listener = object : Player.Listener {
-            override fun onIsPlayingChanged(isPlaying_: Boolean)
-            {
-                isPlaying = isPlaying_
-            }
-        }
-        exoPlayer.addListener(listener)
-        onDispose {
-            exoPlayer.removeListener(listener)
-        }
-    }
-
-    Row(Modifier.padding(top = 15.dp)){
+fun SongViewButtons(exoPlayer: ExoPlayer, onPrevSong: () -> Unit, onNextSong: () -> Unit){
+    Row(Modifier.padding(top = 15.dp), verticalAlignment = Alignment.CenterVertically){
         Button(
             modifier = Modifier.size(39.dp),
             contentPadding = PaddingValues(5.dp),
             onClick = {
-
+                onPrevSong()
             }) {
             Icon(painterResource(R.drawable.ic_prev), contentDescription = null, Modifier.fillMaxSize())
 
@@ -100,23 +129,8 @@ fun SongViewButtons(exoPlayer: ExoPlayer){
 
         Spacer(Modifier.width(24.dp))
 
-        Button(
-            modifier = Modifier.size(45.dp),
-            contentPadding = PaddingValues(5.dp),
-            onClick = {
-                if (exoPlayer.isPlaying) {
-                    exoPlayer.pause()
-                } else {
-                    exoPlayer.play()
-                }
-                isPlaying = exoPlayer.isPlaying
-            }) {
-            if(isPlaying){
-                Icon(painterResource(R.drawable.ic_pause), contentDescription = null, Modifier.fillMaxSize())
-            }else{
-                Icon(Icons.Rounded.PlayArrow, contentDescription = null, Modifier.fillMaxSize())
-            }
-        }
+
+        PlayButton(exoPlayer)
 
         Spacer(Modifier.width(24.dp))
 
@@ -124,11 +138,22 @@ fun SongViewButtons(exoPlayer: ExoPlayer){
             modifier = Modifier.size(39.dp),
             contentPadding = PaddingValues(5.dp),
             onClick = {
-
+                onNextSong()
             }) {
             Icon(painterResource(R.drawable.ic_next), contentDescription = null, Modifier.fillMaxSize())
 
         }
 
     }
+}
+
+
+fun formatMillis(ms: Long): String {
+    if(ms < 0){
+        return "%d:%02d".format(0, 0)
+    }
+    val totalSeconds = ms / 1000
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return "%d:%02d".format(minutes, seconds)
 }
