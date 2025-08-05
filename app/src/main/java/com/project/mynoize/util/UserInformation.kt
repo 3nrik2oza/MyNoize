@@ -15,13 +15,24 @@ class UserInformation(
         preferences[mediaKey]
     }
 
+    val position = context.dataStore.data.map { preferences ->
+        preferences[positionKey]
+    }
+
     suspend fun updateMediaId(id: String) =
         context.dataStore.edit { settings ->
             settings[mediaKey] = id
         }
 
+    suspend fun updatePosition(position: Long) =
+        context.dataStore.edit { settings ->
+            settings[positionKey] = position.toString()
+        }
+
+
     companion object {
         val mediaKey = stringPreferencesKey("media_id_key")
+        val positionKey = stringPreferencesKey("position_key")
     }
 
 }

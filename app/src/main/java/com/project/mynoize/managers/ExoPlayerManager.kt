@@ -21,6 +21,8 @@ class ExoPlayerManager(private val context: Context) {
 
     fun getPlayer(): ExoPlayer? = exoPlayer
 
+    fun getPosition() : Long = exoPlayer?.currentPosition ?: 0L
+
     fun playPauseToggle() {
         exoPlayer?.let {
             if (it.isPlaying) it.pause() else it.play()

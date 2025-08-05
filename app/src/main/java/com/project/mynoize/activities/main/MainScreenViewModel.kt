@@ -9,6 +9,7 @@ import com.google.firebase.ktx.Firebase
 import com.project.mynoize.data.Song
 import com.project.mynoize.managers.ExoPlayerManager
 import com.project.mynoize.util.UserInformation
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,12 +28,18 @@ class MainScreenViewModel (application: Application) : AndroidViewModel(applicat
     val dataStore = UserInformation(application)
 
     var lastId = ""
-
+    var lastPosition = 0L
 
 
     init{
         viewModelScope.launch {
             lastId = dataStore.mediaId.first().toString()
+           val _lastPosition = dataStore.position.first()
+            if(_lastPosition == null){
+                lastPosition = 0L
+            }else{
+                lastPosition = _lastPosition.toLong()
+            }
         }
 
             Firebase.firestore.collection("songs").get()
@@ -46,6 +53,7 @@ class MainScreenViewModel (application: Application) : AndroidViewModel(applicat
                         if(lastId == song.mediaId){
                             _currentSong.value = song
                             playerManager.initializePlayer(song.songUrl, play = false)
+                            playerManager.seekTo(lastPosition)
                         }
 
                         updatedList.add(song)
@@ -53,9 +61,18 @@ class MainScreenViewModel (application: Application) : AndroidViewModel(applicat
                     songList.value = updatedList
                 }
 
+        viewModelScope.launch {
+            savePosition()
+        }
 
 
+    }
 
+    suspend fun savePosition(){
+        while (true){
+            dataStore.updatePosition(playerManager.getPosition())
+            delay(1000)
+        }
 
     }
 

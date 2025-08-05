@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">MyNoize</string>
+    <string name="title_activity_sign_in">SignInActivity</string>
+    <string name="web_client_id">555096211894-1on33g91uhbe2oqlo5s5bs0kes7hdlqj.apps.googleusercontent.com</string>
 </resources>

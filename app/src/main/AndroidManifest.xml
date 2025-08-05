@@ -13,16 +13,21 @@
         android:theme="@style/Theme.MyNoize"
         tools:targetApi="31">
         <activity
-            android:name=".activities.main.MainActivity"
+            android:name=".activities.signin.SignInActivity"
             android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.MyNoize">
+            android:theme="@style/Theme.MyNoize" >
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
+        <activity
+            android:name=".activities.main.MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.MyNoize"/>
     </application>
 
 </manifest>
