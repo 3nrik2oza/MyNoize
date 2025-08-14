@@ -48,7 +48,7 @@ class SignInViewModel: ViewModel() {
                 password = event.password
             }
             is SignInEvent.OnSignInClick -> {
-                signIn()
+                signIn(event.onSuccess)
             }
             is SignInEvent.OnDismissAlertDialog -> {
                 showAlertDialog = false
@@ -56,7 +56,7 @@ class SignInViewModel: ViewModel() {
         }
     }
 
-    fun signIn(){
+    fun signIn(onSuccess: () -> Unit){
         loading = true
         email = email.trim()
         password = password.trim()
@@ -70,9 +70,8 @@ class SignInViewModel: ViewModel() {
         }
 
         auth.signInWithEmailAndPassword(email,password)
-            .addOnFailureListener {
-                messageText = "you have signed in successfully!"
-                showAlertDialog = true
+            .addOnSuccessListener {
+                onSuccess()
             }
             .addOnFailureListener {
                 loading = false

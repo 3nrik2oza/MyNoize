@@ -129,6 +129,11 @@ class SignInActivity : ComponentActivity() {
                                     )
                                 }
                             },
+                            onSuccessfulSignInWithEmail = {
+                                val intent = Intent(applicationContext.applicationContext, MainActivity::class.java)
+                                startActivity(intent)
+                                finish()
+                            },
                             viewModel
                         )
                     }

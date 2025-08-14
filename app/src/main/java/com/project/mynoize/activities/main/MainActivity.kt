@@ -1,6 +1,7 @@
 package com.project.mynoize.activities.main
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -30,12 +31,10 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,14 +44,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.exoplayer.ExoPlayer
 import coil.compose.AsyncImage
+import com.project.mynoize.activities.main.events.MainActivityUiEvent
+import com.project.mynoize.activities.main.screens.MainScreen
 import com.project.mynoize.activities.main.ui.PlayButton
 import com.project.mynoize.activities.main.ui.SongView
 import com.project.mynoize.activities.main.ui.theme.MyNoizeTheme
+import com.project.mynoize.activities.main.viewmodels.ProfileScreenViewModel
+import com.project.mynoize.activities.signin.SignInActivity
 import com.project.mynoize.data.Song
 
 
 class MainActivity : ComponentActivity() {
-    val vm: MainScreenViewModel by viewModels()
+    //val vm: MainScreenViewModel by viewModels()
+    val vmProfileScreenView: ProfileScreenViewModel by viewModels()
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,10 +65,28 @@ class MainActivity : ComponentActivity() {
 
 
 
-        setContent {
-            MyNoizeTheme {
-                val currentSong by vm.currentSong.collectAsState()
 
+        setContent {
+
+            LaunchedEffect(Unit) {
+                vmProfileScreenView.uiEvent.collect { event ->
+                    when(event){
+                        is MainActivityUiEvent.NavigateToSignIn -> {
+                            val intent = Intent(applicationContext.applicationContext, SignInActivity::class.java)
+                            startActivity(intent)
+                            finish()
+                        }
+                    }
+                }
+            }
+
+            MyNoizeTheme {
+                //val currentSong by vm.currentSong.collectAsState()
+
+                MainScreen(
+                    vmProfileScreenView
+                )
+                /*
                 Scaffold(modifier = Modifier.fillMaxSize()) {
                     MainView(
                         songList = vm.songList.value,
@@ -80,14 +102,14 @@ class MainActivity : ComponentActivity() {
                             vm.prevSong()
                         }
                     )
-                }
+                }*/
             }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        vm.playerManager.releasePlayer()
+        //vm.playerManager.releasePlayer()
     }
 }
 

@@ -33,7 +33,8 @@ import com.project.mynoize.activities.signin.ui.theme.MyNoizeTheme
 @Composable
 fun SignInScreen(
     navController: NavController,
-    onSignInWithGoogleClick: @Composable () -> Unit,
+    onSignInWithGoogleClick: () -> Unit,
+    onSuccessfulSignInWithEmail: () -> Unit,
     vm: SignInViewModel
 
     ) {
@@ -91,7 +92,9 @@ fun SignInScreen(
 
                 CustomButton (
                     text = "Sign In",
-                    {vm.onEvent(SignInEvent.OnSignInClick)}
+                    {
+                        vm.onEvent(SignInEvent.OnSignInClick(onSuccessfulSignInWithEmail))
+                    }
                 )
 
                 Box(
@@ -113,7 +116,7 @@ fun SignInScreen(
                     contentAlignment = Alignment.Center
                 ){
                     OutlinedButton(
-                        onClick = {onSignInWithGoogleClick},
+                        onClick = {onSignInWithGoogleClick()},
                         modifier = Modifier.size(80.dp)
                     ) {
                         Text(
@@ -137,6 +140,6 @@ fun SignInPreview() {
     MyNoizeTheme {
         val vm = viewModel<SignInViewModel>()
         val navController = rememberNavController()
-        SignInScreen(navController, {}, vm)
+        SignInScreen(navController, {},{}, vm)
     }
 }

@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.project.mynoize.activities.signin.event.SignUpEvent
+import kotlinx.coroutines.tasks.await
 
 class SignUpViewModel (
 
@@ -69,6 +70,13 @@ class SignUpViewModel (
         creatingAccount = true
         auth.createUserWithEmailAndPassword(email, password)
             .addOnSuccessListener {
+
+                val user = auth.currentUser
+                val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                    .setDisplayName(username)
+                    .build()
+                user!!.updateProfile(profileUpdates)
+
                 messageText = "Account has been created successfully"
                 showAlertDialog = true
                 auth.signOut()

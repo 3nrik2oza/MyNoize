@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.project.mynoize.managers
 
 import android.content.Context
@@ -61,7 +63,7 @@ class GoogleAuthUiClient(
             )
         }
     }
-
+/*
     suspend fun signOut(){
         try{
             oneTapClient.signOut().await()
@@ -71,7 +73,7 @@ class GoogleAuthUiClient(
             if( e is CancellationException) throw e
         }
     }
-
+*/
     fun getSignedInUser(): UserData? =auth.currentUser?.run {
         UserData(
             userId = uid,

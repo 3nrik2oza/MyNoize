@@ -1,11 +1,11 @@
-package com.project.mynoize.activities.main
+package com.project.mynoize.activities.main.viewmodels
 
 import android.app.Application
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 import com.project.mynoize.data.Song
 import com.project.mynoize.managers.ExoPlayerManager
 import com.project.mynoize.util.UserInformation
