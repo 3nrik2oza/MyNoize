@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,13 +50,15 @@ import com.project.mynoize.activities.main.screens.MainScreen
 import com.project.mynoize.activities.main.ui.PlayButton
 import com.project.mynoize.activities.main.ui.SongView
 import com.project.mynoize.activities.main.ui.theme.MyNoizeTheme
+import com.project.mynoize.activities.main.viewmodels.CreateArtistViewModel
+import com.project.mynoize.activities.main.viewmodels.MainScreenViewModel
 import com.project.mynoize.activities.main.viewmodels.ProfileScreenViewModel
 import com.project.mynoize.activities.signin.SignInActivity
 import com.project.mynoize.data.Song
 
 
 class MainActivity : ComponentActivity() {
-    //val vm: MainScreenViewModel by viewModels()
+    val vmMainScreen: MainScreenViewModel by viewModels()
     val vmProfileScreenView: ProfileScreenViewModel by viewModels()
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -81,10 +84,11 @@ class MainActivity : ComponentActivity() {
             }
 
             MyNoizeTheme {
-                //val currentSong by vm.currentSong.collectAsState()
+                //val currentSong by vmMainScreen.currentSong.collectAsState()
 
                 MainScreen(
-                    vmProfileScreenView
+                    vmProfileScreenView,
+                    vmMainScreen
                 )
                 /*
                 Scaffold(modifier = Modifier.fillMaxSize()) {
@@ -124,7 +128,9 @@ fun MainView(
     exoPlayer: ExoPlayer?
 ) {
     Box(
-        modifier = Modifier.fillMaxSize().padding(top = 25.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 25.dp),
     ) {
         val scaffoldState = rememberBottomSheetScaffoldState()
         Column (Modifier.padding(start = 12.dp, top = 12.dp, bottom = 75.dp)){
@@ -157,7 +163,9 @@ fun MainView(
                     sheetDragHandle = {},
                     modifier = Modifier.align(Alignment.BottomCenter),
                     sheetContent = {
-                        Box(modifier = Modifier.fillMaxSize().background(Color.DarkGray)) {
+                        Box(modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.DarkGray)) {
                             val showMusicPlayer = scaffoldState.bottomSheetState.currentValue.name == "PartiallyExpanded"
                             AnimatedContent(
                                 targetState = showMusicPlayer,
@@ -205,7 +213,9 @@ fun SongCardView(
 ){
    Row(
        verticalAlignment = Alignment.CenterVertically,
-       modifier = Modifier.clickable(onClick = event ).fillMaxWidth()
+       modifier = Modifier
+           .clickable(onClick = event)
+           .fillMaxWidth()
    ) {
         AsyncImage(
             model = imageUrl,
@@ -247,7 +257,9 @@ fun MusicPlayer(
             AsyncImage(
                 model = song.imageUrl,
                 contentDescription = "Image",
-                Modifier.size(45.dp).clip(CircleShape)
+                Modifier
+                    .size(45.dp)
+                    .clip(CircleShape)
             )
 
             Column {

@@ -12,7 +12,10 @@ sealed interface AppScreen
     object FavoriteScreen : AppScreen
 
     @Serializable
-    object CreateScreen : AppScreen
+    object ShowMusic : AppScreen
 
     @Serializable
     object ProfileScreen : AppScreen
+
+    @Serializable
+    object CreateArtistScreen : AppScreen

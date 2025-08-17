@@ -1,55 +1,133 @@
 package com.project.mynoize.activities.main.screens
 
-import android.annotation.SuppressLint
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.PlaylistPlay
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.google.android.play.core.integrity.v
-import com.project.mynoize.activities.main.CreateScreen
 import com.project.mynoize.activities.main.FavoriteScreen
+import com.project.mynoize.activities.main.MainView
 import com.project.mynoize.activities.main.MusicScreen
 import com.project.mynoize.activities.main.ProfileScreen
 import com.project.mynoize.activities.main.ui.BottomNavigationBar
+import com.project.mynoize.activities.main.viewmodels.MainScreenViewModel
 import com.project.mynoize.activities.main.viewmodels.ProfileScreenViewModel
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.project.mynoize.activities.main.CreateArtistScreen
+import com.project.mynoize.activities.main.ShowMusic
+import com.project.mynoize.activities.main.viewmodels.CreateArtistViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    vmProfileScreen: ProfileScreenViewModel
+    vmProfileScreen: ProfileScreenViewModel,
+    vmMainScreen: MainScreenViewModel
 ){
 
     val navController = rememberNavController()
+
+    val sheetState = rememberModalBottomSheetState()
+    var isSheetOpen by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    val selectedNavigationIndex = rememberSaveable { mutableStateOf(0) }
+    val selectedNavigationIndexBefore = rememberSaveable { mutableStateOf(0) }
+    var createActive = rememberSaveable { mutableStateOf(false) }
+
+    fun closeBottomSheet(){
+        selectedNavigationIndex.value = selectedNavigationIndexBefore.value
+        createActive.value = false
+        isSheetOpen = false
+    }
 
 
     Scaffold (
         modifier = Modifier
             .fillMaxSize(),
-        bottomBar = {BottomNavigationBar(navController)}
+        bottomBar = {
+            val currentDestination = navController.currentBackStackEntryAsState().value?.destination?.route
+            if (currentDestination != CreateArtistScreen::class.qualifiedName){
+                BottomNavigationBar(
+                    navController,
+                    selectedNavigationIndex,
+                    selectedNavigationIndexBefore,
+                    createActive,
+                    { isSheetOpen = true }
+                )
+            }
+            }
     ){ innerPadding ->
 
         NavHost(
             navController = navController,
-            startDestination = MusicScreen,
+            startDestination = FavoriteScreen,
             modifier = Modifier.padding(innerPadding)
         ){
             composable<MusicScreen>{
-                HomeScreen()
+                MusicScreen()
             }
             composable<FavoriteScreen>{
-                CartScreen()
+                FavoriteScreen()
             }
 
+            /*
             composable<CreateScreen> {
                 SettingScreen()
+            }*/
+
+            composable<ShowMusic> {
+                val currentSong by vmMainScreen.currentSong.collectAsState()
+                MainView(
+                    songList = vmMainScreen.songList.value,
+                    currentSong = currentSong,
+                    onSongClick = { song ->
+                        vmMainScreen.onSongClick(song)
+                    },
+                    exoPlayer = vmMainScreen.playerManager.getPlayer(),
+                    onNextSong = {
+                        vmMainScreen.nextSong()
+                    },
+                    onPrevSong = {
+                        vmMainScreen.prevSong()
+                    }
+                )
             }
 
             composable<ProfileScreen> {
@@ -58,64 +136,105 @@ fun MainScreen(
                 )
             }
 
+            composable<CreateArtistScreen> { backStackEntry ->
+                val vm: CreateArtistViewModel = viewModel(backStackEntry)
+                CreateArtistScreen(
+                    vm,
+                    navController
+                )
+            }
+
+        }
+    }
+
+
+
+    if(isSheetOpen){
+        ModalBottomSheet(
+            sheetState= sheetState,
+            onDismissRequest = {
+                closeBottomSheet()
+            },
+            containerColor = Color.DarkGray,
+            modifier = Modifier.padding(bottom = 75.dp)
+        ) {
+            Column (
+                verticalArrangement = Arrangement.Center,
+            ){
+                CreateViewForBottomSheet(
+                    imageVector = Icons.Default.AccountCircle,
+                    title = "Add Artist",
+                    description = "Add your favorite artist to platform so that you can add his songs to your list",
+                    onClick = {
+                        navController.navigate(CreateArtistScreen)
+                        closeBottomSheet()
+                    }
+                )
+
+                CreateViewForBottomSheet(
+                    imageVector = Icons.Default.MusicNote,
+                    title = "Add Song",
+                    description = "Add your favorite song to platform so that you can add them to your playlist"
+                )
+
+                CreateViewForBottomSheet(
+                    imageVector = Icons.AutoMirrored.Default.PlaylistPlay,
+                    title = "Create playlist",
+                    description = "Create playlists so that you or maybe others can enjoy your songs"
+                )
+            }
+
+        }
+    }
+}
+
+
+@Composable
+fun CreateViewForBottomSheet(
+    imageVector: ImageVector,
+    title: String = "Title",
+    description: String = "Description",
+    onClick: () -> Unit = {}
+){
+    Row(
+        Modifier.fillMaxWidth()
+            .height(85.dp)
+            .background(Color.DarkGray)
+            .padding(horizontal = 15.dp)
+            .clickable{ onClick() },
+        verticalAlignment = Alignment.CenterVertically
+    ){
+        Icon(
+            imageVector = imageVector,
+            contentDescription = "Icon",
+            modifier = Modifier
+                .size(50.dp)
+                .clip(CircleShape)
+                .background(Color.LightGray)
+
+        )
+
+        Column(
+            Modifier.padding(10.dp)
+        ) {
+            Text(
+                text=title,
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp
+            )
+            Spacer(Modifier.height(5.dp))
+            Text(
+                text=description,
+                color = Color.LightGray,
+                fontSize = 12.sp,
+                lineHeight = 16.sp
+            )
+
         }
 
     }
-
 }
 
 
-
-
-//HomeScreen.kt
-@Composable
-fun HomeScreen(){
-    Box (modifier = Modifier
-        .fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ){
-        Text(
-            text = "Home Screen",
-            style = MaterialTheme.typography.headlineLarge
-        )
-    }
-}
-
-//CartScreen.kt
-@Composable
-fun CartScreen(){
-    Box (modifier = Modifier
-        .fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ){
-        Text(
-            text = "Cart Screen",
-            style = MaterialTheme.typography.headlineLarge
-        )
-    }
-}
-
-//SettingScreen
-@Composable
-fun SettingScreen(){
-    Box (modifier = Modifier
-        .fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ){
-        Text(
-            text = "Setting Screen",
-            style = MaterialTheme.typography.headlineLarge
-        )
-    }
-}
-
-@SuppressLint("ViewModelConstructorInComposable")
-@Preview(showBackground = true)
-@Composable
-fun MainScreenPreview() {
-    val vmProfileScreen = ProfileScreenViewModel()
-    MainScreen(
-        vmProfileScreen
-    )
-}
 

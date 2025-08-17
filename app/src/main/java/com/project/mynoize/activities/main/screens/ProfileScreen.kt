@@ -55,7 +55,6 @@ fun ProfileScreen(
         )
         Button(
             onClick = {
-                // TODO: add sign out functionality and fix the bug with sign in ne ucita vec samo vrti
                 vm.onEvent(ProfileScreenEvent.OnSignOutClick)
             }
         ) {
