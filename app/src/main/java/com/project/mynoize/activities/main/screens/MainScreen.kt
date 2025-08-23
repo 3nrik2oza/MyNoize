@@ -1,9 +1,9 @@
 package com.project.mynoize.activities.main.screens
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,10 +17,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.PlaylistPlay
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -50,14 +48,17 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.project.mynoize.activities.main.CreateArtistScreen
+import com.project.mynoize.activities.main.CreateSongScreen
 import com.project.mynoize.activities.main.ShowMusic
 import com.project.mynoize.activities.main.viewmodels.CreateArtistViewModel
+import com.project.mynoize.activities.main.viewmodels.CreateSongViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     vmProfileScreen: ProfileScreenViewModel,
-    vmMainScreen: MainScreenViewModel
+    vmMainScreen: MainScreenViewModel,
+    context: Context
 ){
 
     val navController = rememberNavController()
@@ -67,12 +68,12 @@ fun MainScreen(
         mutableStateOf(false)
     }
 
-    val selectedNavigationIndex = rememberSaveable { mutableStateOf(0) }
-    val selectedNavigationIndexBefore = rememberSaveable { mutableStateOf(0) }
+    val selectedNavigationIndex = rememberSaveable { mutableIntStateOf(0) }
+    val selectedNavigationIndexBefore = rememberSaveable { mutableIntStateOf(0) }
     var createActive = rememberSaveable { mutableStateOf(false) }
 
     fun closeBottomSheet(){
-        selectedNavigationIndex.value = selectedNavigationIndexBefore.value
+        selectedNavigationIndex.intValue = selectedNavigationIndexBefore.intValue
         createActive.value = false
         isSheetOpen = false
     }
@@ -83,16 +84,16 @@ fun MainScreen(
             .fillMaxSize(),
         bottomBar = {
             val currentDestination = navController.currentBackStackEntryAsState().value?.destination?.route
-            if (currentDestination != CreateArtistScreen::class.qualifiedName){
+            if (!(currentDestination == CreateArtistScreen::class.qualifiedName || currentDestination == CreateSongScreen::class.qualifiedName)){
                 BottomNavigationBar(
                     navController,
                     selectedNavigationIndex,
                     selectedNavigationIndexBefore,
                     createActive,
-                    { isSheetOpen = true }
+                    onCreateClick = { isSheetOpen = true }
                 )
             }
-            }
+        }
     ){ innerPadding ->
 
         NavHost(
@@ -144,6 +145,15 @@ fun MainScreen(
                 )
             }
 
+            composable<CreateSongScreen> { backStackEntry ->
+                val vm: CreateSongViewModel = viewModel(backStackEntry)
+                CreateSongScreen(
+                    vm,
+                    context = context,
+                    navController = navController
+                )
+            }
+
         }
     }
 
@@ -174,7 +184,12 @@ fun MainScreen(
                 CreateViewForBottomSheet(
                     imageVector = Icons.Default.MusicNote,
                     title = "Add Song",
-                    description = "Add your favorite song to platform so that you can add them to your playlist"
+                    description = "Add your favorite song to platform so that you can add them to your playlist",
+                    onClick = {
+                        navController.navigate(CreateSongScreen)
+                        closeBottomSheet()
+                    }
+
                 )
 
                 CreateViewForBottomSheet(

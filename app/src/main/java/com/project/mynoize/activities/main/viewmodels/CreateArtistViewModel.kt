@@ -48,8 +48,8 @@ class CreateArtistViewModel: ViewModel() {
 
                 uploadTask.addOnFailureListener {
                     showAlertDialog = true
-                    messageText = "Please enter artist name"
-                    loading = false;
+                    messageText = "An error has occurred. Please try again. "
+                    loading = false
                 }
 
                 uploadTask.addOnSuccessListener {

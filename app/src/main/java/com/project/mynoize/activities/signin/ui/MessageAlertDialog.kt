@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.project.mynoize.activities.signin.ui.theme.Color1
 
 @Composable
-fun CustomAlertDialog(
+fun MessageAlertDialog(
     onDismiss: () -> Unit,
     message: String = "This is the message"
 ){

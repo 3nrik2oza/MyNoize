@@ -19,3 +19,6 @@ sealed interface AppScreen
 
     @Serializable
     object CreateArtistScreen : AppScreen
+
+    @Serializable
+    object CreateSongScreen : AppScreen

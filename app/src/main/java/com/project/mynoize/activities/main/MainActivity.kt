@@ -12,7 +12,7 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.with
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -50,7 +50,6 @@ import com.project.mynoize.activities.main.screens.MainScreen
 import com.project.mynoize.activities.main.ui.PlayButton
 import com.project.mynoize.activities.main.ui.SongView
 import com.project.mynoize.activities.main.ui.theme.MyNoizeTheme
-import com.project.mynoize.activities.main.viewmodels.CreateArtistViewModel
 import com.project.mynoize.activities.main.viewmodels.MainScreenViewModel
 import com.project.mynoize.activities.main.viewmodels.ProfileScreenViewModel
 import com.project.mynoize.activities.signin.SignInActivity
@@ -88,7 +87,8 @@ class MainActivity : ComponentActivity() {
 
                 MainScreen(
                     vmProfileScreenView,
-                    vmMainScreen
+                    vmMainScreen,
+                    this
                 )
                 /*
                 Scaffold(modifier = Modifier.fillMaxSize()) {
@@ -144,7 +144,7 @@ fun MainView(
                     Row(verticalAlignment = Alignment.CenterVertically) {
 
                         SongCardView(event = {onSongClick(item) },
-                            title = item.title, artist = item.subtitle, imageUrl = item.imageUrl)
+                            title = item.title, artist = item.artistName, imageUrl = item.imageUrl)
 
 
                     }
@@ -171,15 +171,11 @@ fun MainView(
                                 targetState = showMusicPlayer,
                                 transitionSpec = {
                                     // Customize animations if desired
-                                    fadeIn(animationSpec = tween(15)) with fadeOut(
-                                        animationSpec = tween(
-                                            15
-                                        )
-                                    )
+                                    fadeIn(animationSpec = tween(1)).togetherWith(fadeOut(animationSpec = tween(1)))
                                 },
                                 label = "SongViewToMusicPlayerTransition"
-                            ) { targetState ->
-                                if (scaffoldState.bottomSheetState.currentValue.name != "PartiallyExpanded") {
+                            ) { isMusicPlayer ->
+                                if (!isMusicPlayer) {
                                     SongView(
                                         exoPlayer = player,
                                         song = it,
@@ -265,7 +261,7 @@ fun MusicPlayer(
             Column {
                 Text(song.title, modifier.padding(start = 12.dp, top = 1.dp, bottom = 1.dp), fontWeight = Bold, fontSize = 18.sp)
 
-                Text(song.subtitle, Modifier.padding(start = 12.dp, top = 1.dp, bottom = 1.dp), fontSize = 12.sp)
+                Text(song.artistName, Modifier.padding(start = 12.dp, top = 1.dp, bottom = 1.dp), fontSize = 12.sp)
             }
 
         }

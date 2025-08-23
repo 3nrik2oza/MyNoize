@@ -18,7 +18,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -46,8 +47,8 @@ fun SongView(
     onNextSong: (Song) -> Unit,
     modifier: Modifier = Modifier
 ){
-    var sliderPosition by remember { mutableStateOf(exoPlayer.currentPosition / exoPlayer.duration.toFloat() ) }
-    var duration by remember { mutableStateOf(0L) }
+    var sliderPosition by remember { mutableFloatStateOf(exoPlayer.currentPosition / exoPlayer.duration.toFloat() ) }
+    var duration by remember { mutableLongStateOf(0L) }
 
 
     val scope = rememberCoroutineScope()
@@ -87,7 +88,7 @@ fun SongView(
 
         Text(song.title, modifier.padding(start = 12.dp, top = 12.dp, bottom = 1.dp), fontWeight = Bold, fontSize = 21.sp)
 
-        Text(song.subtitle, Modifier.padding(start = 12.dp, top = 8.dp, bottom = 1.dp), fontSize = 15.sp)
+        Text(song.artistName, Modifier.padding(start = 12.dp, top = 8.dp, bottom = 1.dp), fontSize = 15.sp)
 
         Column {
             Slider(
