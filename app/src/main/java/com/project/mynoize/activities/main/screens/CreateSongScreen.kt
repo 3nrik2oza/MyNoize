@@ -46,31 +46,24 @@ fun CreateSongScreen(
         }
     )
 
-    if(vm.createAlbum){
+    if(vm.showCreateAlbum){
         CreateAlbumAlertDialog(
-            onDismiss = {
-                vm.createAlbum = false
-            },
-            createAlbum = {imageUri, albumName ->
-                vm.onEvent(CreateSongEvent.OnCreateAlbumClick(imageUri, albumName))
-            },
-            showMessage = vm.showAlertDialogCreateAlbum,
-            message = vm.messageTextCreateAlbum,
-            loading = vm.loadingCreatingAlbum
+            onEvent = vm::onCreateAlbumEvent,
+            createAlbumState = vm.createAlbumDialogState
         )
     }
 
-    if(vm.showAlertDialog){
+    if(vm.alertDialogState.show){
         MessageAlertDialog(
             onDismiss = {
-                if(vm.messageText == Constants.SONG_ADDED_SUCCESSFULLY){
+                if(vm.alertDialogState.message == Constants.SONG_ADDED_SUCCESSFULLY){
                     navController.popBackStack()
                 }else{
-                    vm.showAlertDialog = false
+                    vm.onEvent(CreateSongEvent.OnDismissAlertDialog)
                 }
 
             },
-            message = vm.messageText
+            message = vm.alertDialogState.message
         )
     }
 
@@ -96,18 +89,19 @@ fun CreateSongScreen(
             "Your song name",
             vm.songName,
             onValueChange = {
-                if(!vm.loading){
+                if(!vm.alertDialogState.loading){
                     vm.onEvent(CreateSongEvent.OnSongNameChange(it))
                 }
             }
         )
 
         CustomDropdown(
-            itemList = vm.listOfArtists.value,
+            itemList = vm.artistListState.list.map { it.name },
+            hint = "Select Artist",
             title = "Artist",
-            selectedIndex = vm.artistIndex,
+            selectedIndex = vm.artistListState.index,
             onItemClick = {
-                if(!vm.loading){
+                if(!vm.alertDialogState.loading){
                     vm.onEvent(event = CreateSongEvent.OnArtistClick(it))
                 }
 
@@ -116,19 +110,20 @@ fun CreateSongScreen(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        if(vm.artistSelected.value){
+        if(vm.artistListState.index != -1){
             CustomDropdown(
-                itemList = vm.listOfAlbums.value,
+                itemList = vm.albumList.value.map {it.name},
+                hint = "Select Album",
                 title = "Album",
                 selectedIndex = vm.albumIndex,
                 onItemClick = {
-                    if(!vm.loading){
+                    if(!vm.alertDialogState.loading){
                         vm.onEvent(event = CreateSongEvent.OnAlbumClick(it))
                     }
                 },
                 canAdd = true,
                 onAddClick = {
-                    if(!vm.loading){
+                    if(!vm.alertDialogState.loading){
                         vm.onEvent(CreateSongEvent.OnAddAlbumClick)
                     }
 
@@ -139,7 +134,7 @@ fun CreateSongScreen(
 
         Spacer(modifier = Modifier.height(25.dp))
 
-        if(!vm.loading){
+        if(!vm.alertDialogState.loading){
             CustomSelectFileButton(
                 text = vm.songTitle,
                 onClick = {

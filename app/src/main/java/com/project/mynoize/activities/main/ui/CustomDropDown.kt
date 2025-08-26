@@ -33,6 +33,7 @@ import androidx.compose.ui.window.PopupProperties
 fun CustomDropdown(
     itemList: List<String>,
     title: String = "Type",
+    hint: String = "Select",
     selectedIndex: Int,
     onItemClick: (Int) -> Unit,
     canAdd: Boolean = false,
@@ -42,6 +43,7 @@ fun CustomDropdown(
         Text(text = title)
         DropdownList(
             itemList = itemList,
+            hint = hint,
             selectedIndex = selectedIndex,
             onItemClick = onItemClick,
             canAdd = canAdd,
@@ -53,6 +55,7 @@ fun CustomDropdown(
 @Composable
 fun DropdownList(
     itemList: List<String>,
+    hint: String,
     selectedIndex: Int,
     onItemClick: (Int) -> Unit,
     canAdd: Boolean,
@@ -71,13 +74,13 @@ fun DropdownList(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClick = { showDropdown = !showDropdown }
+                onClick = { if(!itemList.isEmpty()) {showDropdown = !showDropdown} }
             ),
         contentAlignment = Alignment.Center
     ) {
         Text(
             modifier = Modifier.fillMaxWidth(),
-            text = itemList[selectedIndex],
+            text = if(selectedIndex == -1) hint else itemList[selectedIndex],
             textAlign = TextAlign.Center
         )
     }

@@ -8,4 +8,5 @@ sealed class CreateSongEvent {
     data class OnSelectSongClick(val context: android.content.Context, val songUri: String): CreateSongEvent()
     object OnAddAlbumClick: CreateSongEvent()
     object OnAddSongClick: CreateSongEvent()
+    object OnDismissAlertDialog: CreateSongEvent()
 }

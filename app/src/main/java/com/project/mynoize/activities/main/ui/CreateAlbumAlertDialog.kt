@@ -20,7 +20,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,17 +34,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.project.mynoize.activities.main.events.CreateAlbumEvent
+import com.project.mynoize.activities.main.state.AlertDialogState
 import com.project.mynoize.activities.signin.ui.CustomButton
 import com.project.mynoize.activities.signin.ui.CustomTextField
 import com.project.mynoize.activities.signin.ui.MessageAlertDialog
 
 @Composable
 fun CreateAlbumAlertDialog(
-    createAlbum: (imageUri: String, albumName: String)-> Unit,
-    onDismiss: () -> Unit,
-    loading: Boolean,
-    showMessage: MutableState<Boolean>,
-    message: MutableState<String>
+    onEvent: (CreateAlbumEvent) -> Unit,
+    createAlbumState: AlertDialogState,
 ){
 
     var imageUri by remember { mutableStateOf("") }
@@ -58,17 +56,18 @@ fun CreateAlbumAlertDialog(
         }
     )
 
-    if(showMessage.value){
+    if(createAlbumState.show){
         MessageAlertDialog(
             onDismiss = {
-                showMessage.value = false
+
+                onEvent(CreateAlbumEvent.OnDismissMessageDialog)
             },
-            message = message.value
+            message = createAlbumState.message
         )
     }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {onEvent(CreateAlbumEvent.OnDismissCreateAlbumDialog)},
         confirmButton = {},
         modifier = Modifier,
         title = {
@@ -101,7 +100,7 @@ fun CreateAlbumAlertDialog(
                         .clip(CircleShape)
                         .border(2.dp, Color.Black, CircleShape)
                         .clickable{
-                            if(!loading){
+                            if(!createAlbumState.loading){
                                 imagePickerLauncher.launch(
                                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                                 )
@@ -111,7 +110,7 @@ fun CreateAlbumAlertDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                if(loading){
+                if(createAlbumState.loading){
                     CircularProgressIndicator()
                 }else{
                     CustomTextField(
@@ -127,16 +126,17 @@ fun CreateAlbumAlertDialog(
                         text = "ADD",
                         onClick = {
                             if (imageUri == "") {
-                                message.value = "Please select image"
-                                showMessage.value = true
+                                onEvent(CreateAlbumEvent.OnShowAlertDialog("Please select image"))
                                 return@CustomButton
                             }
                             if (albumName == "") {
-                                message.value = "Please enter album name"
-                                showMessage.value = true
+                                onEvent(CreateAlbumEvent.OnShowAlertDialog("Please enter album name"))
                                 return@CustomButton
                             }
-                            createAlbum(imageUri, albumName)
+                            onEvent(CreateAlbumEvent.OnCreateAlbum(
+                                imageUri = imageUri,
+                                albumName = albumName)
+                            )
                         }
                     )
                 }
@@ -151,11 +151,8 @@ fun CreateAlbumAlertDialog(
 @Composable
 fun CreateAlbumAlertDialogPrev(){
     CreateAlbumAlertDialog(
-        onDismiss = {},
-        createAlbum = {_,_->},
-        showMessage = remember { mutableStateOf(false) },
-        message = remember { mutableStateOf("") },
-        loading = false
+        onEvent = {},
+        createAlbumState = AlertDialogState()
     )
 
 }
