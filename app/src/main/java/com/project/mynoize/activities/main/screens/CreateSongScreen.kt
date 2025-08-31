@@ -46,7 +46,7 @@ fun CreateSongScreen(
         }
     )
 
-    if(vm.showCreateAlbum){
+    if(vm.createSongState.showCreateAlbum){
         CreateAlbumAlertDialog(
             onEvent = vm::onCreateAlbumEvent,
             createAlbumState = vm.createAlbumDialogState
@@ -87,7 +87,7 @@ fun CreateSongScreen(
         CustomTextField(
             "Song name",
             "Your song name",
-            vm.songName,
+            vm.createSongState.songName,
             onValueChange = {
                 if(!vm.alertDialogState.loading){
                     vm.onEvent(CreateSongEvent.OnSongNameChange(it))
@@ -112,10 +112,10 @@ fun CreateSongScreen(
 
         if(vm.artistListState.index != -1){
             CustomDropdown(
-                itemList = vm.albumList.value.map {it.name},
+                itemList = vm.albumState.list.map {it.name},
                 hint = "Select Album",
                 title = "Album",
-                selectedIndex = vm.albumIndex,
+                selectedIndex = vm.albumState.index,
                 onItemClick = {
                     if(!vm.alertDialogState.loading){
                         vm.onEvent(event = CreateSongEvent.OnAlbumClick(it))
@@ -136,7 +136,7 @@ fun CreateSongScreen(
 
         if(!vm.alertDialogState.loading){
             CustomSelectFileButton(
-                text = vm.songTitle,
+                text = vm.createSongState.songTitle,
                 onClick = {
                     songPickerLauncher.launch("audio/*")
                 }

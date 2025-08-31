@@ -19,6 +19,7 @@ import com.project.mynoize.activities.main.events.CreateAlbumEvent
 import com.project.mynoize.activities.main.events.CreateSongEvent
 import com.project.mynoize.activities.main.repository.ArtistRepository
 import com.project.mynoize.activities.main.state.AlertDialogState
+import com.project.mynoize.activities.main.state.CreateSongState
 import com.project.mynoize.activities.main.state.ListSelectionState
 import com.project.mynoize.data.Album
 import com.project.mynoize.data.Artist
@@ -29,22 +30,19 @@ import kotlinx.coroutines.launch
 class CreateSongViewModel(
     artistRepository: ArtistRepository = ArtistRepository()
 ): ViewModel() {
-
+/*
     var songName by mutableStateOf("")
     var songUri by mutableStateOf("")
     var songTitle by mutableStateOf("Select Song")
-    var showCreateAlbum by mutableStateOf(false)
+    var showCreateAlbum by mutableStateOf(false)*/
+
+    var createSongState by mutableStateOf(CreateSongState())
 
     var artistListState by mutableStateOf(ListSelectionState<Artist>())
         private set
 
-
-    var albumIndex by mutableIntStateOf(-1)
-    var albumList = mutableStateOf(listOf<Album>())
-
     var albumState by mutableStateOf(ListSelectionState<Album>())
-
-    // implement Stateflow rather then mutableStateOf
+        private set
 
     var createAlbumDialogState by mutableStateOf(AlertDialogState())
         private set
@@ -64,18 +62,18 @@ class CreateSongViewModel(
     fun onEvent(event: CreateSongEvent) {
         when(event){
             is CreateSongEvent.OnSongNameChange -> {
-                songName = event.songName
+                createSongState = createSongState.copy(songName = event.songName)
             }
             is CreateSongEvent.OnArtistClick -> {
                 artistListState = artistListState.copy(index = event.index)
                 getAlbums(artistListState.list[event.index].id)
-                albumIndex = -1
+                albumState = albumState.copy(index = -1)
             }
             is CreateSongEvent.OnAlbumClick -> {
-                albumIndex = event.index
+                albumState = albumState.copy(index = event.index)
             }
             is CreateSongEvent.OnAddAlbumClick -> {
-                showCreateAlbum = true
+                createSongState = createSongState.copy(showCreateAlbum = true)
             }
             is CreateSongEvent.OnCreateAlbumClick->{
                 createAlbum(event.image, event.name)
@@ -106,7 +104,7 @@ class CreateSongViewModel(
                 createAlbumDialogState = createAlbumDialogState.copy(show = true, message = event.message)
             }
             is CreateAlbumEvent.OnDismissCreateAlbumDialog -> {
-                showCreateAlbum = false
+                createSongState = createSongState.copy(showCreateAlbum = false)
             }
             is CreateAlbumEvent.OnCreateAlbum -> {
                 createAlbum(
@@ -120,8 +118,8 @@ class CreateSongViewModel(
 
     fun addSongToStorage(){
         val storageRef = FirebaseStorage.getInstance().reference
-        val file = songUri.toUri()
-        val riversRef = storageRef.child("songs/${songName}")
+        val file = createSongState.songUri.toUri()
+        val riversRef = storageRef.child("songs/${createSongState.songName}")
         val uploadTask = riversRef.putFile(file)
 
         uploadTask
@@ -141,14 +139,14 @@ class CreateSongViewModel(
     fun addToFirestore(storageUrl: String, storageRef: StorageReference, file: Uri){
         val db = FirebaseFirestore.getInstance()
         val song = Song(
-            title = songName,
+            title = createSongState.songName,
             artistId = artistListState.selectedElement().id,
+            artistName = artistListState.selectedElement().name,
             songUrl = storageUrl,
-            imageUrl = albumList.value[albumIndex].image,
-            albumId = albumList.value[albumIndex].id,
-            creatorId = FirebaseAuth.getInstance().currentUser!!.uid,
-            albumName = albumList.value[albumIndex].name,
-            artistName = artistListState.selectedElement().name
+            imageUrl = albumState.selectedElement().image,
+            albumId = albumState.selectedElement().id,
+            albumName = albumState.selectedElement().name,
+            creatorId = FirebaseAuth.getInstance().currentUser!!.uid
         )
         db.collection(Constants.SONG_COLLECTION)
             .add(song)
@@ -169,7 +167,7 @@ class CreateSongViewModel(
     }
 
     fun checkInput() : Boolean{
-        if(songName.isEmpty()){
+        if(createSongState.songName.isEmpty()){
             alertDialogState = alertDialogState.copy(message = "Please enter song name", show = true)
             return false
         }
@@ -177,11 +175,11 @@ class CreateSongViewModel(
             alertDialogState = alertDialogState.copy(message = "Please select artist", show = true)
             return false
         }
-        if(albumIndex == -1){
+        if(albumState.index == -1){
             alertDialogState = alertDialogState.copy(message = "Please select album", show = true)
             return false
         }
-        if(songUri.isEmpty()){
+        if(createSongState.songUri.isEmpty()){
             alertDialogState = alertDialogState.copy(message = "Please select song file", show = true)
             return false
         }
@@ -191,14 +189,15 @@ class CreateSongViewModel(
     fun getAlbums(artistId: String){
         try{
             val db = FirebaseFirestore.getInstance()
-            albumList.value = listOf()
+            var list = emptyArray<Album>()
             db.collection(Constants.ARTIST_COLLECTION)
                 .document(artistId).collection(Constants.ALBUM_COLLECTION).get()
                 .addOnSuccessListener { result ->
                     for(document in result){
                         val album = document.toObject(Album::class.java)
-                        albumList.value += album
+                        list += album
                     }
+                    albumState = albumState.copy(list = list.toList())
                 }
         }catch (e: Exception){
             Log.d("ERROR", e.message.toString())
@@ -208,13 +207,13 @@ class CreateSongViewModel(
 
 
     fun loadSongTitle(context: Context, uri: String) {
-        songUri = uri
+        createSongState = createSongState.copy(songUri = uri)
         val cursor = context.contentResolver.query(uri.toUri(), null, null, null, null)
         cursor?.use {
             if (it.moveToFirst()) {
                 val index = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
                 if (index != -1) {
-                    songTitle = it.getString(index).removeSuffix(".mp3")
+                    createSongState = createSongState.copy(songTitle = it.getString(index).removeSuffix(".mp3"))
                 }
             }
         }
@@ -250,8 +249,8 @@ class CreateSongViewModel(
                         .collection(Constants.ALBUM_COLLECTION)
                         .add(album)
                         .addOnSuccessListener {
-                            albumList.value += album
-                            showCreateAlbum = false
+                            albumState = albumState.copy(list = albumState.list + album)
+                            createSongState = createSongState.copy(showCreateAlbum = false)
                             createAlbumDialogState = createAlbumDialogState.copy(loading = false)
                         }
                         .addOnFailureListener {
