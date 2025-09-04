@@ -1,7 +1,7 @@
 package com.project.mynoize.activities.main.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.project.mynoize.data.Artist
+import com.project.mynoize.core.data.Artist
 import com.project.mynoize.util.Constants
 import kotlinx.coroutines.tasks.await
 

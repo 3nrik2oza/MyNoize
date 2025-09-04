@@ -2,8 +2,8 @@ package com.project.mynoize.activities.main
 
 import kotlinx.serialization.Serializable
 
-@Serializable
-sealed interface AppScreen
+
+interface AppScreen
 
     @Serializable
     object MusicScreen : AppScreen
