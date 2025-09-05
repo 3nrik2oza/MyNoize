@@ -89,7 +89,9 @@ fun SignInScreen(
                     "Email",
                     "Your email",
                     vm.email,
-                    onValueChange = {vm.onEvent(SignInEvent.OnEmailChange(it))}
+                    onValueChange = {vm.onEvent(SignInEvent.OnEmailChange(it))},
+                    isError = false,
+                    errorMessage = "Enter your email"
                 )
 
 
@@ -97,7 +99,9 @@ fun SignInScreen(
                     "Password",
                     "Your password",
                     vm.password,
-                    onValueChange = {vm.onEvent(SignInEvent.OnPasswordChange(it))}
+                    onValueChange = {vm.onEvent(SignInEvent.OnPasswordChange(it))},
+                    isError = false,
+                    errorMessage = "Enter your password"
                 )
 
                 CustomButton (

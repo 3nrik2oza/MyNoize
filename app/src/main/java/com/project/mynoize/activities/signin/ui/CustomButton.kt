@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,7 +24,7 @@ import com.project.mynoize.activities.signin.ui.theme.Color1
 fun CustomButton(
     text: String,
     onClick: () -> Unit,
-    fontSize : TextUnit = 25.sp,
+    fontSize : TextUnit = 25.sp
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -44,6 +45,7 @@ fun CustomButton(
                 modifier = Modifier.padding(vertical = 5.dp, horizontal = 10.dp),
             )
         }
+
         Spacer(modifier = Modifier.height(20.dp))
     }
 }

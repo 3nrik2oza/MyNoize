@@ -84,4 +84,12 @@ dependencies {
     implementation(libs.navigation.compose)
     implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
 
+    // Koin for Android
+
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.navigation)
+    implementation(libs.koin.androidx.compose)
+    testImplementation(libs.koin.test.junit4)
+
+
 }

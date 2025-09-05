@@ -45,20 +45,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.exoplayer.ExoPlayer
 import coil.compose.AsyncImage
-import com.project.mynoize.activities.main.events.MainActivityUiEvent
-import com.project.mynoize.activities.main.screens.MainScreen
+import com.project.mynoize.activities.main.presentation.create_song.CreateSongViewModel
+import com.project.mynoize.activities.main.presentation.main_screen.MainActivityUiEvent
+import com.project.mynoize.activities.main.presentation.main_screen.MainScreen
 import com.project.mynoize.activities.main.ui.PlayButton
-import com.project.mynoize.activities.main.ui.SongView
+import com.project.mynoize.activities.main.presentation.main_screen.components.SongView
 import com.project.mynoize.activities.main.ui.theme.MyNoizeTheme
-import com.project.mynoize.activities.main.viewmodels.MainScreenViewModel
-import com.project.mynoize.activities.main.viewmodels.ProfileScreenViewModel
+import com.project.mynoize.activities.main.presentation.main_screen.MainScreenViewModel
+import com.project.mynoize.activities.main.presentation.profile_screen.ProfileScreenViewModel
 import com.project.mynoize.activities.signin.SignInActivity
-import com.project.mynoize.data.Song
+import com.project.mynoize.core.data.Song
 
 
 class MainActivity : ComponentActivity() {
     val vmMainScreen: MainScreenViewModel by viewModels()
     val vmProfileScreenView: ProfileScreenViewModel by viewModels()
+
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {

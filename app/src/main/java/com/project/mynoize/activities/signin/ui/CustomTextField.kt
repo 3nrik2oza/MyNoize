@@ -1,5 +1,6 @@
 package com.project.mynoize.activities.signin.ui
 
+import android.R
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,7 +23,10 @@ fun CustomTextField(
     hintText: String,
     inputValue: String,
     numberOfLines: Int = 1,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    isError: Boolean,
+    errorMessage: String = ""
+
 ) {
     MaterialTheme(
         colorScheme = MaterialTheme.colorScheme.copy(background = Color.White)
@@ -37,8 +41,17 @@ fun CustomTextField(
                 placeholder = { Text(text = hintText) },
                 maxLines = numberOfLines,
                 onValueChange = onValueChange,
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None)
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None),
+                //isError = isError
             )
+
+            if(isError){
+                Spacer(modifier = Modifier.height(5.dp))
+                Text(
+                    text = errorMessage,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
             Spacer(modifier = Modifier.height(20.dp))
         }
     }

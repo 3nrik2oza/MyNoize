@@ -2,4 +2,19 @@
     <string name="app_name">MyNoize</string>
     <string name="title_activity_sign_in">SignInActivity</string>
     <string name="web_client_id">555096211894-1on33g91uhbe2oqlo5s5bs0kes7hdlqj.apps.googleusercontent.com</string>
+
+    <string name="error_song_name">Please enter song name</string>
+    <string name="error_select_artist">Please select artist</string>
+    <string name="error_select_album">Please select album</string>
+    <string name="error_select_song">Please select song file</string>
+
+    <string name="song_added_successfully">Song added successfully</string>
+
+    <string name="error_select_image">Please select image</string>
+    <string name="error_enter_album_name">Please enter album name </string>
+
+
+
+    <string name="error_server">Something went wrong. Please try again</string>
+
 </resources>

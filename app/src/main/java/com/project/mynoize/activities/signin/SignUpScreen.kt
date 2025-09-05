@@ -87,7 +87,9 @@ fun SignUpScreen(navController: NavController){
                     vm.username,
                     onValueChange = {
                         vm.onEvent(SignUpEvent.OnUsernameChange(it))
-                    }
+                    },
+                    isError = false,
+                    errorMessage = "Enter your username"
                 )
 
                 CustomTextField(
@@ -96,7 +98,9 @@ fun SignUpScreen(navController: NavController){
                     vm.email,
                     onValueChange = {
                         vm.onEvent(SignUpEvent.OnEmailChange(it))
-                    }
+                    },
+                    isError = false,
+                    errorMessage = "Enter your email"
                 )
 
                 CustomPasswordTextField(
@@ -105,7 +109,9 @@ fun SignUpScreen(navController: NavController){
                     vm.password,
                     onValueChange = {
                         vm.onEvent(SignUpEvent.OnPasswordChange(it))
-                    }
+                    },
+                    isError = false,
+                    errorMessage = "Enter your password"
                 )
 
                 CustomPasswordTextField(
@@ -114,7 +120,9 @@ fun SignUpScreen(navController: NavController){
                     vm.repeatedPassword,
                     onValueChange = {
                         vm.onEvent(SignUpEvent.OnRepeatedPasswordChange(it))
-                    }
+                    },
+                    isError = false,
+                    errorMessage = "Please repeat your password"
                 )
 
                 CustomButton(

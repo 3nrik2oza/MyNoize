@@ -12,8 +12,8 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import com.project.mynoize.R
-import com.project.mynoize.data.SignInResult
-import com.project.mynoize.data.UserData
+import com.project.mynoize.core.data.SignInResult
+import com.project.mynoize.core.data.UserData
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.cancellation.CancellationException
 

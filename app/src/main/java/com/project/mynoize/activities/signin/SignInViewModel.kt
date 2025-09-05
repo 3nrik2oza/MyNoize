@@ -2,7 +2,7 @@ package com.project.mynoize.activities.signin
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.project.mynoize.data.SignInResult
+import com.project.mynoize.core.data.SignInResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update

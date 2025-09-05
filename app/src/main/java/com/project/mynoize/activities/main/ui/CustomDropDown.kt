@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -13,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,7 +39,9 @@ fun CustomDropdown(
     selectedIndex: Int,
     onItemClick: (Int) -> Unit,
     canAdd: Boolean = false,
-    onAddClick: () -> Unit = {}
+    onAddClick: () -> Unit = {},
+    isError: Boolean,
+    errorMessage: String = ""
 ) {
     Column {
         Text(text = title)
@@ -49,6 +53,13 @@ fun CustomDropdown(
             canAdd = canAdd,
             onAddClick = onAddClick
         )
+        if(isError){
+            Spacer(modifier = Modifier.height(5.dp))
+            Text(
+                text = errorMessage,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
     }
 }
 
@@ -74,7 +85,7 @@ fun DropdownList(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClick = { if(!itemList.isEmpty()) {showDropdown = !showDropdown} }
+                onClick = { if(!itemList.isEmpty() || canAdd) {showDropdown = !showDropdown} }
             ),
         contentAlignment = Alignment.Center
     ) {

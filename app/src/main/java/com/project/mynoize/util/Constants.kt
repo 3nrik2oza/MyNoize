@@ -10,6 +10,4 @@ object Constants{
     val ARTIST_NAME = "name"
     val ARTIST_IMAGE = "image"
 
-    //Messages
-    val SONG_ADDED_SUCCESSFULLY = "Song added successfully"
 }

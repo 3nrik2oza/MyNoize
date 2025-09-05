@@ -33,7 +33,9 @@ fun CustomPasswordTextField(
     hintText: String,
     inputValue: String,
     numberOfLines: Int = 1,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    isError: Boolean,
+    errorMessage: String = ""
 ){
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
 
@@ -52,6 +54,7 @@ fun CustomPasswordTextField(
                 onValueChange = onValueChange,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                isError = isError,
                 trailingIcon = {
                     val image = if (passwordVisible)
                         Icons.Filled.VisibilityOff
@@ -65,7 +68,13 @@ fun CustomPasswordTextField(
                     }
                 }
             )
-
+            if(isError){
+                Spacer(modifier = Modifier.height(5.dp))
+                Text(
+                    text = errorMessage,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
             Spacer(modifier = Modifier.height(20.dp))
         }
     }
