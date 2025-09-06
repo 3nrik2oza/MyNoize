@@ -18,4 +18,18 @@ sealed interface InputError: Error {
         INCORRECT_EMAIL,
         ENTER_PASSWORD,
     }
+
+    enum class SignUp: InputError{
+        ENTER_USERNAME,
+        USERNAME_TOO_LONG,
+        ENTER_EMAIL,
+        INCORRECT_EMAIL,
+        ENTER_PASSWORD,
+        PASSWORD_TOO_SHORT,
+        PASSWORD_TOO_LONG,
+        PASSWORD_NO_NUMBERS,
+        PASSWORD_NO_LETTERS,
+        ENTER_REPEATED_PASSWORD,
+        PASSWORDS_DO_NOT_MATCH
+    }
 }

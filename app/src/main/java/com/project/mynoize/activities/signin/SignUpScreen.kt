@@ -20,39 +20,44 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
+import com.project.mynoize.activities.main.ui.theme.Red
 import com.project.mynoize.activities.signin.event.SignUpEvent
-import com.project.mynoize.activities.signin.ui.MessageAlertDialog
-import com.project.mynoize.activities.signin.ui.CustomButton
+import com.project.mynoize.core.presentation.components.MessageAlertDialog
+import com.project.mynoize.core.presentation.components.CustomButton
 import com.project.mynoize.activities.signin.ui.CustomPasswordTextField
-import com.project.mynoize.activities.signin.ui.CustomTextField
+import com.project.mynoize.core.presentation.components.CustomTextField
 import com.project.mynoize.activities.signin.ui.theme.MyNoizeTheme
+import com.project.mynoize.core.presentation.AlertDialogState
+import com.project.mynoize.core.presentation.asString
 
 
 @Composable
-fun SignUpScreen(navController: NavController){
-
-    val vm = viewModel<SignUpViewModel>()
+fun SignUpScreen(
+    alertDialogState: AlertDialogState,
+    state: SignUpState,
+    onEvent: (SignUpEvent) -> Unit
+){
 
     val localFocusManager = LocalFocusManager.current
 
 
-   if(vm.showAlertDialog){
+   if(alertDialogState.show){
        MessageAlertDialog(
            onDismiss = {
-               vm.onEvent(SignUpEvent.OnDismissAlertDialog)
-               if(vm.creatingAccount){navController.popBackStack()}
-                       },
-           message = vm.messageText
+               onEvent(SignUpEvent.OnDismissAlertDialog)
+               if(!alertDialogState.warning){
+                   onEvent(SignUpEvent.OnBackClick)
+               } },
+           message = alertDialogState.message?.asString() ?: "",
+           warning = alertDialogState.warning
        )
 
    }
 
     Column (
         modifier = Modifier.fillMaxSize()
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = 12.dp, vertical = 50.dp)
             .pointerInput(Unit){
                 detectTapGestures(onTap = {
                     localFocusManager.clearFocus()
@@ -60,74 +65,81 @@ fun SignUpScreen(navController: NavController){
             }
     ){
         Text(
-            "Sign Up",
-            Modifier.padding(top = 25.dp),
+            "SIGN UP",
+            Modifier.padding(top = 25.dp, start = 20.dp),
             fontWeight = FontWeight.Bold,
             fontSize = 30.sp
         )
 
         Spacer(Modifier.height(33.dp))
 
-        if(vm.creatingAccount){
-            Box(
+        if(state.creatingAccount){
+            Column(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+                horizontalAlignment = Alignment.CenterHorizontally,
             ){
-                Text("Creating account...")
-                CircularProgressIndicator()
+                Text(
+                    "Creating account...",
+                    fontFamily = NovaSquareFontFamily
+                )
+
+                CircularProgressIndicator(
+                    color = Red
+                )
             }
         }
         else {
             Column (
-                Modifier.fillMaxSize()
+                Modifier.fillMaxSize().padding(horizontal = 20.dp)
             ){
                 CustomTextField(
-                    "Username",
-                    "Enter your username",
-                    vm.username,
+                    title="Username",
+                    hintText = "Enter your username",
+                    inputValue = state.username,
                     onValueChange = {
-                        vm.onEvent(SignUpEvent.OnUsernameChange(it))
+                        onEvent(SignUpEvent.OnUsernameChange(it))
                     },
-                    isError = false,
-                    errorMessage = "Enter your username"
+                    isError = state.usernameError != null,
+                    errorMessage = state.usernameError?.asString() ?: ""
                 )
 
                 CustomTextField(
-                    "Email",
-                    "Enter your email",
-                    vm.email,
+                    title = "Email",
+                    hintText = "Enter your email",
+                    inputValue = state.email,
                     onValueChange = {
-                        vm.onEvent(SignUpEvent.OnEmailChange(it))
+                        onEvent(SignUpEvent.OnEmailChange(it))
                     },
-                    isError = false,
-                    errorMessage = "Enter your email"
+                    isError = state.emailError != null,
+                    errorMessage = state.emailError?.asString() ?: ""
                 )
 
                 CustomPasswordTextField(
-                    "Password",
-                    "Enter your password",
-                    vm.password,
+                    title = "Password",
+                    hintText = "Enter your password",
+                    inputValue = state.password,
                     onValueChange = {
-                        vm.onEvent(SignUpEvent.OnPasswordChange(it))
+                        onEvent(SignUpEvent.OnPasswordChange(it))
                     },
-                    isError = false,
-                    errorMessage = "Enter your password"
+                    isError = state.passwordError != null,
+                    errorMessage = state.passwordError?.asString() ?: ""
                 )
 
                 CustomPasswordTextField(
-                    "Confirm password",
-                    "Repeat your password",
-                    vm.repeatedPassword,
+                    title = "Confirm password",
+                    hintText = "Repeat your password",
+                    inputValue = state.repeatedPassword,
                     onValueChange = {
-                        vm.onEvent(SignUpEvent.OnRepeatedPasswordChange(it))
+                        onEvent(SignUpEvent.OnRepeatedPasswordChange(it))
                     },
-                    isError = false,
-                    errorMessage = "Please repeat your password"
+                    isError = state.repeatedPasswordError != null,
+                    errorMessage = state.repeatedPasswordError?.asString() ?: ""
                 )
 
                 CustomButton(
-                    text = "Sign Up",
-                    {vm.onEvent(SignUpEvent.OnSignUpClick)}
+                    modifier = Modifier,
+                    text = "SIGN UP",
+                    {onEvent(SignUpEvent.OnSignUpClick)}
                 )
 
                 Box(
@@ -136,10 +148,11 @@ fun SignUpScreen(navController: NavController){
 
                 ){
                     Text(
-                        "Don't have an account? Sign up",
+                        text = "You already have an account? Sign in",
                         modifier = Modifier.clickable{
-                            navController.popBackStack()
-                        }
+                            onEvent(SignUpEvent.OnBackClick)
+                        },
+                        fontFamily = NovaSquareFontFamily
                     )
                 }
             }
@@ -151,8 +164,12 @@ fun SignUpScreen(navController: NavController){
 @Composable
 fun SignUpPreview() {
     MyNoizeTheme {
-        val navController = rememberNavController()
-        SignUpScreen(navController)
+
+        SignUpScreen(
+            alertDialogState = AlertDialogState(),
+            state = SignUpState(),
+            onEvent = {}
+        )
     }
 }
 

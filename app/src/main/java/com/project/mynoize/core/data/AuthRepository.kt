@@ -20,6 +20,10 @@ class AuthRepository {
         return auth.currentUser!!.uid
     }
 
+    fun signOut() {
+        auth.signOut()
+    }
+
     suspend fun signInWithEmailAndPassword(email: String, password: String): EmptyResult<FbError.Auth>{
         return try {
             auth.signInWithEmailAndPassword(email, password).await()
@@ -46,4 +50,32 @@ class AuthRepository {
 
     }
 
+    suspend fun createUserWithEmailAndPassword(username: String, email: String, password: String): EmptyResult<FbError.Auth>{
+        return try {
+            auth.createUserWithEmailAndPassword(email, password).await()
+
+            val user = auth.currentUser
+            val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                .setDisplayName(username)
+                .build()
+            user!!.updateProfile(profileUpdates)
+
+            signOut()
+
+            Result.Success(Unit)
+        }catch (e: FirebaseAuthException) {
+            Log.d("AuthError", e.errorCode)
+            when (e.errorCode) {
+                "ERROR_INVALID_EMAIL" -> Result.Error(FbError.Auth.INVALID_EMAIL)
+                "ERROR_EMAIL_ALREADY_IN_USE" -> Result.Error(FbError.Auth.EMAIL_ALREADY_IN_USE)
+                "ERROR_NETWORK_REQUEST_FAILED" -> Result.Error(FbError.Auth.ERROR_NETWORK_REQUEST_FAILED)
+                "ERROR_TOO_MANY_REQUESTS" -> Result.Error(FbError.Auth.ERROR_TOO_MANY_REQUESTS)
+                else -> Result.Error(FbError.Auth.UNKNOWN)
+            }
+
+        }catch (e: Exception){
+            Log.d("AuthError", e.message.toString())
+        Result.Error(FbError.Auth.UNKNOWN)
+        }
+    }
 }

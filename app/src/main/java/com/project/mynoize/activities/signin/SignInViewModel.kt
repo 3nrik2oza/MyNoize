@@ -10,7 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
-import com.project.mynoize.activities.main.state.AlertDialogState
+import com.project.mynoize.core.presentation.AlertDialogState
 import com.project.mynoize.activities.signin.domain.SignInValidation
 import com.project.mynoize.activities.signin.event.SignInEvent
 import com.project.mynoize.core.data.AuthRepository
@@ -20,6 +20,8 @@ import com.project.mynoize.core.domain.InputError
 import com.project.mynoize.core.domain.onError
 import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.core.presentation.toErrorMessage
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 class SignInViewModel(
@@ -42,6 +44,9 @@ class SignInViewModel(
         ) }
     }
 
+    private val signInEventChannel = Channel<Boolean>()
+    val validSignInEvent = signInEventChannel.receiveAsFlow()
+
 
     fun onEvent(event: SignInEvent) {
         when (event) {
@@ -53,15 +58,16 @@ class SignInViewModel(
                 _state.update { it.copy(password = event.password) }
             }
             is SignInEvent.OnSignInClick -> {
-                signIn(event.onSuccess)
+                signIn()
             }
             is SignInEvent.OnDismissAlertDialog -> {
                 _alertDialogState.update { it.copy(show = false) }
             }
+            else -> Unit
         }
     }
 
-    fun signIn(onSuccess: () -> Unit){
+    fun signIn(){
         _alertDialogState.update { it.copy(show = false) }
         _state.update { it.copy(loading = true, email = it.email.trim(),
             password = it.password.trim(), emailError = null, passwordError = null) }
@@ -95,10 +101,12 @@ class SignInViewModel(
                     _alertDialogState.update {
                         it.copy(show = true, message = error.toErrorMessage())
                     }
+                    return@launch
                 }
                 .onSuccess {
-                    onSuccess()
+
                 }
+            signInEventChannel.send(true)
         }
 
 

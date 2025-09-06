@@ -9,13 +9,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,46 +21,42 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.project.mynoize.activities.main.state.AlertDialogState
+import com.project.mynoize.core.presentation.AlertDialogState
+import com.project.mynoize.activities.main.ui.theme.LatoFontFamily
+import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
 import com.project.mynoize.activities.signin.event.SignInEvent
-import com.project.mynoize.activities.signin.ui.MessageAlertDialog
-import com.project.mynoize.activities.signin.ui.CustomButton
+import com.project.mynoize.core.presentation.components.MessageAlertDialog
+import com.project.mynoize.core.presentation.components.CustomButton
 import com.project.mynoize.activities.signin.ui.CustomPasswordTextField
-import com.project.mynoize.activities.signin.ui.CustomTextField
+import com.project.mynoize.core.presentation.components.CustomTextField
 import com.project.mynoize.activities.signin.ui.theme.MyNoizeTheme
 import com.project.mynoize.core.presentation.asString
 
 @Composable
 fun SignInScreen(
     navController: NavController,
-    onSignInWithGoogleClick: () -> Unit,
-    onSuccessfulSignInWithEmail: () -> Unit,
-    //vm: SignInViewModel
     alertDialogState: AlertDialogState,
     state: SignInState,
     onEvent: (SignInEvent) -> Unit
     ) {
 
     val localFocusManager = LocalFocusManager.current
-    //val alertDialogState by vm.alertDialogState.collectAsState()
-    //val state by vm.state.collectAsStateWithLifecycle()
 
     if(alertDialogState.show){
         MessageAlertDialog(
             onDismiss = {
                 onEvent(SignInEvent.OnDismissAlertDialog)
             },
-            message = alertDialogState.message?.asString() ?: ""
+            message = alertDialogState.message?.asString() ?: "",
+            warning = alertDialogState.warning
         )
     }
 
     Column(
         Modifier.fillMaxSize()
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = 12.dp, vertical = 50.dp)
             .pointerInput(Unit){
                 detectTapGestures(onTap = {
                     localFocusManager.clearFocus()
@@ -74,10 +66,11 @@ fun SignInScreen(
 
 
         Text(
-            "Sign In",
-            Modifier.padding(top = 25.dp),
+            text="SIGN IN",
+            Modifier.padding(top = 25.dp, start = 20.dp),
             fontWeight = FontWeight.Bold,
-            fontSize = 33.sp
+            fontSize = 33.sp,
+            fontFamily = LatoFontFamily
         )
 
         Spacer(Modifier.height(31.dp))
@@ -91,13 +84,13 @@ fun SignInScreen(
             }
         }else{
             Column(
-                Modifier.fillMaxWidth()
+                Modifier.fillMaxWidth().padding(horizontal = 20.dp)
             ){
 
                 CustomTextField(
-                    "Email",
-                    "Your email",
-                    state.email,
+                    title = "EMAIL",
+                    hintText = "Your email",
+                    inputValue =  state.email,
                     onValueChange = {onEvent(SignInEvent.OnEmailChange(it))},
                     isError = state.emailError != null,
                     errorMessage = state.emailError?.asString() ?: ""
@@ -105,18 +98,19 @@ fun SignInScreen(
 
 
                 CustomPasswordTextField(
-                    "Password",
-                    "Your password",
-                    state.password,
+                    title = "PASSWORD",
+                    hintText = "Your password",
+                    inputValue = state.password,
                     onValueChange = {onEvent(SignInEvent.OnPasswordChange(it))},
                     isError = state.passwordError != null,
                     errorMessage = state.passwordError?.asString() ?: ""
                 )
 
                 CustomButton (
-                    text = "Sign In",
+                    modifier = Modifier,
+                    text = "SIGN IN",
                     {
-                        onEvent(SignInEvent.OnSignInClick(onSuccessfulSignInWithEmail))
+                        onEvent(SignInEvent.OnSignInClick)
                     }
                 )
 
@@ -125,10 +119,11 @@ fun SignInScreen(
                     contentAlignment = Alignment.Center
                 ){
                     Text(
-                        "Don't have an account? Sign up",
+                        text="Don't have an account? Sign up",
                         modifier = Modifier.clickable{
                             navController.navigate(ScreenSignUp)
-                        }
+                        },
+                        fontFamily = NovaSquareFontFamily,
                     )
                 }
 
@@ -138,17 +133,13 @@ fun SignInScreen(
                     Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ){
-                    OutlinedButton(
-                        onClick = {onSignInWithGoogleClick()},
-                        modifier = Modifier.size(80.dp)
-                    ) {
-                        Text(
-                            "G",
-                            fontSize = 30.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                    }
+                    Text(
+                        text="G",
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Black,
+                        modifier = Modifier.clickable{ onEvent(SignInEvent.OnSignInWithGoogleClick) }
+                    )
                 }
 
             }
@@ -161,11 +152,8 @@ fun SignInScreen(
 @Composable
 fun SignInPreview() {
     MyNoizeTheme {
-        val vm = viewModel<SignInViewModel>()
         val navController = rememberNavController()
         SignInScreen(navController,
-            {},
-            {},
             alertDialogState = AlertDialogState(),
             state = SignInState(),
             onEvent = {}

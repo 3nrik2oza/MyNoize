@@ -4,13 +4,24 @@
     <string name="web_client_id">555096211894-1on33g91uhbe2oqlo5s5bs0kes7hdlqj.apps.googleusercontent.com</string>
 
     <string name="error_enter_email">Please enter your email address</string>
-    <string name="error_incorrect_email">The email address is not valid. Please check and try again.</string>
+    <string name="error_incorrect_email">The email address is not valid.</string>
     <string name="error_enter_password">Please enter your password</string>
     <string name="error_incorrect_password">Password is invalid</string>
 
+    <string name="successfully_account_created">Account has been created successfully</string>
+    <string name="error_enter_username">Please enter your username</string>
+    <string name="error_username_too_long">Username is too long</string>
+    <string name="error_password_too_short">Password is too short</string>
+    <string name="error_password_too_long">Password is too long</string>
+    <string name="error_password_no_numbers">Password must contain at least one number</string>
+    <string name="error_password_no_letters">Password must contain at least one letter</string>
+    <string name="error_enter_repeated_password">Please repeat your password</string>
+    <string name="error_passwords_do_not_match">Passwords do not match</string>
+    <string name="error_email_already_in_use">Email is already in use</string>"
+
     <string name="error_invalid_credential">Invalid email or password or given account does not exist.</string>
     <string name="error_user_disabled">This account has been disabled.</string>
-    <string name="error_too_many_requests">No account found with this email. Please sign up first.</string>
+    <string name="error_too_many_requests">Too many requests. Try again later</string>
     <string name="error_network_request_failed">Network error. Please check your connection and try again.</string>
     <string name="error_unknown">Something went wrong. Please try again.</string>
 

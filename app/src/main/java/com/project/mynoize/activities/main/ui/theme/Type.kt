@@ -34,7 +34,7 @@ val Typography = Typography(
     )
     */
 )
-val latoFontFamily = FontFamily(
+val LatoFontFamily = FontFamily(
     Font(R.font.lato_black, FontWeight.Black),
     Font(R.font.lato_blackitalic, FontWeight.Black),
     Font(R.font.lato_bold, FontWeight.Bold),
@@ -47,7 +47,7 @@ val latoFontFamily = FontFamily(
     Font(R.font.lato_thinitalic, FontWeight.Thin)
 )
 
-val novaSquareFontFamily = FontFamily(
+val NovaSquareFontFamily = FontFamily(
     Font(R.font.novasquare_regular, FontWeight.Normal)
 
 )

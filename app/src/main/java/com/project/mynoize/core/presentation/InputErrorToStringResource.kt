@@ -30,3 +30,20 @@ fun InputError.SingIn.toErrorMessage(): UiText{
     }
     return UiText.StringResource(stringRes)
 }
+
+fun InputError.SignUp.toErrorMessage(): UiText{
+    val stringRes = when(this){
+        InputError.SignUp.ENTER_USERNAME -> R.string.error_enter_username
+        InputError.SignUp.USERNAME_TOO_LONG -> R.string.error_username_too_long
+        InputError.SignUp.ENTER_EMAIL -> R.string.error_enter_email
+        InputError.SignUp.INCORRECT_EMAIL -> R.string.error_incorrect_email
+        InputError.SignUp.ENTER_PASSWORD -> R.string.error_enter_password
+        InputError.SignUp.PASSWORD_TOO_SHORT -> R.string.error_password_too_short
+        InputError.SignUp.PASSWORD_TOO_LONG -> R.string.error_password_too_long
+        InputError.SignUp.PASSWORD_NO_NUMBERS -> R.string.error_password_no_numbers
+        InputError.SignUp.PASSWORD_NO_LETTERS -> R.string.error_password_no_letters
+        InputError.SignUp.ENTER_REPEATED_PASSWORD -> R.string.error_enter_repeated_password
+        InputError.SignUp.PASSWORDS_DO_NOT_MATCH -> R.string.error_passwords_do_not_match
+    }
+    return UiText.StringResource(stringRes)
+}

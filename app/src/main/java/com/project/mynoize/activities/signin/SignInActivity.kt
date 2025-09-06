@@ -19,18 +19,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.project.mynoize.activities.signin.ui.theme.MyNoizeTheme
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.serialization.Serializable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.auth.api.identity.Identity
 import com.project.mynoize.activities.main.MainActivity
+import com.project.mynoize.activities.signin.event.SignInEvent
+import com.project.mynoize.activities.signin.event.SignUpEvent
 import com.project.mynoize.managers.GoogleAuthUiClient
-import kotlinx.coroutines.flow.compose
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -114,37 +115,63 @@ class SignInActivity : ComponentActivity() {
                             }
                         }
 
+                        LaunchedEffect(key1 = LocalContext.current) {
+                            viewModel.validSignInEvent.collect {
+                                if(it){
+                                    val intent = Intent(applicationContext.applicationContext, MainActivity::class.java)
+                                    startActivity(intent)
+                                    finish()
+                                }
+                            }
+                        }
+
 
                         SignInScreen(
                             navController,
-                            onSignInWithGoogleClick = {
-                                lifecycleScope.launch {
-                                    val signInIntentSender = googleAuthUiClient.signIn()
-                                    if (signInIntentSender == null) {
-                                        Toast.makeText(applicationContext, "Failed to get sign-in intent", Toast.LENGTH_SHORT).show()
-                                        return@launch
-                                    }
-                                    launcher.launch(
-                                        IntentSenderRequest.Builder(
-                                            signInIntentSender
-                                        ).build()
-                                    )
-                                }
-                            },
-                            onSuccessfulSignInWithEmail = {
-                                val intent = Intent(applicationContext.applicationContext, MainActivity::class.java)
-                                startActivity(intent)
-                                finish()
-                            },
                             alertDialogState = viewModel.alertDialogState.collectAsStateWithLifecycle().value,
                             state = viewModel.state.collectAsStateWithLifecycle().value,
-                            onEvent = {
-                                viewModel.onEvent(it)
+                            onEvent = { event->
+                                when(event){
+                                    is SignInEvent.OnSignInWithGoogleClick -> {
+                                        lifecycleScope.launch {
+                                            val signInIntentSender = googleAuthUiClient.signIn()
+                                            if (signInIntentSender == null) {
+                                                Toast.makeText(applicationContext, "Failed to get sign-in intent", Toast.LENGTH_SHORT).show()
+                                                return@launch
+                                            }
+                                            launcher.launch(
+                                                IntentSenderRequest.Builder(
+                                                    signInIntentSender
+                                                ).build()
+                                            )
+                                        }
+                                    }
+                                    is SignInEvent.OnSuccessFulSignInWithEmail ->{
+                                        val intent = Intent(applicationContext.applicationContext, MainActivity::class.java)
+                                        startActivity(intent)
+                                        finish()
+                                    }
+                                    else -> Unit
+                                }
+                                viewModel.onEvent(event)
                             }
                         )
                     }
                     composable<ScreenSignUp>{
-                        SignUpScreen(navController)
+                        val viewModel = koinViewModel<SignUpViewModel>()
+                        SignUpScreen(
+                            alertDialogState = viewModel.alertDialogState.collectAsStateWithLifecycle().value,
+                            state = viewModel.state.collectAsStateWithLifecycle().value,
+                            onEvent = { event->
+                                when(event){
+                                    is SignUpEvent.OnBackClick-> {
+                                        navController.popBackStack()
+                                    }
+                                    else -> Unit
+                                }
+                                viewModel.onEvent(event)
+                            }
+                        )
                     }
                 }
             }

@@ -35,10 +35,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.project.mynoize.activities.main.presentation.create_song.CreateAlbumEvent
-import com.project.mynoize.activities.main.state.AlertDialogState
-import com.project.mynoize.activities.signin.ui.CustomButton
-import com.project.mynoize.activities.signin.ui.CustomTextField
-import com.project.mynoize.activities.signin.ui.MessageAlertDialog
+import com.project.mynoize.core.presentation.AlertDialogState
+import com.project.mynoize.core.presentation.components.CustomButton
+import com.project.mynoize.core.presentation.components.CustomTextField
+import com.project.mynoize.core.presentation.components.MessageAlertDialog
 import com.project.mynoize.core.domain.InputError
 import com.project.mynoize.core.presentation.asString
 
@@ -66,7 +66,8 @@ fun CreateAlbumAlertDialog(
 
                 onEvent(CreateAlbumEvent.OnDismissMessageDialog)
             },
-            message = createAlbumState.message?.asString() ?: ""
+            message = createAlbumState.message?.asString() ?: "",
+            warning = createAlbumState.warning
         )
     }
 
@@ -120,7 +121,7 @@ fun CreateAlbumAlertDialog(
                     CustomTextField(
                         title = "Album name",
                         hintText = "Enter album name...",
-                        albumName,
+                        inputValue = albumName,
                         onValueChange = {
                             albumName = it
                         },

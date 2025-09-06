@@ -21,14 +21,20 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
 import com.project.mynoize.activities.signin.ui.theme.AppTextInputColors
+import com.project.mynoize.activities.signin.ui.theme.ModifiedTextInputColors
+import com.project.mynoize.core.presentation.components.Surrounding
 
 @Composable
 fun CustomPasswordTextField(
+    modifier: Modifier = Modifier,
     title: String,
     hintText: String,
     inputValue: String,
@@ -39,6 +45,38 @@ fun CustomPasswordTextField(
 ){
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
 
+    Surrounding(
+        modifier = modifier.fillMaxWidth(),
+        title = title,
+        isError = isError,
+        errorMessage = errorMessage
+    ){
+        OutlinedTextField(
+            modifier = Modifier.fillMaxWidth(),
+            colors = ModifiedTextInputColors,
+            value = inputValue,
+            shape = RectangleShape,
+            placeholder = { Text(text=hintText, fontFamily = NovaSquareFontFamily, color = Color.LightGray) },
+            maxLines = numberOfLines,
+            onValueChange = onValueChange,
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            trailingIcon = {
+                val image = if (passwordVisible)
+                    Icons.Filled.VisibilityOff
+                else Icons.Filled.Visibility
+
+                // Please provide localized description for accessibility services
+                val description = if (passwordVisible) "Hide password" else "Show password"
+
+                IconButton(onClick = {passwordVisible = !passwordVisible}){
+                    Icon(imageVector  = image, description)
+                }
+            },
+            textStyle = TextStyle.Default.copy(fontFamily = NovaSquareFontFamily)
+        )
+    }
+/*
     MaterialTheme(
         colorScheme = MaterialTheme.colorScheme.copy(background = Color.White)
     ) {
@@ -77,7 +115,7 @@ fun CustomPasswordTextField(
             }
             Spacer(modifier = Modifier.height(20.dp))
         }
-    }
+    }*/
 
 
 }

@@ -25,11 +25,9 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistEvent
-import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistViewModel
-import com.project.mynoize.activities.signin.ui.MessageAlertDialog
-import com.project.mynoize.activities.signin.ui.CustomButton
-import com.project.mynoize.activities.signin.ui.CustomTextField
+import com.project.mynoize.core.presentation.components.MessageAlertDialog
+import com.project.mynoize.core.presentation.components.CustomButton
+import com.project.mynoize.core.presentation.components.CustomTextField
 
 @Composable
 fun CreateArtistScreen(
@@ -56,7 +54,8 @@ fun CreateArtistScreen(
                 }
 
             },
-            message = vm.messageText
+            message = vm.messageText,
+            warning = true //TODO: change this
         )
     }
 
@@ -95,7 +94,7 @@ fun CreateArtistScreen(
         CustomTextField(
             title = "Artist name",
             hintText = "Enter artist name...",
-            vm.artistName,
+            inputValue = vm.artistName,
             onValueChange = {
                 vm.onEvent(CreateArtistEvent.OnArtistNameChange(it))
             },

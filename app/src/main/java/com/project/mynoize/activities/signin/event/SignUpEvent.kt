@@ -7,5 +7,6 @@ sealed class SignUpEvent {
     data class OnRepeatedPasswordChange(val repeatedPassword: String): SignUpEvent()
     object OnSignUpClick: SignUpEvent()
     object OnDismissAlertDialog: SignUpEvent()
+    object OnBackClick: SignUpEvent()
 
 }

@@ -1,109 +1,139 @@
 package com.project.mynoize.activities.signin
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+
 import androidx.lifecycle.ViewModel
-import com.google.firebase.auth.FirebaseAuth
+import androidx.lifecycle.viewModelScope
+import com.project.mynoize.R
+import com.project.mynoize.core.presentation.AlertDialogState
+import com.project.mynoize.activities.signin.domain.SignUpValidation
 import com.project.mynoize.activities.signin.event.SignUpEvent
-import kotlinx.coroutines.tasks.await
+import com.project.mynoize.core.data.AuthRepository
+import com.project.mynoize.core.domain.InputError
+import com.project.mynoize.core.domain.onError
+import com.project.mynoize.core.domain.onSuccess
+import com.project.mynoize.core.presentation.UiText
+import com.project.mynoize.core.presentation.toErrorMessage
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class SignUpViewModel (
-
+    val validation: SignUpValidation,
+    val authRepository: AuthRepository
 ): ViewModel(){
 
-    val auth = FirebaseAuth.getInstance()
 
-    var creatingAccount by mutableStateOf(false)
 
-    var showAlertDialog by mutableStateOf(false)
-        private set
-    var messageText by mutableStateOf("")
-        private set
+    private val _state = MutableStateFlow(SignUpState())
+    val state = _state.asStateFlow()
 
-    var username by mutableStateOf("")
-        private set
-
-    var email by mutableStateOf("")
-        private set
-
-    var password by mutableStateOf("")
-        private set
-
-    var repeatedPassword by mutableStateOf("")
-        private set
-
+    private val _alertDialogState = MutableStateFlow(AlertDialogState())
+    val alertDialogState = _alertDialogState.asStateFlow()
 
     fun onEvent(event: SignUpEvent){
         when(event){
             is SignUpEvent.OnUsernameChange -> {
-                username = event.username
+                if(event.username.length < 30){
+                    _state.update { it.copy(username = event.username) }
+                }
             }
             is SignUpEvent.OnEmailChange -> {
-                email = event.email.lowercase()
+                _state.update { it.copy(email = event.email.lowercase()) }
             }
             is SignUpEvent.OnPasswordChange -> {
-                password = event.password
+                _state.update { it.copy(password = event.password) }
             }
             is SignUpEvent.OnRepeatedPasswordChange -> {
-                repeatedPassword = event.repeatedPassword
+                _state.update { it.copy(repeatedPassword = event.repeatedPassword) }
             }
             is SignUpEvent.OnSignUpClick -> {
                 createAccount()
             }
             is SignUpEvent.OnDismissAlertDialog -> {
-                showAlertDialog = false
+                _alertDialogState.update { it.copy(show = false) }
             }
+            is SignUpEvent.OnBackClick -> Unit
         }
     }
 
     fun createAccount(){
-        username = username.trim()
-        email = email.trim()
-        password = password.trim()
-        repeatedPassword = repeatedPassword.trim()
-        if(!checkInput().isEmpty()){
-            messageText = checkInput()
-            showAlertDialog = true
+        _state.update {
+            it.copy(
+                username = it.username.trim(),
+                usernameError = null,
+                email = it.email.trim(),
+                emailError = null,
+                password = it.password.trim(),
+                passwordError = null,
+                repeatedPassword = it.repeatedPassword.trim(),
+                repeatedPasswordError = null
+            )
+        }
+
+        validation.execute(
+            username = state.value.username,
+            email = state.value.email,
+            password = state.value.password,
+            repeatedPassword = state.value.repeatedPassword
+        ).onError { error ->
+
+            when(error){
+                InputError.SignUp.ENTER_USERNAME ->{
+                    _state.update { it.copy(usernameError = error.toErrorMessage()) }
+                }
+                InputError.SignUp.USERNAME_TOO_LONG -> {
+                    _state.update { it.copy(usernameError = error.toErrorMessage()) }
+                }
+                InputError.SignUp.ENTER_EMAIL -> {
+                    _state.update { it.copy(emailError = error.toErrorMessage()) }
+                }
+                InputError.SignUp.INCORRECT_EMAIL -> {
+                    _state.update { it.copy(emailError = error.toErrorMessage()) }
+                }
+                InputError.SignUp.ENTER_PASSWORD -> {
+                    _state.update { it.copy(passwordError = error.toErrorMessage()) }
+                }
+                InputError.SignUp.PASSWORD_TOO_SHORT -> {
+                    _state.update { it.copy(passwordError = error.toErrorMessage()) }
+                }
+                InputError.SignUp.PASSWORD_TOO_LONG -> {
+                    _state.update { it.copy(passwordError = error.toErrorMessage()) }
+                }
+                InputError.SignUp.PASSWORD_NO_NUMBERS -> {
+                    _state.update { it.copy(passwordError = error.toErrorMessage()) }
+                }
+                InputError.SignUp.PASSWORD_NO_LETTERS -> {
+                    _state.update { it.copy(passwordError = error.toErrorMessage()) }
+                }
+                InputError.SignUp.ENTER_REPEATED_PASSWORD -> {
+                    _state.update { it.copy(repeatedPasswordError = error.toErrorMessage()) }
+                }
+                InputError.SignUp.PASSWORDS_DO_NOT_MATCH -> {
+                    _state.update { it.copy(repeatedPasswordError = error.toErrorMessage()) }
+                }
+
+            }
+            _alertDialogState.update {
+                it.copy(show = true, message = error.toErrorMessage(), warning = true)
+            }
             return
         }
-        creatingAccount = true
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnSuccessListener {
 
-                val user = auth.currentUser
-                val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
-                    .setDisplayName(username)
-                    .build()
-                user!!.updateProfile(profileUpdates)
+        _state.update { it.copy(creatingAccount = true) }
 
-                messageText = "Account has been created successfully"
-                showAlertDialog = true
-                auth.signOut()
-
-            }
-            .addOnFailureListener {
-                creatingAccount = false
-                messageText = "Something went wrong"
-                showAlertDialog = true
-            }
+        viewModelScope.launch {
+            authRepository.createUserWithEmailAndPassword(state.value.username, state.value.email, state.value.password)
+                .onError { error ->
+                    _state.update { it.copy(creatingAccount = false) }
+                    _alertDialogState.update { it.copy(show = true, message = error.toErrorMessage(), warning = true) }
+                }
+                .onSuccess {
+                    _alertDialogState.update { it.copy(show = true, message = UiText.StringResource(R.string.successfully_account_created), warning = false) }
+                }
+        }
 
     }
-
-
-    fun checkInput(): String{
-        if(username.isEmpty()) return "Account has been created successfully"
-        if(username.length > 30) return "Username is too long"
-
-        if(email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) return "Invalid email"
-
-        if(password.isEmpty() || password.length < 8 || password.length > 30) return "Invalid password"
-
-        if(repeatedPassword != password) return "Passwords don't match"
-
-        return ""
-    }
-
 
 
 }

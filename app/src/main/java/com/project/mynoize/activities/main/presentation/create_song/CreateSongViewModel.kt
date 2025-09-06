@@ -11,7 +11,7 @@ import com.project.mynoize.activities.main.repository.AlbumRepository
 import com.project.mynoize.activities.main.repository.ArtistRepository
 import com.project.mynoize.activities.main.repository.StorageRepository
 import com.project.mynoize.activities.main.repository.SongRepository
-import com.project.mynoize.activities.main.state.AlertDialogState
+import com.project.mynoize.core.presentation.AlertDialogState
 import com.project.mynoize.activities.main.state.ListOfState
 import com.project.mynoize.core.data.Album
 import com.project.mynoize.core.data.Artist
@@ -215,14 +215,16 @@ class CreateSongViewModel(
                 alertDialogState.update {
                     it.copy(
                         show = true,
-                        message = UiText.StringResource(R.string.song_added_successfully))
+                        message = UiText.StringResource(R.string.song_added_successfully),
+                        warning = false)
                 }
 
             }.onError { error ->
                 alertDialogState.update {it.copy(
                     show = true,
                     loading = false,
-                    message = error.toErrorMessage()
+                    message = error.toErrorMessage(),
+                    warning = true
                 ) }
                 storageRepository.removeFromStorage(fileName)
             }

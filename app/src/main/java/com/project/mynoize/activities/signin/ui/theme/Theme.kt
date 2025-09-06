@@ -10,6 +10,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
@@ -39,6 +40,30 @@ val AppTextInputColors: TextFieldColors
     get() = OutlinedTextFieldDefaults.colors(
         focusedContainerColor = MaterialTheme.colorScheme.background,
         unfocusedContainerColor = MaterialTheme.colorScheme.background,
+        cursorColor = MaterialTheme.colorScheme.onBackground,
+        focusedLabelColor = MaterialTheme.colorScheme.onBackground,
+        unfocusedLabelColor = MaterialTheme.colorScheme.onBackground,
+        focusedBorderColor = Color1,
+        unfocusedBorderColor = MaterialTheme.colorScheme.onBackground,
+        focusedLeadingIconColor = MaterialTheme.colorScheme.onBackground,
+        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onBackground,
+        focusedTrailingIconColor = MaterialTheme.colorScheme.onBackground,
+        unfocusedTrailingIconColor = MaterialTheme.colorScheme.onBackground,
+        errorBorderColor = MaterialTheme.colorScheme.onBackground,
+        errorTextColor = MaterialTheme.colorScheme.onBackground,
+        errorLeadingIconColor = MaterialTheme.colorScheme.onBackground,
+        errorTrailingIconColor = MaterialTheme.colorScheme.onBackground,
+        errorLabelColor = MaterialTheme.colorScheme.onBackground,
+        errorSupportingTextColor = MaterialTheme.colorScheme.error,
+        focusedSupportingTextColor = MaterialTheme.colorScheme.primary,
+        unfocusedSupportingTextColor = MaterialTheme.colorScheme.onSecondaryContainer
+    )
+
+val ModifiedTextInputColors: TextFieldColors
+    @Composable
+    get() = OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = Color.Transparent,
+        unfocusedContainerColor = Color.Transparent,
         cursorColor = MaterialTheme.colorScheme.onBackground,
         focusedLabelColor = MaterialTheme.colorScheme.onBackground,
         unfocusedLabelColor = MaterialTheme.colorScheme.onBackground,

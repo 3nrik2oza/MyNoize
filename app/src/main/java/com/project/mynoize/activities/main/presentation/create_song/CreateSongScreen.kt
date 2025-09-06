@@ -27,9 +27,9 @@ import com.project.mynoize.R
 import com.project.mynoize.activities.main.presentation.create_song.components.CreateAlbumAlertDialog
 import com.project.mynoize.activities.main.ui.CustomDropdown
 import com.project.mynoize.activities.main.ui.CustomSelectFileButton
-import com.project.mynoize.activities.signin.ui.CustomButton
-import com.project.mynoize.activities.signin.ui.CustomTextField
-import com.project.mynoize.activities.signin.ui.MessageAlertDialog
+import com.project.mynoize.core.presentation.components.CustomButton
+import com.project.mynoize.core.presentation.components.CustomTextField
+import com.project.mynoize.core.presentation.components.MessageAlertDialog
 import com.project.mynoize.core.presentation.UiText
 import com.project.mynoize.core.presentation.asString
 
@@ -75,7 +75,8 @@ fun CreateSongScreen(
                 }
 
             },
-            message = alertDialogState.message?.asString() ?: ""
+            message = alertDialogState.message?.asString() ?: "",
+            warning = alertDialogState.warning
         )
     }
 
@@ -97,9 +98,9 @@ fun CreateSongScreen(
         )
 
         CustomTextField(
-            "Song name",
-            "Your song name",
-            createSongState.songName,
+            title = "Song name",
+            hintText = "Your song name",
+            inputValue = createSongState.songName,
             onValueChange = {
                 if(!alertDialogState.loading){
                     vm.onEvent(CreateSongEvent.OnSongNameChange(it))
