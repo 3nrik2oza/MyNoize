@@ -21,3 +21,12 @@ fun InputError.CreateAlbum.toErrorMessage(): UiText{
     }
     return UiText.StringResource(stringRes)
 }
+
+fun InputError.SingIn.toErrorMessage(): UiText{
+    val stringRes = when(this){
+        InputError.SingIn.ENTER_EMAIL -> R.string.error_enter_email
+        InputError.SingIn.INCORRECT_EMAIL -> R.string.error_incorrect_email
+        InputError.SingIn.ENTER_PASSWORD -> R.string.error_enter_password
+    }
+    return UiText.StringResource(stringRes)
+}

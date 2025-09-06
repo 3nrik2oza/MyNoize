@@ -8,21 +8,29 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.project.mynoize.activities.main.state.AlertDialogState
+import com.project.mynoize.activities.signin.domain.SignInValidation
 import com.project.mynoize.activities.signin.event.SignInEvent
+import com.project.mynoize.core.data.AuthRepository
+import com.project.mynoize.core.domain.DataError
+import com.project.mynoize.core.domain.FbError
+import com.project.mynoize.core.domain.InputError
+import com.project.mynoize.core.domain.onError
+import com.project.mynoize.core.domain.onSuccess
+import com.project.mynoize.core.presentation.toErrorMessage
+import kotlinx.coroutines.launch
 
-class SignInViewModel: ViewModel() {
+class SignInViewModel(
+    private val validation: SignInValidation,
+    private val auth: AuthRepository
+): ViewModel() {
 
-    val auth = FirebaseAuth.getInstance()
 
-    var loading by mutableStateOf(false)
-    var showAlertDialog by mutableStateOf(false)
-    var messageText by mutableStateOf("")
 
-    var email by mutableStateOf("")
-        private set
-
-    var password by mutableStateOf("")
+    private val _alertDialogState = MutableStateFlow(AlertDialogState())
+    val alertDialogState = _alertDialogState.asStateFlow()
 
     private val _state = MutableStateFlow(SignInState())
     val state = _state.asStateFlow()
@@ -33,59 +41,68 @@ class SignInViewModel: ViewModel() {
             signInError = result.errorMessage
         ) }
     }
-/*
-    fun resetState(){
-        _state.update { SignInState() }
-    }*/
+
 
     fun onEvent(event: SignInEvent) {
         when (event) {
             is SignInEvent.OnEmailChange -> {
-                email = event.email.lowercase()
+                _state.update { it.copy(email = event.email.lowercase()) }
             }
 
             is SignInEvent.OnPasswordChange -> {
-                password = event.password
+                _state.update { it.copy(password = event.password) }
             }
             is SignInEvent.OnSignInClick -> {
                 signIn(event.onSuccess)
             }
             is SignInEvent.OnDismissAlertDialog -> {
-                showAlertDialog = false
+                _alertDialogState.update { it.copy(show = false) }
             }
         }
     }
 
     fun signIn(onSuccess: () -> Unit){
-        loading = true
-        email = email.trim()
-        password = password.trim()
-        val message = checkInput()
+        _alertDialogState.update { it.copy(show = false) }
+        _state.update { it.copy(loading = true, email = it.email.trim(),
+            password = it.password.trim(), emailError = null, passwordError = null) }
 
-        if(message.isNotEmpty()){
-            messageText = message
-            showAlertDialog = true
-            loading = false
+
+        validation.execute(email = _state.value.email, password = _state.value.password).onError { error->
+            when (error) {
+                InputError.SingIn.ENTER_EMAIL -> {
+                    _state.update { it.copy(loading = false, emailError = error.toErrorMessage()) }
+                }
+                InputError.SingIn.INCORRECT_EMAIL -> {
+                    _state.update { it.copy(loading = false, emailError = error.toErrorMessage()) }
+                }
+                InputError.SingIn.ENTER_PASSWORD -> {
+                    _state.update { it.copy(loading = false, passwordError = error.toErrorMessage()) }
+                }
+            }
+
+            _alertDialogState.update { it.copy(
+                show = true,
+                message = error.toErrorMessage()
+            ) }
+
             return
         }
 
-        auth.signInWithEmailAndPassword(email,password)
-            .addOnSuccessListener {
-                onSuccess()
-            }
-            .addOnFailureListener {
-                loading = false
-                messageText = "Something went wrong"
-                showAlertDialog = true
-            }
+        viewModelScope.launch {
+            auth.signInWithEmailAndPassword(_state.value.email, _state.value.password)
+                .onError { error ->
+                    _state.update { it.copy(loading = false) }
+                    _alertDialogState.update {
+                        it.copy(show = true, message = error.toErrorMessage())
+                    }
+                }
+                .onSuccess {
+                    onSuccess()
+                }
+        }
+
 
     }
 
-    fun checkInput(): String{
-        if(email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) return "Invalid email"
-        if(password.isEmpty() || password.length < 8 || password.length > 30) return "Invalid password"
-        return ""
-
-    }
 
 }

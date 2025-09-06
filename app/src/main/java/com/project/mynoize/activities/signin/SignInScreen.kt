@@ -14,6 +14,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,33 +25,40 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.project.mynoize.activities.main.state.AlertDialogState
 import com.project.mynoize.activities.signin.event.SignInEvent
 import com.project.mynoize.activities.signin.ui.MessageAlertDialog
 import com.project.mynoize.activities.signin.ui.CustomButton
 import com.project.mynoize.activities.signin.ui.CustomPasswordTextField
 import com.project.mynoize.activities.signin.ui.CustomTextField
 import com.project.mynoize.activities.signin.ui.theme.MyNoizeTheme
+import com.project.mynoize.core.presentation.asString
 
 @Composable
 fun SignInScreen(
     navController: NavController,
     onSignInWithGoogleClick: () -> Unit,
     onSuccessfulSignInWithEmail: () -> Unit,
-    vm: SignInViewModel
-
+    //vm: SignInViewModel
+    alertDialogState: AlertDialogState,
+    state: SignInState,
+    onEvent: (SignInEvent) -> Unit
     ) {
 
     val localFocusManager = LocalFocusManager.current
+    //val alertDialogState by vm.alertDialogState.collectAsState()
+    //val state by vm.state.collectAsStateWithLifecycle()
 
-    if(vm.showAlertDialog){
+    if(alertDialogState.show){
         MessageAlertDialog(
             onDismiss = {
-                vm.onEvent(SignInEvent.OnDismissAlertDialog)
+                onEvent(SignInEvent.OnDismissAlertDialog)
             },
-            message = vm.messageText
+            message = alertDialogState.message?.asString() ?: ""
         )
     }
 
@@ -73,7 +82,7 @@ fun SignInScreen(
 
         Spacer(Modifier.height(31.dp))
 
-        if(vm.loading){
+        if(state.loading){
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -88,26 +97,26 @@ fun SignInScreen(
                 CustomTextField(
                     "Email",
                     "Your email",
-                    vm.email,
-                    onValueChange = {vm.onEvent(SignInEvent.OnEmailChange(it))},
-                    isError = false,
-                    errorMessage = "Enter your email"
+                    state.email,
+                    onValueChange = {onEvent(SignInEvent.OnEmailChange(it))},
+                    isError = state.emailError != null,
+                    errorMessage = state.emailError?.asString() ?: ""
                 )
 
 
                 CustomPasswordTextField(
                     "Password",
                     "Your password",
-                    vm.password,
-                    onValueChange = {vm.onEvent(SignInEvent.OnPasswordChange(it))},
-                    isError = false,
-                    errorMessage = "Enter your password"
+                    state.password,
+                    onValueChange = {onEvent(SignInEvent.OnPasswordChange(it))},
+                    isError = state.passwordError != null,
+                    errorMessage = state.passwordError?.asString() ?: ""
                 )
 
                 CustomButton (
                     text = "Sign In",
                     {
-                        vm.onEvent(SignInEvent.OnSignInClick(onSuccessfulSignInWithEmail))
+                        onEvent(SignInEvent.OnSignInClick(onSuccessfulSignInWithEmail))
                     }
                 )
 
@@ -154,6 +163,12 @@ fun SignInPreview() {
     MyNoizeTheme {
         val vm = viewModel<SignInViewModel>()
         val navController = rememberNavController()
-        SignInScreen(navController, {},{}, vm)
+        SignInScreen(navController,
+            {},
+            {},
+            alertDialogState = AlertDialogState(),
+            state = SignInState(),
+            onEvent = {}
+        )
     }
 }

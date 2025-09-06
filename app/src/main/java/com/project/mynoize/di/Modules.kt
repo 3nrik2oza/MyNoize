@@ -6,6 +6,8 @@ import com.project.mynoize.activities.main.repository.AlbumRepository
 import com.project.mynoize.activities.main.repository.ArtistRepository
 import com.project.mynoize.activities.main.repository.SongRepository
 import com.project.mynoize.activities.main.repository.StorageRepository
+import com.project.mynoize.activities.signin.SignInViewModel
+import com.project.mynoize.activities.signin.domain.SignInValidation
 import com.project.mynoize.core.data.AuthRepository
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.scope.get
@@ -29,6 +31,14 @@ val appModule = module{
     }
     single {
         CreateSongValidation()
+    }
+
+    single {
+        SignInValidation()
+    }
+
+    viewModel {
+        SignInViewModel(get(), get())
     }
 
     viewModel {

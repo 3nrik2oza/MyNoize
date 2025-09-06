@@ -12,4 +12,10 @@ sealed interface InputError: Error {
         SELECT_IMAGE,
         ENTER_ALBUM_NAME
     }
+
+    enum class SingIn: InputError{
+        ENTER_EMAIL,
+        INCORRECT_EMAIL,
+        ENTER_PASSWORD,
+    }
 }

@@ -1,6 +1,5 @@
 package com.project.mynoize.activities.signin.ui
 
-import android.R
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth

@@ -30,7 +30,9 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.auth.api.identity.Identity
 import com.project.mynoize.activities.main.MainActivity
 import com.project.mynoize.managers.GoogleAuthUiClient
+import kotlinx.coroutines.flow.compose
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 
 class SignInActivity : ComponentActivity() {
 
@@ -73,7 +75,7 @@ class SignInActivity : ComponentActivity() {
                     }
 
                     composable<ScreenSignIn>{
-                        val viewModel = viewModel<SignInViewModel>()
+                        val viewModel = koinViewModel<SignInViewModel>()
                         val state by viewModel.state.collectAsStateWithLifecycle()
 
                         LaunchedEffect(key1 = Unit) {
@@ -134,7 +136,11 @@ class SignInActivity : ComponentActivity() {
                                 startActivity(intent)
                                 finish()
                             },
-                            viewModel
+                            alertDialogState = viewModel.alertDialogState.collectAsStateWithLifecycle().value,
+                            state = viewModel.state.collectAsStateWithLifecycle().value,
+                            onEvent = {
+                                viewModel.onEvent(it)
+                            }
                         )
                     }
                     composable<ScreenSignUp>{
