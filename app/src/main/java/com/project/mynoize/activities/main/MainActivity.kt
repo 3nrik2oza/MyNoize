@@ -45,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.exoplayer.ExoPlayer
 import coil.compose.AsyncImage
-import com.project.mynoize.activities.main.presentation.create_song.CreateSongViewModel
 import com.project.mynoize.activities.main.presentation.main_screen.MainActivityUiEvent
 import com.project.mynoize.activities.main.presentation.main_screen.MainScreen
 import com.project.mynoize.activities.main.ui.PlayButton

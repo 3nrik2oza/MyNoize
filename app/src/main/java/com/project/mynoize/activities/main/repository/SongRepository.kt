@@ -26,37 +26,3 @@ class SongRepository{
 
     }
 }
-
-
-/*
-*
-*     fun addToFirestore(storageUrl: String, storageRef: StorageReference, file: Uri){
-        val db = FirebaseFirestore.getInstance()
-        val song = Song(
-            title = createSongState.songName,
-            artistId = artistListState.selectedElement().id,
-            artistName = artistListState.selectedElement().name,
-            songUrl = storageUrl,
-            imageUrl = albumState.selectedElement().image,
-            albumId = albumState.selectedElement().id,
-            albumName = albumState.selectedElement().name,
-            creatorId = FirebaseAuth.getInstance().currentUser!!.uid
-        )
-        db.collection(Constants.SONG_COLLECTION)
-            .add(song)
-            .addOnSuccessListener {
-                alertDialogState = alertDialogState.copy(
-                    show = true,
-                    message = Constants.SONG_ADDED_SUCCESSFULLY
-                )
-            }
-            .addOnFailureListener {
-                alertDialogState = AlertDialogState(
-                    show = true,
-                    loading = false,
-                    message = "An error has occurred. Please try again."
-                )
-                storageRef.child("songs/${file.lastPathSegment}").delete()
-            }
-    }
-* */

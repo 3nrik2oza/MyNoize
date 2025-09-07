@@ -10,4 +10,5 @@ sealed interface CreateSongEvent {
     object OnAddAlbumClick: CreateSongEvent
     object OnAddSongClick: CreateSongEvent
     object OnDismissAlertDialog: CreateSongEvent
+    object OnBackClick: CreateSongEvent
 }

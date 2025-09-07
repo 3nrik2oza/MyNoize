@@ -10,6 +10,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
@@ -75,7 +77,12 @@ class SignInActivity : ComponentActivity() {
 
                     }
 
-                    composable<ScreenSignIn>{
+                    composable<ScreenSignIn>(
+                        exitTransition = { slideOutHorizontally{ initialOffset ->
+                            initialOffset
+                        } },
+                        popEnterTransition = { slideInHorizontally() }
+                    ){
                         val viewModel = koinViewModel<SignInViewModel>()
                         val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -157,12 +164,19 @@ class SignInActivity : ComponentActivity() {
                             }
                         )
                     }
-                    composable<ScreenSignUp>{
+                    composable<ScreenSignUp>(
+                        enterTransition = {slideInHorizontally{ initialOffset ->
+                            initialOffset
+                        }},
+                        exitTransition = { slideOutHorizontally{ initialOffset ->
+                            initialOffset
+                        }}
+                    ){
                         val viewModel = koinViewModel<SignUpViewModel>()
                         SignUpScreen(
                             alertDialogState = viewModel.alertDialogState.collectAsStateWithLifecycle().value,
                             state = viewModel.state.collectAsStateWithLifecycle().value,
-                            onEvent = { event->
+                            onEvent = { event ->
                                 when(event){
                                     is SignUpEvent.OnBackClick-> {
                                         navController.popBackStack()

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,11 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -38,19 +34,28 @@ import com.project.mynoize.activities.main.presentation.main_screen.components.B
 import com.project.mynoize.activities.main.presentation.profile_screen.ProfileScreenViewModel
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.project.mynoize.R
 import com.project.mynoize.activities.main.CreateArtistScreen
 import com.project.mynoize.activities.main.CreateSongScreen
 import com.project.mynoize.activities.main.ShowMusic
+import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistEvent
+import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistScreen
 import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistViewModel
+import com.project.mynoize.activities.main.presentation.create_song.CreateSongEvent
+import com.project.mynoize.activities.main.presentation.create_song.CreateSongScreen
 import com.project.mynoize.activities.main.presentation.create_song.CreateSongViewModel
+import com.project.mynoize.activities.main.ui.theme.DarkGray
+import com.project.mynoize.activities.main.ui.theme.LatoFontFamily
+import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
+import com.project.mynoize.activities.main.ui.theme.Red
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,7 +75,7 @@ fun MainScreen(
 
     val selectedNavigationIndex = rememberSaveable { mutableIntStateOf(0) }
     val selectedNavigationIndexBefore = rememberSaveable { mutableIntStateOf(0) }
-    var createActive = rememberSaveable { mutableStateOf(false) }
+    val createActive = rememberSaveable { mutableStateOf(false) }
 
     fun closeBottomSheet(){
         selectedNavigationIndex.intValue = selectedNavigationIndexBefore.intValue
@@ -108,11 +113,6 @@ fun MainScreen(
                 com.project.mynoize.activities.main.presentation.favorite_screen.FavoriteScreen()
             }
 
-            /*
-            composable<CreateScreen> {
-                SettingScreen()
-            }*/
-
             composable<ShowMusic> {
                 val currentSong by vmMainScreen.currentSong.collectAsState()
                 MainView(
@@ -138,19 +138,52 @@ fun MainScreen(
             }
 
             composable<CreateArtistScreen> { backStackEntry ->
-                val vm: CreateArtistViewModel = viewModel(backStackEntry)
-                com.project.mynoize.activities.main.presentation.create_artist.CreateArtistScreen(
-                    vm,
-                    navController
+                val vm: CreateArtistViewModel = koinViewModel<CreateArtistViewModel>()
+
+                val state by vm.state.collectAsStateWithLifecycle()
+                val alertDialogState by vm.alertDialogState.collectAsStateWithLifecycle()
+                CreateArtistScreen(
+                    state = state,
+                    alertDialogState = alertDialogState,
+                    onEvent = { event ->
+                        when(event){
+                            CreateArtistEvent.OnBackClick -> {
+                                navController.popBackStack()
+                            }else -> Unit
+                        }
+                        vm.onEvent(event)
+                    }
                 )
             }
 
             composable<CreateSongScreen> { backStackEntry ->
                 val vm = koinViewModel<CreateSongViewModel>()
-                com.project.mynoize.activities.main.presentation.create_song.CreateSongScreen(
-                    vm,
+
+                val createSongState by vm.createSongState.collectAsStateWithLifecycle()
+                val artistListState by vm.artistListState.collectAsStateWithLifecycle()
+                val albumListState by vm.albumListState.collectAsStateWithLifecycle()
+                val alertDialogState by vm.alertDialogState.collectAsStateWithLifecycle()
+                val createAlbumDialogState by vm.createAlbumDialogState.collectAsStateWithLifecycle()
+
+
+                CreateSongScreen(
                     context = context,
-                    navController = navController
+                    createSongState = createSongState,
+                    alertDialogState = alertDialogState,
+                    createAlbumDialogState = createAlbumDialogState,
+                    albumListState = albumListState,
+                    artistListState = artistListState,
+                    onEvent = { event ->
+                        when(event){
+                            CreateSongEvent.OnBackClick -> {
+                                navController.popBackStack()
+                            }else -> Unit
+                        }
+                        vm.onEvent(event)
+                    },
+                    onCreateAlbumEvent = { event ->
+                        vm.onCreateAlbumEvent(event)
+                    }
                 )
             }
 
@@ -165,14 +198,17 @@ fun MainScreen(
             onDismissRequest = {
                 closeBottomSheet()
             },
-            containerColor = Color.DarkGray,
-            modifier = Modifier.padding(bottom = 75.dp)
+            shape = RectangleShape,
+            dragHandle = {},
+            containerColor = DarkGray,
+            modifier = Modifier.padding(bottom = 70.dp)
         ) {
             Column (
                 verticalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(vertical = 10.dp)
             ){
                 CreateViewForBottomSheet(
-                    imageVector = Icons.Default.AccountCircle,
+                    icon = R.drawable.ic_profile,
                     title = "Add Artist",
                     description = "Add your favorite artist to platform so that you can add his songs to your list",
                     onClick = {
@@ -182,7 +218,7 @@ fun MainScreen(
                 )
 
                 CreateViewForBottomSheet(
-                    imageVector = Icons.Default.MusicNote,
+                    icon = R.drawable.ic_music_note,
                     title = "Add Song",
                     description = "Add your favorite song to platform so that you can add them to your playlist",
                     onClick = {
@@ -193,7 +229,7 @@ fun MainScreen(
                 )
 
                 CreateViewForBottomSheet(
-                    imageVector = Icons.AutoMirrored.Default.PlaylistPlay,
+                    icon = R.drawable.ic_playlist,
                     title = "Create playlist",
                     description = "Create playlists so that you or maybe others can enjoy your songs"
                 )
@@ -206,42 +242,51 @@ fun MainScreen(
 
 @Composable
 fun CreateViewForBottomSheet(
-    imageVector: ImageVector,
+    icon: Int,
     title: String = "Title",
     description: String = "Description",
     onClick: () -> Unit = {}
 ){
     Row(
         Modifier.fillMaxWidth()
-            .height(85.dp)
-            .background(Color.DarkGray)
-            .padding(horizontal = 15.dp)
+            .background(Color.Transparent)
+            .padding(horizontal = 20.dp)
             .clickable{ onClick() },
         verticalAlignment = Alignment.CenterVertically
     ){
-        Icon(
-            imageVector = imageVector,
-            contentDescription = "Icon",
-            modifier = Modifier
-                .size(50.dp)
-                .clip(CircleShape)
-                .background(Color.LightGray)
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.size(60.dp)
+                .background(
+                shape = RectangleShape,
+                color = Color.White
+            )
+        ){
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = title,
+                modifier = Modifier
+                    .size(28.dp)
 
-        )
+            )
+        }
+
 
         Column(
             Modifier.padding(10.dp)
         ) {
             Text(
-                text=title,
-                color = Color.White,
+                text=title.uppercase(),
+                color = Red,
                 fontWeight = FontWeight.SemiBold,
+                fontFamily = NovaSquareFontFamily,
                 fontSize = 15.sp
             )
             Spacer(Modifier.height(5.dp))
             Text(
                 text=description,
-                color = Color.LightGray,
+                color = Color.White,
+                fontFamily = LatoFontFamily,
                 fontSize = 12.sp,
                 lineHeight = 16.sp
             )

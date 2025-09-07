@@ -22,6 +22,17 @@ fun InputError.CreateAlbum.toErrorMessage(): UiText{
     return UiText.StringResource(stringRes)
 }
 
+fun InputError.CreateArtist.toErrorMessage(): UiText{
+    val stringRes = when(this){
+        InputError.CreateArtist.ENTER_ARTIST_NAME -> R.string.error_enter_artist_name
+        InputError.CreateArtist.ARTIST_NAME_TOO_LONG -> R.string.error_artist_name_too_long
+        InputError.CreateArtist.SELECT_ARTIST_IMAGE -> R.string.error_select_artist_image
+    }
+    return UiText.StringResource(stringRes)
+
+
+}
+
 fun InputError.SingIn.toErrorMessage(): UiText{
     val stringRes = when(this){
         InputError.SingIn.ENTER_EMAIL -> R.string.error_enter_email

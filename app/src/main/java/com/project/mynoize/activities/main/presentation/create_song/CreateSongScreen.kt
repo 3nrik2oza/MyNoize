@@ -4,29 +4,40 @@ package com.project.mynoize.activities.main.presentation.create_song
 import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import com.project.mynoize.R
 import com.project.mynoize.activities.main.presentation.create_song.components.CreateAlbumAlertDialog
+import com.project.mynoize.activities.main.state.ListOfState
 import com.project.mynoize.activities.main.ui.CustomDropdown
 import com.project.mynoize.activities.main.ui.CustomSelectFileButton
+import com.project.mynoize.activities.main.ui.theme.LatoFontFamily
+import com.project.mynoize.core.data.Album
+import com.project.mynoize.core.data.Artist
+import com.project.mynoize.core.presentation.AlertDialogState
 import com.project.mynoize.core.presentation.components.CustomButton
 import com.project.mynoize.core.presentation.components.CustomTextField
 import com.project.mynoize.core.presentation.components.MessageAlertDialog
@@ -36,29 +47,27 @@ import com.project.mynoize.core.presentation.asString
 
 @Composable
 fun CreateSongScreen(
-    vm: CreateSongViewModel,
     context: Context,
-    navController: NavHostController
+    createSongState: CreateSongState,
+    alertDialogState: AlertDialogState,
+    createAlbumDialogState: AlertDialogState,
+    albumListState: ListOfState<Album>,
+    artistListState: ListOfState<Artist>,
+    onEvent: (CreateSongEvent) -> Unit,
+    onCreateAlbumEvent: (CreateAlbumEvent) -> Unit,
 ){
     val localFocusManager = LocalFocusManager.current
-
-    val createSongState by vm.createSongState.collectAsState()
-    val alertDialogState by vm.alertDialogState.collectAsState()
-    val createAlbumDialogState by vm.createAlbumDialogState.collectAsState()
-    val albumListState by vm.albumListState.collectAsState()
-    val artistListState by vm.artistListState.collectAsState()
-
 
     val songPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = {
-            vm.onEvent(CreateSongEvent.OnSelectSongClick(context, it.toString()))
+            onEvent(CreateSongEvent.OnSelectSongClick(context, it.toString()))
         }
     )
 
     if(createSongState.showCreateAlbum){
         CreateAlbumAlertDialog(
-            onEvent = vm::onCreateAlbumEvent,
+            onEvent = onCreateAlbumEvent,
             createAlbumState = createAlbumDialogState
         )
     }
@@ -67,11 +76,11 @@ fun CreateSongScreen(
         MessageAlertDialog(
             onDismiss = {
                 if(alertDialogState.message is UiText.StringResource &&
-                    (alertDialogState.message as UiText.StringResource).id == R.string.song_added_successfully
+                    alertDialogState.message.id == R.string.song_added_successfully
                 ){
-                    navController.popBackStack()
+                    onEvent(CreateSongEvent.OnBackClick)
                 }else{
-                    vm.onEvent(CreateSongEvent.OnDismissAlertDialog)
+                    onEvent(CreateSongEvent.OnDismissAlertDialog)
                 }
 
             },
@@ -91,11 +100,32 @@ fun CreateSongScreen(
             },
         horizontalAlignment = CenterHorizontally
     ) {
-        Text(
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 23.sp,
-            text = "Add new song"
-        )
+
+        Box(
+            modifier = Modifier,
+            contentAlignment = Alignment.CenterStart
+        ){
+
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                Modifier.size(35.dp)
+                    .clickable{
+                        onEvent(CreateSongEvent.OnBackClick)
+                    }
+            )
+
+            Text(
+                text = "Add new song",
+                fontFamily = LatoFontFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 30.sp,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+        }
+
+
 
         CustomTextField(
             title = "Song name",
@@ -103,7 +133,7 @@ fun CreateSongScreen(
             inputValue = createSongState.songName,
             onValueChange = {
                 if(!alertDialogState.loading){
-                    vm.onEvent(CreateSongEvent.OnSongNameChange(it))
+                    onEvent(CreateSongEvent.OnSongNameChange(it))
                 }
             },
             isError = createSongState.songNameError != null,
@@ -117,7 +147,7 @@ fun CreateSongScreen(
             selectedIndex = artistListState.index,
             onItemClick = {
                 if(!alertDialogState.loading){
-                    vm.onEvent(event = CreateSongEvent.OnArtistClick(it))
+                    onEvent(CreateSongEvent.OnArtistClick(it))
                 }
             },
             isError = artistListState.listError != null,
@@ -135,13 +165,13 @@ fun CreateSongScreen(
                 selectedIndex = albumListState.index,
                 onItemClick = {
                     if(!alertDialogState.loading){
-                        vm.onEvent(event = CreateSongEvent.OnAlbumClick(it))
+                        onEvent(CreateSongEvent.OnAlbumClick(it))
                     }
                 },
                 canAdd = true,
                 onAddClick = {
                     if(!alertDialogState.loading){
-                        vm.onEvent(CreateSongEvent.OnAddAlbumClick)
+                        onEvent(CreateSongEvent.OnAddAlbumClick)
                     }
                 },
                 isError = albumListState.listError != null,
@@ -165,7 +195,7 @@ fun CreateSongScreen(
             CustomButton(
                 text = "Add song",
                 onClick = {
-                    vm.onEvent(CreateSongEvent.OnAddSongClick)
+                    onEvent(CreateSongEvent.OnAddSongClick)
                 }
             )
         }else{

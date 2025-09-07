@@ -13,4 +13,24 @@ interface FbError: Error {
         UNKNOWN
     }
 
+    enum class Storage : FbError {
+        OBJECT_NOT_FOUND,
+        BUCKET_NOT_FOUND,
+        QUOTA_EXCEEDED,
+        NOT_AUTHENTICATED,
+        NOT_AUTHORIZED,
+        UNKNOWN
+    }
+
+    enum class Firestore : FbError {
+        PERMISSION_DENIED,
+        UNAVAILABLE,
+        ABORTED,
+        NOT_FOUND,
+        ALREADY_EXISTS,
+        DEADLINE_EXCEEDED,
+        CANCELLED,
+        UNKNOWN
+    }
+
 }

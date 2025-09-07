@@ -25,10 +25,36 @@
     <string name="error_network_request_failed">Network error. Please check your connection and try again.</string>
     <string name="error_unknown">Something went wrong. Please try again.</string>
 
+
+
+    <string name="error_permission_denied">Permission denied</string>
+    <string name="error_unavailable">Service is currently unavailable</string>
+    <string name="error_aborted">Transaction was aborted due to concurrency issues.</string>
+    <string name="error_not_found">Error occurred. Document was not found</string>
+    <string name="error_already_exists">Error occurred. Document already exists.</string>
+    <string name="error_deadline_exceeded">Deadline exceeded.</string>
+    <string name="error_cancelled">The operation was cancelled.</string>
+
+    // FirebaseStorage errors
+    <string name="error_object_not_found">The file doesn’t exist at that path.</string>
+    <string name="error_bucket_not_found">The storage bucket is misconfigured or unavailable.</string>
+    <string name="error_quota_exceeded">You’ve hit storage or bandwidth limits. Try again later.</string>
+    <string name="error_not_authenticated">You are not logged, but rules require authentication.</string>
+    <string name="error_not_authorized">You are not authorized to perform the requested operation.</string>
+
+    <string name="error_enter_artist_name">Please enter artist name</string>
+    <string name="error_artist_name_too_long">Artist name is too long</string>
+    <string name="error_select_artist_image">Please select artist image</string>
+    <string name="artist_added_successfully">Artist has been added successfully</string>
+
+
     <string name="error_song_name">Please enter song name</string>
     <string name="error_select_artist">Please select artist</string>
     <string name="error_select_album">Please select album</string>
     <string name="error_select_song">Please select song file</string>
+
+    <string name="error_loading_artist_failed">Loading artists failed. Try to restart the app</string>
+    <string name="error_loading_album_failed">Loading albums failed. Try to reselect artist or to restart the app</string>
 
     <string name="song_added_successfully">Song added successfully</string>
 

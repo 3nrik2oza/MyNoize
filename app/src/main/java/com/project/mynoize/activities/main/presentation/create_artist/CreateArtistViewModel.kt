@@ -1,114 +1,125 @@
 package com.project.mynoize.activities.main.presentation.create_artist
 
-import android.net.Uri
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.core.net.toUri
+
 import androidx.lifecycle.ViewModel
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageReference
+import androidx.lifecycle.viewModelScope
+import com.project.mynoize.R
+import com.project.mynoize.activities.main.presentation.create_artist.domain.CreateArtistValidation
+import com.project.mynoize.activities.main.repository.ArtistRepository
+import com.project.mynoize.activities.main.repository.StorageRepository
 import com.project.mynoize.core.data.Artist
-import com.project.mynoize.util.Constants
+import com.project.mynoize.core.data.AuthRepository
+import com.project.mynoize.core.domain.InputError
+import com.project.mynoize.core.domain.onError
+import com.project.mynoize.core.domain.onSuccess
+import com.project.mynoize.core.presentation.AlertDialogState
+import com.project.mynoize.core.presentation.UiText
+import com.project.mynoize.core.presentation.toErrorMessage
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-class CreateArtistViewModel: ViewModel() {
+class CreateArtistViewModel(
+    private val artistRepository: ArtistRepository,
+    private val storageRepository: StorageRepository,
+    private val artistValidation: CreateArtistValidation,
+    private val auth: AuthRepository
+): ViewModel() {
 
-    var loading by mutableStateOf(false)
+    val _alertDialogState = MutableStateFlow(AlertDialogState())
+    val alertDialogState = _alertDialogState.asStateFlow()
 
-    var showAlertDialog by mutableStateOf(false)
-    var messageText by mutableStateOf("")
+    private val _state = MutableStateFlow(CreateArtistState())
+    val state = _state.asStateFlow()
 
-    var artistName by mutableStateOf("")
-    var artistNameError by mutableStateOf(false)
 
-    var artistImage by mutableStateOf("")
-    var artistImageError  by mutableStateOf(false)
 
 
     fun onEvent(event: CreateArtistEvent){
         when(event){
             is CreateArtistEvent.OnArtistNameChange -> {
-                if(!loading){
-                    artistName = event.artistName
+                if(!state.value.loading){
+                    _state.update { it.copy(artistName = event.artistName) }
                 }
             }
-            is CreateArtistEvent.OnAddArtistClick -> {
-                loading = true
-                if(!checkInput()){
-                    loading = false
-                    return
-                }
-
-                val storageRef = FirebaseStorage.getInstance().reference
-
-                val file = artistImage.toUri()
-                val riversRef = storageRef.child("artist_images/${file.lastPathSegment}")
-                val uploadTask = riversRef.putFile(file)
-
-                uploadTask.addOnFailureListener {
-                    showAlertDialog = true
-                    messageText = "An error has occurred. Please try again. "
-                    loading = false
-                }
-
-                uploadTask.addOnSuccessListener {
-                    addToFirestore(riversRef, storageRef, file)
-                }
-
-            }
+            is CreateArtistEvent.OnAddArtistClick -> { addArtistToFirestore() }
             is CreateArtistEvent.OnImageChange -> {
-                if(!loading) {
-                    artistImage = event.artistImage
+                if(!state.value.loading) {
+                    _state.update { it.copy(artistImage = event.artistImage) }
                 }
 
             }
             is CreateArtistEvent.OnDismissAlertDialog -> {
-                showAlertDialog = false
+                _alertDialogState.update { it.copy(show = false) }
+            }
+            else -> Unit
+        }
+    }
+
+    fun addArtistToFirestore(){
+        _state.update { it.copy(loading = true) }
+
+        artistValidation.execute(state.value.artistName, state.value.artistImage).onError { error->
+            _alertDialogState.update {
+                it.copy(show = true, message = error.toErrorMessage())
+            }
+            _state.update { it.copy(artistNameError = null, artistImageError = null) }
+
+            when (error) {
+                InputError.CreateArtist.ENTER_ARTIST_NAME -> {
+                    _state.update { it.copy(artistNameError = error.toErrorMessage()) }
+                }
+                InputError.CreateArtist.ARTIST_NAME_TOO_LONG -> {
+                    _state.update { it.copy(artistNameError = error.toErrorMessage()) }
+                }
+                InputError.CreateArtist.SELECT_ARTIST_IMAGE -> {
+                    _state.update { it.copy(artistImageError = error.toErrorMessage()) }
+                }
+            }
+
+            _state.update { it.copy(loading = false) }
+            return
+        }
+
+        val fileName = "artist_images/${state.value.artistImage!!.lastPathSegment}"
+
+        var artist = Artist()
+        viewModelScope.launch {
+            storageRepository.addToStorage(
+                file = state.value.artistImage!!,
+                path = fileName
+            ).onError { error ->
+                _alertDialogState.update { it.copy(show = true, message = error.toErrorMessage()) }
+                _state.update { it.copy(loading = false) }
+                return@launch
+            }.onSuccess {
+                artist = createArtist(it)
+
+            }
+            artistRepository.createArtist(artist).onError { error ->
+                _alertDialogState.update { it.copy(show = true, message = error.toErrorMessage()) }
+                _state.update { it.copy(loading = false) }
+                return@launch
+            }.onSuccess {
+                _state.update { it.copy(loading = false) }
+                _alertDialogState.update {
+                    it.copy(
+                        show = true,
+                        message = UiText.StringResource(R.string.artist_added_successfully),
+                        warning = false)
+                }
             }
         }
     }
 
-    fun addToFirestore(riversRef: StorageReference, storageRef: StorageReference, file: Uri){
-        riversRef.downloadUrl.addOnSuccessListener { uri ->
-            val db = FirebaseFirestore.getInstance()
-            val artist = Artist(
-                name = artistName.trim(),
-                image = uri.toString(),
-                creator = FirebaseAuth.getInstance().currentUser!!.uid
-            )
-            db.collection(Constants.ARTIST_COLLECTION)
-                .add(artist)
-                .addOnSuccessListener {
-                    showAlertDialog = true
-                    messageText = "Artist added successfully"
-                }
-                .addOnFailureListener {
-                    showAlertDialog = true
-                    messageText = "Error adding artist"
-                    loading = false
-                    storageRef.child("artist_images/${file.lastPathSegment}").delete()
-                }
-        }
+    fun createArtist(imageUri: String): Artist{
+        return Artist(
+            name = state.value.artistName,
+            image = imageUri,
+            creator = auth.getCurrentUserId()
+        )
     }
 
-    fun checkInput(): Boolean {
-        if(artistName.isEmpty()){
-            showAlertDialog = true
-            messageText = "Please enter artist name"
-            artistNameError = true
-            return false
-        }
-        artistNameError = false
-        if(artistImage.isEmpty()){
-            showAlertDialog = true
-            messageText = "Please select artist image"
-            artistImageError = true
-            return false
-        }
-        artistImageError = false
-        return true
-    }
 
 }

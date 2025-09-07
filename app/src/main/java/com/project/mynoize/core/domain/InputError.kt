@@ -13,6 +13,12 @@ sealed interface InputError: Error {
         ENTER_ALBUM_NAME
     }
 
+    enum class CreateArtist: InputError{
+        ENTER_ARTIST_NAME,
+        ARTIST_NAME_TOO_LONG,
+        SELECT_ARTIST_IMAGE,
+    }
+
     enum class SingIn: InputError{
         ENTER_EMAIL,
         INCORRECT_EMAIL,

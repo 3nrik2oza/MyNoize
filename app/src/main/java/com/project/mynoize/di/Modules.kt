@@ -1,5 +1,7 @@
 package com.project.mynoize.di
 
+import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistViewModel
+import com.project.mynoize.activities.main.presentation.create_artist.domain.CreateArtistValidation
 import com.project.mynoize.activities.main.presentation.create_song.CreateSongViewModel
 import com.project.mynoize.activities.main.presentation.create_song.domain.CreateSongValidation
 import com.project.mynoize.activities.main.repository.AlbumRepository
@@ -41,6 +43,10 @@ val appModule = module{
         SignUpValidation()
     }
 
+    single {
+        CreateArtistValidation()
+    }
+
 
     viewModel {
         SignInViewModel(get(), get())
@@ -52,5 +58,9 @@ val appModule = module{
 
     viewModel {
         CreateSongViewModel(get(), get(), get(), get(), get(), get())
+    }
+
+    viewModel {
+        CreateArtistViewModel(get(), get(), get(), get())
     }
 }

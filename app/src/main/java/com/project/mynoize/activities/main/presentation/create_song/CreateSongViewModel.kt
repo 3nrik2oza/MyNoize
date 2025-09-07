@@ -37,7 +37,7 @@ class CreateSongViewModel(
 ): ViewModel() {
 
     private val _createSongState = MutableStateFlow(CreateSongState())
-    var createSongState = _createSongState
+    val createSongState = _createSongState
 
     private val _artistListState = MutableStateFlow(ListOfState<Artist>())
     var artistListState = _artistListState
@@ -53,7 +53,13 @@ class CreateSongViewModel(
 
     init{
         viewModelScope.launch {
-            artistListState.update { it.copy(list = artistRepository.getArtists()) }
+            artistRepository.getArtists().onSuccess { list ->
+                artistListState.update { it.copy(list = list) }
+            }.onError { error ->
+                alertDialogState.update {
+                    it.copy(show = true, message = UiText.StringResource(R.string.error_loading_artist_failed))
+                }
+            }
         }
     }
 
@@ -87,6 +93,7 @@ class CreateSongViewModel(
                     it.copy(show = false)
                 }
             }
+            else -> Unit
         }
     }
 
@@ -145,7 +152,9 @@ class CreateSongViewModel(
                     albumListState.update { it.copy(list = list) }
                 }
                 .onError {
-
+                    alertDialogState.update {
+                        it.copy(show = true, message = UiText.StringResource(R.string.error_loading_album_failed))
+                    }
                 }
         }
     }
@@ -200,7 +209,11 @@ class CreateSongViewModel(
             storageRepository.addToStorage(
                 createSongState.value.songUri.toUri(),
                 fileName
-            ).onSuccess {
+            ).onError { error ->
+                alertDialogState.update {
+                    it.copy(show = true, loading = false, message = error.toErrorMessage())
+                }
+            }.onSuccess {
                 song = createSong(it)
 
             }
