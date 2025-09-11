@@ -1,5 +1,6 @@
 package com.project.mynoize.activities.main
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
@@ -14,7 +15,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,25 +28,31 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.media3.exoplayer.ExoPlayer
+import androidx.core.app.ActivityCompat
 import coil.compose.AsyncImage
 import com.project.mynoize.activities.main.presentation.main_screen.MainActivityUiEvent
 import com.project.mynoize.activities.main.presentation.main_screen.MainScreen
+import com.project.mynoize.activities.main.presentation.main_screen.MainScreenEvent
+import com.project.mynoize.activities.main.presentation.main_screen.MainScreenState
 import com.project.mynoize.activities.main.ui.PlayButton
 import com.project.mynoize.activities.main.presentation.main_screen.components.SongView
 import com.project.mynoize.activities.main.ui.theme.MyNoizeTheme
@@ -54,10 +60,12 @@ import com.project.mynoize.activities.main.presentation.main_screen.MainScreenVi
 import com.project.mynoize.activities.main.presentation.profile_screen.ProfileScreenViewModel
 import com.project.mynoize.activities.signin.SignInActivity
 import com.project.mynoize.core.data.Song
+import com.project.mynoize.notification.MusicService
+import org.koin.androidx.compose.koinViewModel
 
 
 class MainActivity : ComponentActivity() {
-    val vmMainScreen: MainScreenViewModel by viewModels()
+
     val vmProfileScreenView: ProfileScreenViewModel by viewModels()
 
 
@@ -67,9 +75,19 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
 
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+            0
+            )
+
 
 
         setContent {
+
+            val vmMainScreen: MainScreenViewModel = koinViewModel<MainScreenViewModel>()
+
+            var musicServiceStarted by remember { mutableStateOf(false) }
 
             LaunchedEffect(Unit) {
                 vmProfileScreenView.uiEvent.collect { event ->
@@ -79,35 +97,38 @@ class MainActivity : ComponentActivity() {
                             startActivity(intent)
                             finish()
                         }
+                        else -> Unit
+                    }
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                vmMainScreen.uiEvent.collect { event ->
+                    when(event){
+                        is MainActivityUiEvent.ShowNotification -> {
+                            if(!musicServiceStarted){
+                                Intent(
+                                    applicationContext, MusicService::class.java).also {
+                                    it.action = MusicService.Actions.START.toString()
+                                    startService(it)
+                                }
+                                musicServiceStarted = true
+                            }
+
+                        }
+                        else -> Unit
                     }
                 }
             }
 
             MyNoizeTheme {
-                //val currentSong by vmMainScreen.currentSong.collectAsState()
+
 
                 MainScreen(
                     vmProfileScreenView,
                     vmMainScreen,
                     this
                 )
-                /*
-                Scaffold(modifier = Modifier.fillMaxSize()) {
-                    MainView(
-                        songList = vm.songList.value,
-                        currentSong = currentSong,
-                        onSongClick = { song ->
-                            vm.onSongClick(song)
-                        },
-                        exoPlayer = vm.playerManager.getPlayer(),
-                        onNextSong = {
-                            vm.nextSong()
-                        },
-                        onPrevSong = {
-                            vm.prevSong()
-                        }
-                    )
-                }*/
             }
         }
     }
@@ -121,13 +142,11 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun MainView(
-    songList: List<Song>,
-    currentSong: Song?,
-    onSongClick: (Song) -> Unit,
-    onNextSong: (Song) -> Unit,
-    onPrevSong: (Song) -> Unit,
-    exoPlayer: ExoPlayer?
+    state: MainScreenState,
+    onEvent: (MainScreenEvent) -> Unit,
 ) {
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -141,13 +160,13 @@ fun MainView(
 
 
             LazyColumn {
-                itemsIndexed(songList) { index, item ->
+                itemsIndexed(state.songList) { index, item ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
 
-                        SongCardView(event = {onSongClick(item) },
-                            title = item.title, artist = item.artistName, imageUrl = item.imageUrl)
-
-
+                        SongCardView(
+                            event = {onEvent(MainScreenEvent.OnSongClick(item))},
+                            song = item
+                        )
                     }
                     Spacer(Modifier.height(15.dp))
 
@@ -156,38 +175,38 @@ fun MainView(
 
         }
 
-        currentSong?.let {
-            exoPlayer?.let { player ->
+        state.currentSong?.let { song ->
                 BottomSheetScaffold(
                     scaffoldState = scaffoldState,
                     sheetPeekHeight = 75.dp,
                     sheetDragHandle = {},
                     modifier = Modifier.align(Alignment.BottomCenter),
+                    sheetShape = RectangleShape,
                     sheetContent = {
                         Box(modifier = Modifier
                             .fillMaxSize()
-                            .background(Color.DarkGray)) {
+                            .background(
+                                shape = RectangleShape,
+                                color = Color.White
+                            )) {
                             val showMusicPlayer = scaffoldState.bottomSheetState.currentValue.name == "PartiallyExpanded"
                             AnimatedContent(
                                 targetState = showMusicPlayer,
                                 transitionSpec = {
-                                    // Customize animations if desired
                                     fadeIn(animationSpec = tween(1)).togetherWith(fadeOut(animationSpec = tween(1)))
                                 },
                                 label = "SongViewToMusicPlayerTransition"
                             ) { isMusicPlayer ->
                                 if (!isMusicPlayer) {
                                     SongView(
-                                        exoPlayer = player,
-                                        song = it,
-                                        onPrevSong = onPrevSong,
-                                        onNextSong = onNextSong
+                                        onEvent = onEvent,
+                                        state = state
                                     )
 
                                 } else {
                                     MusicPlayer(
-                                        exoPlayer = player,
-                                        song = it
+                                        onEvent = onEvent,
+                                        state = state
                                     )
                                 }
                             }
@@ -195,7 +214,6 @@ fun MainView(
                     }
                 ) { }
 
-            }
         }
     }
 }
@@ -204,9 +222,7 @@ fun MainView(
 @Composable
 fun SongCardView(
     event: () -> Unit,
-    title: String = "",
-    artist: String = "",
-    imageUrl: String = "",
+    song: Song
 ){
    Row(
        verticalAlignment = Alignment.CenterVertically,
@@ -215,18 +231,21 @@ fun SongCardView(
            .fillMaxWidth()
    ) {
         AsyncImage(
-            model = imageUrl,
+            model = song.imageUrl,
             contentDescription = "translated description of what the image contains",
+            contentScale = ContentScale.Crop,
             modifier = Modifier
                 .size(100.dp)
-                .clip(CircleShape)
-                .border(2.dp, Color.Black, CircleShape)
+                .clip(RectangleShape)
+
         )
 
         Column(Modifier.padding(start = 10.dp)) {
-            Text(title)
+            Text(song.title)
             Spacer(Modifier.height(15.dp))
-            Text(artist)
+            Text(song.artistName)
+
+
         }
 
     }
@@ -234,9 +253,9 @@ fun SongCardView(
 
 @Composable
 fun MusicPlayer(
-    exoPlayer: ExoPlayer,
-    song: Song,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onEvent: (MainScreenEvent) -> Unit,
+    state: MainScreenState
 ) {
 
 
@@ -244,7 +263,6 @@ fun MusicPlayer(
         modifier
             .fillMaxWidth()
             .height(80.dp)
-            .background(Color.DarkGray)
             .padding(start = 12.dp, end = 24.dp),
         Arrangement.SpaceBetween,
         Alignment.CenterVertically
@@ -252,22 +270,24 @@ fun MusicPlayer(
         Row {
 
             AsyncImage(
-                model = song.imageUrl,
+                model = state.currentSong?.imageUrl ?: "",
                 contentDescription = "Image",
                 Modifier
                     .size(45.dp)
-                    .clip(CircleShape)
             )
 
             Column {
-                Text(song.title, modifier.padding(start = 12.dp, top = 1.dp, bottom = 1.dp), fontWeight = Bold, fontSize = 18.sp)
+                Text(state.currentSong?.title ?: "Song name", modifier.padding(start = 12.dp, top = 1.dp, bottom = 1.dp), fontWeight = Bold, fontSize = 18.sp)
 
-                Text(song.artistName, Modifier.padding(start = 12.dp, top = 1.dp, bottom = 1.dp), fontSize = 12.sp)
+                Text(state.currentSong?.artistName ?: "Artist name", Modifier.padding(start = 12.dp, top = 1.dp, bottom = 1.dp), fontSize = 12.sp)
             }
 
         }
 
-        PlayButton(exoPlayer)
+        PlayButton(
+            onEvent = onEvent,
+            state = state
+        )
 
     }
 }

@@ -52,6 +52,8 @@ import com.project.mynoize.activities.main.presentation.create_artist.CreateArti
 import com.project.mynoize.activities.main.presentation.create_song.CreateSongEvent
 import com.project.mynoize.activities.main.presentation.create_song.CreateSongScreen
 import com.project.mynoize.activities.main.presentation.create_song.CreateSongViewModel
+import com.project.mynoize.activities.main.presentation.favorite_screen.FavoriteScreen
+import com.project.mynoize.activities.main.presentation.music_screen.MusicScreen
 import com.project.mynoize.activities.main.ui.theme.DarkGray
 import com.project.mynoize.activities.main.ui.theme.LatoFontFamily
 import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
@@ -107,26 +109,21 @@ fun MainScreen(
             modifier = Modifier.padding(innerPadding)
         ){
             composable<MusicScreen>{
-                com.project.mynoize.activities.main.presentation.music_screen.MusicScreen()
+                MusicScreen()
             }
             composable<FavoriteScreen>{
-                com.project.mynoize.activities.main.presentation.favorite_screen.FavoriteScreen()
+                FavoriteScreen()
             }
 
             composable<ShowMusic> {
-                val currentSong by vmMainScreen.currentSong.collectAsState()
+                val state by vmMainScreen.state.collectAsState()
+
                 MainView(
-                    songList = vmMainScreen.songList.value,
-                    currentSong = currentSong,
-                    onSongClick = { song ->
-                        vmMainScreen.onSongClick(song)
-                    },
-                    exoPlayer = vmMainScreen.playerManager.getPlayer(),
-                    onNextSong = {
-                        vmMainScreen.nextSong()
-                    },
-                    onPrevSong = {
-                        vmMainScreen.prevSong()
+                    state,
+                    //exoPlayer = vmMainScreen.playerManager.getPlayer(),
+                    onEvent = { event->
+                        vmMainScreen.onEvent(event)
+
                     }
                 )
             }

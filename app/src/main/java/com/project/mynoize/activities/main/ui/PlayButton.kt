@@ -3,57 +3,39 @@ package com.project.mynoize.activities.main.ui
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.media3.common.Player
-import androidx.media3.exoplayer.ExoPlayer
 import com.project.mynoize.R
+import com.project.mynoize.activities.main.presentation.main_screen.MainScreenEvent
+import com.project.mynoize.activities.main.presentation.main_screen.MainScreenState
+import com.project.mynoize.activities.main.ui.theme.DarkGray
 
 @Composable
-fun PlayButton(exoPlayer : ExoPlayer){
+fun PlayButton(
+    state: MainScreenState,
+    onEvent: (MainScreenEvent) -> Unit,
+){
 
-    var isPlaying by remember { mutableStateOf(exoPlayer.isPlaying) }
 
 
-    DisposableEffect(exoPlayer) {
-        val listener = object : Player.Listener {
-            override fun onIsPlayingChanged(isPlaying_: Boolean)
-            {
-                isPlaying = isPlaying_
-            }
-        }
-        exoPlayer.addListener(listener)
-        onDispose {
-            exoPlayer.removeListener(listener)
-        }
-    }
 
     Button(
         modifier = Modifier.size(51.dp),
         contentPadding = PaddingValues(5.dp),
+        colors = ButtonColors(contentColor = DarkGray, containerColor = Color.Transparent, disabledContainerColor = Color.Transparent, disabledContentColor = Color.Transparent),
         onClick = {
-            if (exoPlayer.isPlaying) {
-                exoPlayer.pause()
-            } else {
-                exoPlayer.play()
-            }
-            isPlaying = exoPlayer.isPlaying
+            onEvent(MainScreenEvent.OnPlayPauseToggleClick)
         }) {
-        if(isPlaying){
-            Icon(painterResource(R.drawable.ic_pause), contentDescription = null, Modifier.fillMaxSize())
+        if(state.isPlaying ){
+            Icon(painterResource(R.drawable.ic_pause), contentDescription = "Pause", Modifier.fillMaxSize())
         }else{
-            Icon(Icons.Rounded.PlayArrow, contentDescription = null, Modifier.fillMaxSize())
+            Icon(painterResource(R.drawable.ic_play), contentDescription = "Play", Modifier.fillMaxSize())
         }
     }
 }

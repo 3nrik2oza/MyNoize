@@ -72,9 +72,20 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:21.2.0")
 
     implementation(libs.androidx.media3.exoplayer)
+    implementation("com.google.android.exoplayer:extension-mediasession:2.19.1")
     implementation("androidx.media3:media3-exoplayer-dash:1.7.1")
     implementation("androidx.media3:media3-ui:1.7.1")
     implementation("androidx.media3:media3-ui-compose:1.7.1")
+
+    // Media session + Android Auto integration
+    implementation("androidx.media3:media3-session:1.3.1")
+
+    // UI notifications for playback controls
+    implementation("androidx.media3:media3-ui:1.3.1")
+// Optional: casting support (Chromecast, smart speakers)
+    implementation("androidx.media3:media3-cast:1.3.1")
+// Optional: common utilities (transformer, extractor, etc.)
+    implementation("androidx.media3:media3-common:1.3.1")
 
     // Datastore -> preference
     implementation("androidx.datastore:datastore-preferences:1.0.0")
@@ -83,6 +94,8 @@ dependencies {
 
     implementation(libs.navigation.compose)
     implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
+
+    implementation("androidx.media:media:1.7.0")
 
     // Koin for Android
 
