@@ -68,6 +68,10 @@ class MainActivity : ComponentActivity() {
 
     val vmProfileScreenView: ProfileScreenViewModel by viewModels()
 
+    lateinit var vmMainScreen: MainScreenViewModel
+
+    var intent1: Intent? = null
+
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,10 +86,9 @@ class MainActivity : ComponentActivity() {
             )
 
 
-
         setContent {
 
-            val vmMainScreen: MainScreenViewModel = koinViewModel<MainScreenViewModel>()
+            vmMainScreen = koinViewModel<MainScreenViewModel>()
 
             var musicServiceStarted by remember { mutableStateOf(false) }
 
@@ -102,14 +105,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+
             LaunchedEffect(Unit) {
                 vmMainScreen.uiEvent.collect { event ->
                     when(event){
                         is MainActivityUiEvent.ShowNotification -> {
                             if(!musicServiceStarted){
-                                Intent(
+                                intent1 = Intent(
                                     applicationContext, MusicService::class.java).also {
-                                    it.action = MusicService.Actions.START.toString()
                                     startService(it)
                                 }
                                 musicServiceStarted = true
@@ -135,7 +138,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        //vm.playerManager.releasePlayer()
+        vmMainScreen.playerManager.releasePlayer()
+        stopService(intent1)
     }
 }
 
@@ -164,7 +168,7 @@ fun MainView(
                     Row(verticalAlignment = Alignment.CenterVertically) {
 
                         SongCardView(
-                            event = {onEvent(MainScreenEvent.OnSongClick(item))},
+                            event = {onEvent(MainScreenEvent.OnSongClick(index))},
                             song = item
                         )
                     }
@@ -270,16 +274,16 @@ fun MusicPlayer(
         Row {
 
             AsyncImage(
-                model = state.currentSong?.imageUrl ?: "",
+                model = state.currentSong?.artworkUri ?: "",
                 contentDescription = "Image",
                 Modifier
                     .size(45.dp)
             )
 
             Column {
-                Text(state.currentSong?.title ?: "Song name", modifier.padding(start = 12.dp, top = 1.dp, bottom = 1.dp), fontWeight = Bold, fontSize = 18.sp)
+                Text(state.currentSong?.title.toString() , modifier.padding(start = 12.dp, top = 1.dp, bottom = 1.dp), fontWeight = Bold, fontSize = 18.sp)
 
-                Text(state.currentSong?.artistName ?: "Artist name", Modifier.padding(start = 12.dp, top = 1.dp, bottom = 1.dp), fontSize = 12.sp)
+                Text(state.currentSong?.artist.toString(), Modifier.padding(start = 12.dp, top = 1.dp, bottom = 1.dp), fontSize = 12.sp)
             }
 
         }

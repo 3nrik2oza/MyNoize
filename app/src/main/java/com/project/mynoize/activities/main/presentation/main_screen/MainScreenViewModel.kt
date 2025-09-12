@@ -1,8 +1,6 @@
 package com.project.mynoize.activities.main.presentation.main_screen
 
 import android.app.Application
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
@@ -10,26 +8,17 @@ import com.google.firebase.firestore.firestore
 import com.project.mynoize.core.data.Song
 import com.project.mynoize.managers.ExoPlayerManager
 import com.project.mynoize.util.Constants
-import com.project.mynoize.util.UserInformation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class MainScreenViewModel (
     val playerManager: ExoPlayerManager,
     application: Application) : AndroidViewModel(application){
-
-
-    //var songList = mutableStateOf(listOf<Song>())
-
-   // val currentSong: StateFlow<Song?> = playerManager.currentSong
 
   //  val dataStore = UserInformation(application)
 
@@ -76,16 +65,12 @@ class MainScreenViewModel (
                         song.position = list.size
                         song.mediaId = document.id
 
-                        if(song.position == 2){
-                            playerManager.initializePlayer(song, play = false)
-                          //  playerManager.seekTo(lastPosition)
-                        }
 
                         list += song
                     }
                     _state.update { it.copy(songList = list) }
 
-                    playerManager.setSongList(list)
+                    playerManager.initializePlayer(songs = list, play = false, scope = viewModelScope)
                 }
 
         viewModelScope.launch {
@@ -110,7 +95,7 @@ class MainScreenViewModel (
             is MainScreenEvent.OnNextSongClick -> nextSong()
             is MainScreenEvent.OnPrevSongClick -> prevSong()
             is MainScreenEvent.OnPlayPauseToggleClick -> playPauseToggle()
-            is MainScreenEvent.OnSongClick -> onSongClick(event.song)
+            is MainScreenEvent.OnSongClick -> onSongClick(event.position)
             is MainScreenEvent.SeekTo -> playerManager.seekTo(event.position)
         }
     }
@@ -124,8 +109,8 @@ class MainScreenViewModel (
     }
 
 
-    fun onSongClick(song: Song){
-        playerManager.playSong(song)
+    fun onSongClick(position: Int){
+        playerManager.playSong(position)
 
         viewModelScope.launch {
         //    dataStore.updateMediaId(song.mediaId)

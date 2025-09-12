@@ -93,18 +93,18 @@ fun SongView(
             )
 
             Text(
-                text= "FROM ALBUM \"${state.currentSong?.albumName}\"".uppercase(),
+                text= "FROM ALBUM \"${state.currentSong?.albumTitle}\"".uppercase(),
                 fontFamily = NovaSquareFontFamily,
                 color = Red,
                 fontSize = 15.sp
             )
         }
 
-        var imageLoadResult by remember(state.currentSong?.imageUrl) { mutableStateOf<Result<Painter>?>(null) }
+        var imageLoadResult by remember(state.currentSong?.artworkUri) { mutableStateOf<Result<Painter>?>(null) }
 
 
         val painter = rememberAsyncImagePainter(
-            model = state.currentSong?.imageUrl,
+            model = state.currentSong?.artworkUri,
             onSuccess = {
                 imageLoadResult = Result.success(it.painter)
             },
@@ -170,14 +170,14 @@ fun SongView(
             horizontalAlignment = Alignment.Start
         ) {
             Text(
-                state.currentSong?.title ?: "",
+                state.currentSong?.title.toString(),
                 fontWeight = Bold, fontSize = 18.sp,
                 fontFamily = NovaSquareFontFamily,
                 color = Color.Black
             )
 
             Text(
-                state.currentSong?.artistName ?: "",
+                state.currentSong?.artist.toString(),
                 fontSize = 15.sp,
                 color = DarkGray,
                 fontFamily = NovaSquareFontFamily

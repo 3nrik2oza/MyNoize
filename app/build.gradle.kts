@@ -87,6 +87,8 @@ dependencies {
 // Optional: common utilities (transformer, extractor, etc.)
     implementation("androidx.media3:media3-common:1.3.1")
 
+    implementation("androidx.media:media:1.7.0")
+
     // Datastore -> preference
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
