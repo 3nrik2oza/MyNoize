@@ -77,11 +77,11 @@ fun SongView(
         label = "rotation" )
 
     Column(modifier.fillMaxWidth()
-        .padding(vertical = 20.dp, horizontal = 12.dp),
+        .padding(top = 20.dp, start = 12.dp, end = 12.dp),
         Arrangement.Top, Alignment.CenterHorizontally) {
 
         Column(
-            modifier = Modifier.fillMaxWidth().height(130.dp).padding(top = 10.dp, start = 20.dp, end = 20.dp),
+            modifier = Modifier.weight(1f).padding(bottom = 1.dp).fillMaxSize().padding(top = 10.dp, start = 20.dp, end = 20.dp),
             horizontalAlignment = Alignment.Start
         ) {
             Text(
@@ -89,14 +89,16 @@ fun SongView(
                 fontFamily = LatoFontFamily,
                 fontWeight = Bold,
                 color = Color.Black,
-                fontSize = 27.sp
+                fontSize = 27.sp,
+                maxLines = 3
             )
 
             Text(
                 text= "FROM ALBUM \"${state.currentSong?.albumTitle}\"".uppercase(),
                 fontFamily = NovaSquareFontFamily,
                 color = Red,
-                fontSize = 15.sp
+                fontSize = 15.sp,
+                maxLines = 2
             )
         }
 
@@ -166,7 +168,7 @@ fun SongView(
 
 
         Column(
-            modifier= Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
+            modifier= Modifier.weight(2f).fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
             horizontalAlignment = Alignment.Start
         ) {
             Text(
@@ -182,62 +184,69 @@ fun SongView(
                 color = DarkGray,
                 fontFamily = NovaSquareFontFamily
             )
-        }
 
-        Column {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
 
 
-            Slider(
-                value = state.currentPosition.toFloat()/state.duration,
-                onValueChange = { sliderPosition = it},
-                enabled = state.duration > 0,
-                onValueChangeFinished = {
-                    onEvent(MainScreenEvent.SeekTo((sliderPosition * state.duration).toLong()))
-                                        },
-                valueRange = 0f..1f,
-                modifier = Modifier.height(15.dp).padding(top =  15.dp),
-                track = { sliderState ->
+                Slider(
+                    value = state.currentPosition.toFloat()/state.duration,
+                    onValueChange = { sliderPosition = it},
+                    enabled = state.duration > 0,
+                    onValueChangeFinished = {
+                        onEvent(MainScreenEvent.SeekTo((sliderPosition * state.duration).toLong()))
+                    },
+                    valueRange = 0f..1f,
+                    modifier = Modifier.height(15.dp).padding(top =  15.dp),
+                    track = { sliderState ->
 
-                    Box(Modifier.fillMaxWidth().background(LightGray)) {
-                        Box(
-                            Modifier
-                                .fillMaxWidth(sliderState.value )
-                                .align(Alignment.CenterStart)
-                                .height(2.dp)
-                                .background(DarkGray, CircleShape)
-                        )
+                        Box(Modifier.fillMaxWidth().background(LightGray)) {
+                            Box(
+                                Modifier
+                                    .fillMaxWidth(sliderState.value )
+                                    .align(Alignment.CenterStart)
+                                    .height(2.dp)
+                                    .background(DarkGray, CircleShape)
+                            )
+                        }
+                    },
+                    thumb = {
                     }
-                },
-                thumb = {
-                }
-            )
+                )
 
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement =  Arrangement.SpaceBetween
-            ){
-                Text(
-                    text = formatMillis(state.currentPosition),
-                    modifier = Modifier.padding(start = 12.dp),
-                    fontFamily = NovaSquareFontFamily,
-                    fontWeight = Bold,
-                    color = DarkGray,
-                    fontSize = 12.sp
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement =  Arrangement.SpaceBetween
+                ){
+                    Text(
+                        text = formatMillis(state.currentPosition),
+                        modifier = Modifier.padding(start = 12.dp),
+                        fontFamily = NovaSquareFontFamily,
+                        fontWeight = Bold,
+                        color = DarkGray,
+                        fontSize = 12.sp
                     )
 
-                Text(
-                    formatMillis(state.duration),
-                    modifier = Modifier.padding(start = 12.dp),
-                    fontFamily = NovaSquareFontFamily,
-                    fontWeight = Bold,
-                    color = DarkGray,
-                    fontSize = 12.sp
-                )
+                    Text(
+                        formatMillis(state.duration),
+                        modifier = Modifier.padding(start = 12.dp),
+                        fontFamily = NovaSquareFontFamily,
+                        fontWeight = Bold,
+                        color = DarkGray,
+                        fontSize = 12.sp
+                    )
+                }
+
+                SongViewButtons(onEvent, state = state)
             }
         }
 
 
-        SongViewButtons(onEvent, state = state)
+
+
+
 
     }
 

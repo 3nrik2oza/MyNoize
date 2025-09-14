@@ -130,7 +130,6 @@ class MainActivity : ComponentActivity() {
                 MainScreen(
                     vmProfileScreenView,
                     vmMainScreen,
-                    this
                 )
             }
         }
@@ -271,7 +270,9 @@ fun MusicPlayer(
         Arrangement.SpaceBetween,
         Alignment.CenterVertically
     ) {
-        Row {
+        Row(
+            modifier = Modifier.weight(1f)
+        ) {
 
             AsyncImage(
                 model = state.currentSong?.artworkUri ?: "",
@@ -281,7 +282,12 @@ fun MusicPlayer(
             )
 
             Column {
-                Text(state.currentSong?.title.toString() , modifier.padding(start = 12.dp, top = 1.dp, bottom = 1.dp), fontWeight = Bold, fontSize = 18.sp)
+                Text(
+                    state.currentSong?.title.toString() ,
+                    modifier.padding(start = 12.dp, top = 1.dp, bottom = 1.dp),
+                    fontWeight = Bold, fontSize = 18.sp,
+                    maxLines = 1
+                )
 
                 Text(state.currentSong?.artist.toString(), Modifier.padding(start = 12.dp, top = 1.dp, bottom = 1.dp), fontSize = 12.sp)
             }

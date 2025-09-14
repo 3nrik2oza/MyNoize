@@ -1,6 +1,5 @@
 package com.project.mynoize.activities.main.presentation.main_screen
 
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -64,8 +63,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun MainScreen(
     vmProfileScreen: ProfileScreenViewModel,
-    vmMainScreen: MainScreenViewModel,
-    context: Context
+    vmMainScreen: MainScreenViewModel
 ){
 
     val navController = rememberNavController()
@@ -164,7 +162,6 @@ fun MainScreen(
 
 
                 CreateSongScreen(
-                    context = context,
                     createSongState = createSongState,
                     alertDialogState = alertDialogState,
                     createAlbumDialogState = createAlbumDialogState,

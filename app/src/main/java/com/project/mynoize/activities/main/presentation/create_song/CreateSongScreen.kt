@@ -1,9 +1,10 @@
 package com.project.mynoize.activities.main.presentation.create_song
 
 
-import android.content.Context
+
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -23,10 +24,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.project.mynoize.R
@@ -47,7 +51,6 @@ import com.project.mynoize.core.presentation.asString
 
 @Composable
 fun CreateSongScreen(
-    context: Context,
     createSongState: CreateSongState,
     alertDialogState: AlertDialogState,
     createAlbumDialogState: AlertDialogState,
@@ -58,10 +61,15 @@ fun CreateSongScreen(
 ){
     val localFocusManager = LocalFocusManager.current
 
+    val context = LocalContext.current
+
     val songPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = {
-            onEvent(CreateSongEvent.OnSelectSongClick(context, it.toString()))
+            onEvent(CreateSongEvent.OnSelectSongClick(
+                context = context,
+                songUri = it.toString()
+            ))
         }
     )
 
@@ -92,6 +100,7 @@ fun CreateSongScreen(
     Column(
         Modifier
             .fillMaxSize()
+            .background(Color.White)
             .padding(top=15.dp, start = 15.dp, end = 15.dp)
             .pointerInput(Unit) {
                 detectTapGestures(onTap = {
@@ -180,7 +189,7 @@ fun CreateSongScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(25.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         if(!alertDialogState.loading){
             CustomSelectFileButton(
@@ -193,7 +202,7 @@ fun CreateSongScreen(
             )
 
             CustomButton(
-                text = "Add song",
+                text = "ADD SONG",
                 onClick = {
                     onEvent(CreateSongEvent.OnAddSongClick)
                 }
@@ -204,4 +213,19 @@ fun CreateSongScreen(
 
     }
 }
+
+@Preview
+@Composable
+fun CreateSongScreenPreview(){
+    CreateSongScreen(
+        createSongState = CreateSongState(),
+        alertDialogState = AlertDialogState(),
+        createAlbumDialogState = AlertDialogState(),
+        albumListState = ListOfState(),
+        artistListState = ListOfState(),
+        onEvent = {},
+        onCreateAlbumEvent = {})
+
+}
+
 

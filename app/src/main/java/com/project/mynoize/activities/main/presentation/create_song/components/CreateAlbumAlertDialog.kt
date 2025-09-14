@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.AlertDialog
@@ -28,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.project.mynoize.activities.main.presentation.create_song.CreateAlbumEvent
+import com.project.mynoize.activities.main.ui.theme.LatoFontFamily
 import com.project.mynoize.core.presentation.AlertDialogState
 import com.project.mynoize.core.presentation.components.CustomButton
 import com.project.mynoize.core.presentation.components.CustomTextField
@@ -75,6 +76,8 @@ fun CreateAlbumAlertDialog(
         onDismissRequest = {onEvent(CreateAlbumEvent.OnDismissCreateAlbumDialog)},
         confirmButton = {},
         modifier = Modifier,
+        shape = RectangleShape,
+        containerColor = Color.White,
         title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -83,9 +86,10 @@ fun CreateAlbumAlertDialog(
             ){
                 Icon(imageVector = Icons.Default.Create, contentDescription = "")
                 Text(
-                    text = "Add new Album",
+                    text = "Add new Album".uppercase(),
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = LatoFontFamily
                 )
             }
         },
@@ -102,8 +106,8 @@ fun CreateAlbumAlertDialog(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(140.dp)
-                        .clip(CircleShape)
-                        .border(2.dp, Color.Black, CircleShape)
+                        .clip(RectangleShape)
+                        .border(1.dp, Color.Black, RectangleShape)
                         .clickable{
                             if(!createAlbumState.loading){
                                 imagePickerLauncher.launch(
