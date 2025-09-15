@@ -43,16 +43,21 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.project.mynoize.R
 import com.project.mynoize.activities.main.CreateArtistScreen
+import com.project.mynoize.activities.main.CreatePlaylistScreen
 import com.project.mynoize.activities.main.CreateSongScreen
 import com.project.mynoize.activities.main.ShowMusic
 import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistEvent
 import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistScreen
 import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistViewModel
+import com.project.mynoize.activities.main.presentation.create_playlist.CreatePlaylistEvent
+import com.project.mynoize.activities.main.presentation.create_playlist.CreatePlaylistScreen
+import com.project.mynoize.activities.main.presentation.create_playlist.CreatePlaylistViewModel
 import com.project.mynoize.activities.main.presentation.create_song.CreateSongEvent
 import com.project.mynoize.activities.main.presentation.create_song.CreateSongScreen
 import com.project.mynoize.activities.main.presentation.create_song.CreateSongViewModel
 import com.project.mynoize.activities.main.presentation.favorite_screen.FavoriteScreen
 import com.project.mynoize.activities.main.presentation.music_screen.MusicScreen
+import com.project.mynoize.activities.main.presentation.profile_screen.ProfileScreen
 import com.project.mynoize.activities.main.ui.theme.DarkGray
 import com.project.mynoize.activities.main.ui.theme.LatoFontFamily
 import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
@@ -127,7 +132,7 @@ fun MainScreen(
             }
 
             composable<ProfileScreen> {
-                com.project.mynoize.activities.main.presentation.profile_screen.ProfileScreen(
+                ProfileScreen(
                     vm = vmProfileScreen
                 )
             }
@@ -181,6 +186,28 @@ fun MainScreen(
                 )
             }
 
+            composable<CreatePlaylistScreen> {
+
+                val vm: CreatePlaylistViewModel = koinViewModel<CreatePlaylistViewModel>()
+
+                val state by vm.state.collectAsStateWithLifecycle()
+                val alertDialogState by vm.alertDialogState.collectAsStateWithLifecycle()
+
+                CreatePlaylistScreen(
+                    state = state,
+                    alertDialogState = alertDialogState,
+                    onEvent = { event ->
+                        when(event){
+                            CreatePlaylistEvent.OnBackClick -> {
+                                navController.popBackStack()
+                            }else -> Unit
+                        }
+                        vm.onEvent(event)
+                    }
+
+                )
+            }
+
         }
     }
 
@@ -225,7 +252,11 @@ fun MainScreen(
                 CreateViewForBottomSheet(
                     icon = R.drawable.ic_playlist,
                     title = "Create playlist",
-                    description = "Create playlists so that you or maybe others can enjoy your songs"
+                    description = "Create playlists so that you or maybe others can enjoy your songs",
+                    onClick = {
+                        navController.navigate(CreatePlaylistScreen)
+                        closeBottomSheet()
+                    }
                 )
             }
 

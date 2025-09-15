@@ -61,6 +61,12 @@
     <string name="error_select_image">Please select image</string>
     <string name="error_enter_album_name">Please enter album name </string>
 
+    //Create Playlist
+    <string name="error_enter_playlist_name">Please enter playlist name</string>
+    <string name="error_playlist_name_too_long">Playlist name is too long</string>
+    <string name="error_select_playlist_image">Please select playlist image</string>
+    <string name="playlist_added_successfully">Playlist added successfully</string>
+
 
 
     <string name="error_server">Something went wrong. Please try again</string>

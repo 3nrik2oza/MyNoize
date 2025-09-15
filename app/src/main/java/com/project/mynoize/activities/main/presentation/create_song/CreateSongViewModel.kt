@@ -7,10 +7,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.mynoize.R
 import com.project.mynoize.activities.main.presentation.create_song.domain.CreateSongValidation
-import com.project.mynoize.activities.main.repository.AlbumRepository
-import com.project.mynoize.activities.main.repository.ArtistRepository
-import com.project.mynoize.activities.main.repository.StorageRepository
-import com.project.mynoize.activities.main.repository.SongRepository
+import com.project.mynoize.core.data.repositories.AlbumRepository
+import com.project.mynoize.core.data.repositories.ArtistRepository
+import com.project.mynoize.core.data.repositories.StorageRepository
+import com.project.mynoize.core.data.repositories.SongRepository
 import com.project.mynoize.core.presentation.AlertDialogState
 import com.project.mynoize.activities.main.state.ListOfState
 import com.project.mynoize.core.data.Album

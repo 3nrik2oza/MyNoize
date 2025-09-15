@@ -1,4 +1,4 @@
-package com.project.mynoize.activities.main.repository
+package com.project.mynoize.core.data.repositories
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException

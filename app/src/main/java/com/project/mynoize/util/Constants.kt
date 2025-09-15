@@ -5,9 +5,6 @@ object Constants{
     val ARTIST_COLLECTION = "artists"
     val ALBUM_COLLECTION = "albums"
     val SONG_COLLECTION = "songs"
-
-    //Fields
-    val ARTIST_NAME = "name"
-    val ARTIST_IMAGE = "image"
+    val PLAYLIST_COLLECTION = "playlists"
 
 }

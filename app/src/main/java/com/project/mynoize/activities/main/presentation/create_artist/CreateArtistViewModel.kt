@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.mynoize.R
 import com.project.mynoize.activities.main.presentation.create_artist.domain.CreateArtistValidation
-import com.project.mynoize.activities.main.repository.ArtistRepository
-import com.project.mynoize.activities.main.repository.StorageRepository
+import com.project.mynoize.core.data.repositories.ArtistRepository
+import com.project.mynoize.core.data.repositories.StorageRepository
 import com.project.mynoize.core.data.Artist
 import com.project.mynoize.core.data.AuthRepository
 import com.project.mynoize.core.domain.InputError

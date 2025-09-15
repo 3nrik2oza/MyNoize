@@ -22,3 +22,6 @@ interface AppScreen
 
     @Serializable
     object CreateSongScreen : AppScreen
+
+    @Serializable
+    object CreatePlaylistScreen: AppScreen

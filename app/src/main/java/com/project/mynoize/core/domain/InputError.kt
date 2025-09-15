@@ -19,6 +19,12 @@ sealed interface InputError: Error {
         SELECT_ARTIST_IMAGE,
     }
 
+    enum class CreatePlaylist: InputError{
+        ENTER_PLAYLIST_NAME,
+        PLAYLIST_NAME_TOO_LONG,
+        SELECT_PLAYLIST_IMAGE
+    }
+
     enum class SingIn: InputError{
         ENTER_EMAIL,
         INCORRECT_EMAIL,
