@@ -1,6 +1,9 @@
 package com.project.mynoize.activities.main.presentation.main_screen.components
 
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -58,12 +61,13 @@ import com.project.mynoize.activities.main.ui.theme.LightGray
 import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
 import com.project.mynoize.activities.main.ui.theme.Red
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun SongView(
+fun SharedTransitionScope.SongView(
     state: MainScreenState,
     onEvent: (MainScreenEvent) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    animatedVisibilityScope: AnimatedVisibilityScope
 ){
     var sliderPosition by remember { mutableFloatStateOf(state.currentPosition / state.duration.toFloat() ) }
 
@@ -116,25 +120,18 @@ fun SongView(
         )
 
 
-
-        when(val result = imageLoadResult){
-            null-> Row(
-                modifier= Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ){
-                Box(
-                    modifier = Modifier
-                        .padding(top = 40.dp)
-                        .size(220.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                    Image(painter=painter, contentDescription = null, alpha = 0.001f)
-                }
+        Box(Modifier.sharedElement(
+            sharedContentState = rememberSharedContentState(key = "image/${state.currentSong!!.artworkUri}"),
+            animatedVisibilityScope = animatedVisibilityScope,
+            boundsTransform = {_,_ ->
+                tween(durationMillis = 500)
             }
-            else ->{
-                Row(
-                    modifier= Modifier.width(310.dp)
+        )
+        ){
+            when(val result = imageLoadResult){
+                null-> Row(
+                    modifier= Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
                 ){
                     Box(
                         modifier = Modifier
@@ -142,29 +139,46 @@ fun SongView(
                             .size(220.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Image(
-                            painter = painterResource(R.drawable.music_disk),
-                            contentDescription = "Music Disk",
+                        CircularProgressIndicator()
+                        Image(painter=painter, contentDescription = null, alpha = 0.001f)
+                    }
+                }
+                else ->{
+                    Row(
+                        modifier= Modifier.width(310.dp)
+                    ){
+                        Box(
                             modifier = Modifier
-                                .size(200.dp)
-                                .offset(x = 100.dp)
-                                .graphicsLayer{
-                                    rotationZ = rotation
-                                }
-                                .zIndex(0f)
-                        )
-                        Image(
-                            painter = if(result.isSuccess) painter else painterResource(R.drawable.music_disk),
-                            contentDescription = "Song Image",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(210.dp)
-                                .zIndex(1f)
-                        )
+                                .padding(top = 40.dp)
+                                .size(220.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.music_disk),
+                                contentDescription = "Music Disk",
+                                modifier = Modifier
+                                    .size(200.dp)
+                                    .offset(x = 100.dp)
+                                    .graphicsLayer{
+                                        rotationZ = rotation
+                                    }
+                                    .zIndex(0f)
+                            )
+                            Image(
+                                painter = if(result.isSuccess) painter else painterResource(R.drawable.music_disk),
+                                contentDescription = "Song Image",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(210.dp)
+                                    .zIndex(1f)
+                            )
+                        }
                     }
                 }
             }
         }
+
+
 
 
         Column(
@@ -172,17 +186,31 @@ fun SongView(
             horizontalAlignment = Alignment.Start
         ) {
             Text(
-                state.currentSong?.title.toString(),
+                state.currentSong.title.toString(),
                 fontWeight = Bold, fontSize = 18.sp,
                 fontFamily = NovaSquareFontFamily,
-                color = Color.Black
+                color = Color.Black,
+                modifier = Modifier.sharedElement(
+                    sharedContentState = rememberSharedContentState(key = "text/${state.currentSong.title}"),
+                    animatedVisibilityScope = animatedVisibilityScope,
+                    boundsTransform = {_,_ ->
+                        tween(durationMillis = 500)
+                    }
+                )
             )
 
             Text(
-                state.currentSong?.artist.toString(),
+                state.currentSong.artist.toString(),
                 fontSize = 15.sp,
                 color = DarkGray,
-                fontFamily = NovaSquareFontFamily
+                fontFamily = NovaSquareFontFamily,
+                modifier = Modifier.sharedElement(
+                    sharedContentState = rememberSharedContentState(key = "text/${state.currentSong.artist}"),
+                    animatedVisibilityScope = animatedVisibilityScope,
+                    boundsTransform = {_,_ ->
+                        tween(durationMillis = 500)
+                    }
+                )
             )
 
             Column(

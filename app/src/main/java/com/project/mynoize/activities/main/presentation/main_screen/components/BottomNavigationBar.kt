@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.project.mynoize.R
 import com.project.mynoize.activities.main.CreateArtistScreen
-import com.project.mynoize.activities.main.FavoriteScreen
+import com.project.mynoize.activities.main.FavoriteScreenRoot
 import com.project.mynoize.activities.main.MusicScreen
 import com.project.mynoize.activities.main.ProfileScreen
 import com.project.mynoize.activities.main.ShowMusic
@@ -51,7 +51,7 @@ fun BottomNavigationBar(
         NavigationItem(
             title = "Favorite",
             icon = R.drawable.ic_heart,
-            route = FavoriteScreen
+            route = FavoriteScreenRoot
         ),
 
         NavigationItem(

@@ -8,13 +8,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,10 +26,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,20 +37,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.project.mynoize.activities.main.presentation.main_screen.MainActivityUiEvent
 import com.project.mynoize.activities.main.presentation.main_screen.MainScreen
 import com.project.mynoize.activities.main.presentation.main_screen.MainScreenEvent
 import com.project.mynoize.activities.main.presentation.main_screen.MainScreenState
 import com.project.mynoize.activities.main.ui.PlayButton
-import com.project.mynoize.activities.main.presentation.main_screen.components.SongView
 import com.project.mynoize.activities.main.ui.theme.MyNoizeTheme
 import com.project.mynoize.activities.main.presentation.main_screen.MainScreenViewModel
 import com.project.mynoize.activities.main.presentation.profile_screen.ProfileScreenViewModel
@@ -89,6 +84,8 @@ class MainActivity : ComponentActivity() {
         setContent {
 
             vmMainScreen = koinViewModel<MainScreenViewModel>()
+
+            val state by vmMainScreen.state.collectAsStateWithLifecycle()
 
             var musicServiceStarted by remember { mutableStateOf(false) }
 
@@ -130,6 +127,7 @@ class MainActivity : ComponentActivity() {
                 MainScreen(
                     vmProfileScreenView,
                     vmMainScreen,
+                    state
                 )
             }
         }
@@ -155,7 +153,7 @@ fun MainView(
             .fillMaxSize()
             .padding(top = 25.dp),
     ) {
-        val scaffoldState = rememberBottomSheetScaffoldState()
+
         Column (Modifier.padding(start = 12.dp, top = 12.dp, bottom = 75.dp)){
             Text(text = "My Noize",
                 fontSize = 20.sp, fontWeight = Bold)
@@ -178,46 +176,7 @@ fun MainView(
 
         }
 
-        state.currentSong?.let { song ->
-                BottomSheetScaffold(
-                    scaffoldState = scaffoldState,
-                    sheetPeekHeight = 75.dp,
-                    sheetDragHandle = {},
-                    modifier = Modifier.align(Alignment.BottomCenter),
-                    sheetShape = RectangleShape,
-                    sheetContent = {
-                        Box(modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                shape = RectangleShape,
-                                color = Color.White
-                            )) {
-                            val showMusicPlayer = scaffoldState.bottomSheetState.currentValue.name == "PartiallyExpanded"
-                            AnimatedContent(
-                                targetState = showMusicPlayer,
-                                transitionSpec = {
-                                    fadeIn(animationSpec = tween(1)).togetherWith(fadeOut(animationSpec = tween(1)))
-                                },
-                                label = "SongViewToMusicPlayerTransition"
-                            ) { isMusicPlayer ->
-                                if (!isMusicPlayer) {
-                                    SongView(
-                                        onEvent = onEvent,
-                                        state = state
-                                    )
 
-                                } else {
-                                    MusicPlayer(
-                                        onEvent = onEvent,
-                                        state = state
-                                    )
-                                }
-                            }
-                        }
-                    }
-                ) { }
-
-        }
     }
 }
 
@@ -254,11 +213,13 @@ fun SongCardView(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun MusicPlayer(
+fun SharedTransitionScope.MusicPlayer(
     modifier: Modifier = Modifier,
     onEvent: (MainScreenEvent) -> Unit,
-    state: MainScreenState
+    state: MainScreenState,
+    animatedVisibilityScope: AnimatedVisibilityScope
 ) {
 
 
@@ -279,17 +240,43 @@ fun MusicPlayer(
                 contentDescription = "Image",
                 Modifier
                     .size(45.dp)
+                    .sharedElement(
+                        sharedContentState = rememberSharedContentState(key = "image/${state.currentSong!!.artworkUri}"),
+                        animatedVisibilityScope = animatedVisibilityScope,
+                        boundsTransform = {_,_ ->
+                            tween(durationMillis = 500)
+                        }
+                    )
             )
 
             Column {
                 Text(
-                    state.currentSong?.title.toString() ,
-                    modifier.padding(start = 12.dp, top = 1.dp, bottom = 1.dp),
+                    state.currentSong.title.toString() ,
+                    modifier
+                        .padding(start = 12.dp, top = 1.dp, bottom = 1.dp)
+                        .sharedElement(
+                            sharedContentState = rememberSharedContentState(key = "text/${state.currentSong.title}"),
+                            animatedVisibilityScope = animatedVisibilityScope,
+                            boundsTransform = {_,_ ->
+                                tween(durationMillis = 500)
+                            }
+                        ),
                     fontWeight = Bold, fontSize = 18.sp,
                     maxLines = 1
                 )
 
-                Text(state.currentSong?.artist.toString(), Modifier.padding(start = 12.dp, top = 1.dp, bottom = 1.dp), fontSize = 12.sp)
+                Text(
+                    state.currentSong.artist.toString(),
+                    Modifier
+                        .padding(start = 12.dp, top = 1.dp, bottom = 1.dp)
+                        .sharedElement(
+                            sharedContentState = rememberSharedContentState(key = "text/${state.currentSong.artist}"),
+                            animatedVisibilityScope = animatedVisibilityScope,
+                            boundsTransform = {_,_ ->
+                                tween(durationMillis = 500)
+                            }
+                        ),
+                    fontSize = 12.sp)
             }
 
         }

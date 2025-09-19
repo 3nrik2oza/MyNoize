@@ -1,7 +1,9 @@
 package com.project.mynoize.core.data
 
+
+
 data class Playlist(
-    val id: String = "",
+    var id: String = "",
     val name: String = "",
     val creator: String = "",
     val image: String = "",

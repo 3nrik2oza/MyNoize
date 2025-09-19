@@ -7,7 +7,10 @@ import com.project.mynoize.activities.main.presentation.create_playlist.CreatePl
 import com.project.mynoize.activities.main.presentation.create_playlist.domain.CreatePlaylistValidation
 import com.project.mynoize.activities.main.presentation.create_song.CreateSongViewModel
 import com.project.mynoize.activities.main.presentation.create_song.domain.CreateSongValidation
+import com.project.mynoize.activities.main.presentation.favorite_screen.FavoriteScreenViewModel
 import com.project.mynoize.activities.main.presentation.main_screen.MainScreenViewModel
+import com.project.mynoize.activities.main.presentation.playlist_screen.PlaylistScreenViewModel
+import com.project.mynoize.activities.main.presentation.select_songs_screen.SelectSongsViewModel
 import com.project.mynoize.core.data.repositories.AlbumRepository
 import com.project.mynoize.core.data.repositories.ArtistRepository
 import com.project.mynoize.core.data.repositories.SongRepository
@@ -60,27 +63,21 @@ val appModule = module{
         ExoPlayerManager(context = get<Application>())
     }
 
-    viewModel {
-        MainScreenViewModel(get(), get())
+    viewModel { MainScreenViewModel(get(), get()) }
 
-    }
+    viewModel { FavoriteScreenViewModel(get(), get()) }
 
+    viewModel { PlaylistScreenViewModel(get(), get(), get()) }
 
-    viewModel {
-        SignInViewModel(get(), get())
-    }
-
-    viewModel {
-        SignUpViewModel(get(), get())
-    }
+    viewModel { SelectSongsViewModel(get(), get()) }
 
     viewModel{ CreatePlaylistViewModel(get(), get(), get(), get()) }
 
-    viewModel {
-        CreateSongViewModel(get(), get(), get(), get(), get(), get())
-    }
+    viewModel { CreateSongViewModel(get(), get(), get(), get(), get(), get()) }
 
-    viewModel {
-        CreateArtistViewModel(get(), get(), get(), get())
-    }
+    viewModel { CreateArtistViewModel(get(), get(), get(), get()) }
+
+    viewModel { SignInViewModel(get(), get()) }
+
+    viewModel { SignUpViewModel(get(), get()) }
 }

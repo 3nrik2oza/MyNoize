@@ -63,7 +63,7 @@ class MainScreenViewModel (
                     for(document in result){
                         val song = document.toObject(Song::class.java)
                         song.position = list.size
-                        song.mediaId = document.id
+                        song.id = document.id
 
 
                         list += song

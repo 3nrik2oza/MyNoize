@@ -1,15 +1,76 @@
 package com.project.mynoize.core.data.repositories
 
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.project.mynoize.core.data.Song
 import com.project.mynoize.core.domain.DataError
 import com.project.mynoize.core.domain.EmptyResult
+import com.project.mynoize.core.domain.FbError
 import com.project.mynoize.core.domain.Result
+import com.project.mynoize.core.domain.Result.Error
+import com.project.mynoize.core.domain.Result.Success
 import com.project.mynoize.util.Constants
 import kotlinx.coroutines.tasks.await
 
 class SongRepository{
     private val db = FirebaseFirestore.getInstance()
+
+
+    suspend fun getSongByIds(ids: List<String>): Result<List<Song>, FbError.Firestore>{
+        return try {
+            val snapshot = db.collection(Constants.SONG_COLLECTION)
+                .whereIn(FieldPath.documentId(), ids)
+                .get()
+                .await()
+
+            return Success(snapshot.documents.map{ document ->
+                document.toObject(Song::class.java)!!.apply {
+                    id = document.id
+                }
+            })
+        }catch (e: FirebaseFirestoreException){
+            when(e.code){
+                FirebaseFirestoreException.Code.PERMISSION_DENIED -> Error(FbError.Firestore.PERMISSION_DENIED)
+                FirebaseFirestoreException.Code.UNAVAILABLE -> Error(FbError.Firestore.UNAVAILABLE)
+                FirebaseFirestoreException.Code.ABORTED -> Error(FbError.Firestore.ABORTED)
+                FirebaseFirestoreException.Code.NOT_FOUND -> Error(FbError.Firestore.NOT_FOUND)
+                FirebaseFirestoreException.Code.ALREADY_EXISTS -> Error(FbError.Firestore.ALREADY_EXISTS)
+                FirebaseFirestoreException.Code.DEADLINE_EXCEEDED -> Error(FbError.Firestore.DEADLINE_EXCEEDED)
+                FirebaseFirestoreException.Code.CANCELLED -> Error(FbError.Firestore.CANCELLED)
+                else -> Error(FbError.Firestore.UNKNOWN)
+            }
+        }catch (_: Exception){
+            Error(FbError.Firestore.UNKNOWN)
+        }
+    }
+
+    suspend fun getAllSongs(): Result<List<Song>, FbError.Firestore>{
+        return try {
+            val snapshot = db.collection(Constants.SONG_COLLECTION)
+                .get()
+                .await()
+
+            return Success(snapshot.documents.map{ document ->
+                document.toObject(Song::class.java)!!.apply {
+                    id = document.id
+                }
+            })
+        }catch (e: FirebaseFirestoreException){
+            when(e.code){
+                FirebaseFirestoreException.Code.PERMISSION_DENIED -> Error(FbError.Firestore.PERMISSION_DENIED)
+                FirebaseFirestoreException.Code.UNAVAILABLE -> Error(FbError.Firestore.UNAVAILABLE)
+                FirebaseFirestoreException.Code.ABORTED -> Error(FbError.Firestore.ABORTED)
+                FirebaseFirestoreException.Code.NOT_FOUND -> Error(FbError.Firestore.NOT_FOUND)
+                FirebaseFirestoreException.Code.ALREADY_EXISTS -> Error(FbError.Firestore.ALREADY_EXISTS)
+                FirebaseFirestoreException.Code.DEADLINE_EXCEEDED -> Error(FbError.Firestore.DEADLINE_EXCEEDED)
+                FirebaseFirestoreException.Code.CANCELLED -> Error(FbError.Firestore.CANCELLED)
+                else -> Error(FbError.Firestore.UNKNOWN)
+            }
+        }catch (_: Exception){
+            Error(FbError.Firestore.UNKNOWN)
+        }
+    }
 
     suspend fun addSongToFirebase(
         song: Song
@@ -19,9 +80,9 @@ class SongRepository{
                 .add(song)
                 .await()
 
-            Result.Success(Unit)
-        }catch (e: Exception){
-            Result.Error(DataError.Remote.SERVER)
+            Success(Unit)
+        }catch (_: Exception){
+            Error(DataError.Remote.SERVER)
         }
 
     }

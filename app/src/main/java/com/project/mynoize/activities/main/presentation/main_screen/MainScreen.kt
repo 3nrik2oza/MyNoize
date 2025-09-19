@@ -1,5 +1,15 @@
+@file:OptIn(ExperimentalSharedTransitionApi::class)
+
 package com.project.mynoize.activities.main.presentation.main_screen
 
+import android.annotation.SuppressLint
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,11 +22,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -41,10 +53,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.navigation
+import androidx.navigation.toRoute
 import com.project.mynoize.R
 import com.project.mynoize.activities.main.CreateArtistScreen
 import com.project.mynoize.activities.main.CreatePlaylistScreen
 import com.project.mynoize.activities.main.CreateSongScreen
+import com.project.mynoize.activities.main.FavoriteScreenRoot
+import com.project.mynoize.activities.main.MusicPlayer
+import com.project.mynoize.activities.main.PlaylistView
+import com.project.mynoize.activities.main.SelectSongsScreen
 import com.project.mynoize.activities.main.ShowMusic
 import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistEvent
 import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistScreen
@@ -56,19 +74,30 @@ import com.project.mynoize.activities.main.presentation.create_song.CreateSongEv
 import com.project.mynoize.activities.main.presentation.create_song.CreateSongScreen
 import com.project.mynoize.activities.main.presentation.create_song.CreateSongViewModel
 import com.project.mynoize.activities.main.presentation.favorite_screen.FavoriteScreen
+import com.project.mynoize.activities.main.presentation.favorite_screen.FavoriteScreenEvent
+import com.project.mynoize.activities.main.presentation.favorite_screen.FavoriteScreenViewModel
+import com.project.mynoize.activities.main.presentation.main_screen.components.SongView
 import com.project.mynoize.activities.main.presentation.music_screen.MusicScreen
+import com.project.mynoize.activities.main.presentation.playlist_screen.PlaylistScreen
+import com.project.mynoize.activities.main.presentation.playlist_screen.PlaylistScreenEvent
+import com.project.mynoize.activities.main.presentation.playlist_screen.PlaylistScreenViewModel
 import com.project.mynoize.activities.main.presentation.profile_screen.ProfileScreen
+import com.project.mynoize.activities.main.presentation.select_songs_screen.SelectSongsEvent
+import com.project.mynoize.activities.main.presentation.select_songs_screen.SelectSongsScreen
+import com.project.mynoize.activities.main.presentation.select_songs_screen.SelectSongsViewModel
 import com.project.mynoize.activities.main.ui.theme.DarkGray
 import com.project.mynoize.activities.main.ui.theme.LatoFontFamily
 import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
 import com.project.mynoize.activities.main.ui.theme.Red
 import org.koin.androidx.compose.koinViewModel
 
+@SuppressLint("UnusedSharedTransitionModifierParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     vmProfileScreen: ProfileScreenViewModel,
-    vmMainScreen: MainScreenViewModel
+    vmMainScreen: MainScreenViewModel,
+    mainState: MainScreenState
 ){
 
     val navController = rememberNavController()
@@ -105,110 +134,250 @@ fun MainScreen(
             }
         }
     ){ innerPadding ->
-
-        NavHost(
-            navController = navController,
-            startDestination = FavoriteScreen,
-            modifier = Modifier.padding(innerPadding)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
         ){
-            composable<MusicScreen>{
-                MusicScreen()
-            }
-            composable<FavoriteScreen>{
-                FavoriteScreen()
-            }
-
-            composable<ShowMusic> {
-                val state by vmMainScreen.state.collectAsState()
-
-                MainView(
-                    state,
-                    //exoPlayer = vmMainScreen.playerManager.getPlayer(),
-                    onEvent = { event->
-                        vmMainScreen.onEvent(event)
-
+            SharedTransitionLayout {
+                NavHost(
+                    navController = navController,
+                    startDestination = MusicScreen,
+                    modifier = Modifier.padding(innerPadding)
+                ){
+                    composable<MusicScreen>{
+                        MusicScreen()
                     }
-                )
-            }
+                    navigation<FavoriteScreenRoot>(
+                        startDestination = FavoriteScreen
+                    ){
 
-            composable<ProfileScreen> {
-                ProfileScreen(
-                    vm = vmProfileScreen
-                )
-            }
+                        composable<FavoriteScreen>{
+                            val vm: FavoriteScreenViewModel =koinViewModel<FavoriteScreenViewModel>()
 
-            composable<CreateArtistScreen> { backStackEntry ->
-                val vm: CreateArtistViewModel = koinViewModel<CreateArtistViewModel>()
-
-                val state by vm.state.collectAsStateWithLifecycle()
-                val alertDialogState by vm.alertDialogState.collectAsStateWithLifecycle()
-                CreateArtistScreen(
-                    state = state,
-                    alertDialogState = alertDialogState,
-                    onEvent = { event ->
-                        when(event){
-                            CreateArtistEvent.OnBackClick -> {
-                                navController.popBackStack()
-                            }else -> Unit
+                            val state by vm.state.collectAsStateWithLifecycle()
+                            FavoriteScreen(
+                                state = state,
+                                onEvent = { event ->
+                                    when(event){
+                                        is FavoriteScreenEvent.OnPlaylistClicked -> {
+                                            navController.navigate(PlaylistView(playlistId = event.playlistId))
+                                        }
+                                        //else -> Unit
+                                    }
+                                    vm.onEvent(event)
+                                },
+                                animatedVisibilityScope = this
+                            )
                         }
-                        vm.onEvent(event)
-                    }
-                )
-            }
 
-            composable<CreateSongScreen> { backStackEntry ->
-                val vm = koinViewModel<CreateSongViewModel>()
-
-                val createSongState by vm.createSongState.collectAsStateWithLifecycle()
-                val artistListState by vm.artistListState.collectAsStateWithLifecycle()
-                val albumListState by vm.albumListState.collectAsStateWithLifecycle()
-                val alertDialogState by vm.alertDialogState.collectAsStateWithLifecycle()
-                val createAlbumDialogState by vm.createAlbumDialogState.collectAsStateWithLifecycle()
+                        composable<PlaylistView> {
+                            val arg = it.toRoute<PlaylistView>()
 
 
-                CreateSongScreen(
-                    createSongState = createSongState,
-                    alertDialogState = alertDialogState,
-                    createAlbumDialogState = createAlbumDialogState,
-                    albumListState = albumListState,
-                    artistListState = artistListState,
-                    onEvent = { event ->
-                        when(event){
-                            CreateSongEvent.OnBackClick -> {
-                                navController.popBackStack()
-                            }else -> Unit
+                            val vm: PlaylistScreenViewModel = koinViewModel<PlaylistScreenViewModel>()
+
+                            LaunchedEffect(true) {
+                                vm.onEvent(PlaylistScreenEvent.SetPlaylistId(arg.playlistId))
+                            }
+
+                            val state by vm.state.collectAsStateWithLifecycle()
+                            val alertDialogState by vm.alertDialogState.collectAsStateWithLifecycle()
+
+                            PlaylistScreen(
+                                state = state,
+                                alertDialogState = alertDialogState,
+                                onEvent = { event ->
+                                    when(event){
+                                        is PlaylistScreenEvent.OnBackClick -> {
+                                            navController.popBackStack()
+                                        }
+                                        is PlaylistScreenEvent.OnAddSongClick -> {
+                                            navController.navigate(SelectSongsScreen(playlistId = arg.playlistId))
+                                        }
+                                        else -> Unit
+                                    }
+                                    vm.onEvent(event)
+                                },
+                                animatedVisibilityScope = this
+                            )
+
                         }
-                        vm.onEvent(event)
-                    },
-                    onCreateAlbumEvent = { event ->
-                        vm.onCreateAlbumEvent(event)
-                    }
-                )
-            }
 
-            composable<CreatePlaylistScreen> {
+                        composable<SelectSongsScreen>{
+                            val args = it.toRoute<SelectSongsScreen>()
 
-                val vm: CreatePlaylistViewModel = koinViewModel<CreatePlaylistViewModel>()
+                            val vm: SelectSongsViewModel = koinViewModel<SelectSongsViewModel>()
+                            vm.onEvent(SelectSongsEvent.SetPlaylist(playlistId = args.playlistId))
 
-                val state by vm.state.collectAsStateWithLifecycle()
-                val alertDialogState by vm.alertDialogState.collectAsStateWithLifecycle()
-
-                CreatePlaylistScreen(
-                    state = state,
-                    alertDialogState = alertDialogState,
-                    onEvent = { event ->
-                        when(event){
-                            CreatePlaylistEvent.OnBackClick -> {
-                                navController.popBackStack()
-                            }else -> Unit
+                            val state by vm.state.collectAsStateWithLifecycle()
+                            val alertDialogState by vm.alertDialogState.collectAsStateWithLifecycle()
+                            SelectSongsScreen(
+                                state = state,
+                                alertDialogState = alertDialogState,
+                                onEvent = { event ->
+                                    when(event){
+                                        is SelectSongsEvent.OnBackClick -> {
+                                            navController.popBackStack()
+                                        }
+                                        else -> Unit
+                                    }
+                                    vm.onEvent(event)
+                                }
+                            )
                         }
-                        vm.onEvent(event)
+
                     }
 
-                )
+
+
+                    composable<ShowMusic> {
+                        val state by vmMainScreen.state.collectAsState()
+
+                        MainView(
+                            state,
+                            onEvent = { event->
+                                vmMainScreen.onEvent(event)
+
+                            }
+                        )
+                    }
+
+                    composable<ProfileScreen> {
+                        ProfileScreen(
+                            vm = vmProfileScreen
+                        )
+                    }
+
+                    composable<CreateArtistScreen> { backStackEntry ->
+                        val vm: CreateArtistViewModel = koinViewModel<CreateArtistViewModel>()
+
+                        val state by vm.state.collectAsStateWithLifecycle()
+                        val alertDialogState by vm.alertDialogState.collectAsStateWithLifecycle()
+                        CreateArtistScreen(
+                            state = state,
+                            alertDialogState = alertDialogState,
+                            onEvent = { event ->
+                                when(event){
+                                    CreateArtistEvent.OnBackClick -> {
+                                        navController.popBackStack()
+                                    }else -> Unit
+                                }
+                                vm.onEvent(event)
+                            }
+                        )
+                    }
+
+                    composable<CreateSongScreen> { backStackEntry ->
+                        val vm = koinViewModel<CreateSongViewModel>()
+
+                        val createSongState by vm.createSongState.collectAsStateWithLifecycle()
+                        val artistListState by vm.artistListState.collectAsStateWithLifecycle()
+                        val albumListState by vm.albumListState.collectAsStateWithLifecycle()
+                        val alertDialogState by vm.alertDialogState.collectAsStateWithLifecycle()
+                        val createAlbumDialogState by vm.createAlbumDialogState.collectAsStateWithLifecycle()
+
+
+                        CreateSongScreen(
+                            createSongState = createSongState,
+                            alertDialogState = alertDialogState,
+                            createAlbumDialogState = createAlbumDialogState,
+                            albumListState = albumListState,
+                            artistListState = artistListState,
+                            onEvent = { event ->
+                                when(event){
+                                    CreateSongEvent.OnBackClick -> {
+                                        navController.popBackStack()
+                                    }else -> Unit
+                                }
+                                vm.onEvent(event)
+                            },
+                            onCreateAlbumEvent = { event ->
+                                vm.onCreateAlbumEvent(event)
+                            }
+                        )
+                    }
+
+                    composable<CreatePlaylistScreen> {
+
+                        val vm: CreatePlaylistViewModel = koinViewModel<CreatePlaylistViewModel>()
+
+                        val state by vm.state.collectAsStateWithLifecycle()
+                        val alertDialogState by vm.alertDialogState.collectAsStateWithLifecycle()
+
+                        CreatePlaylistScreen(
+                            state = state,
+                            alertDialogState = alertDialogState,
+                            onEvent = { event ->
+                                when(event){
+                                    CreatePlaylistEvent.OnBackClick -> {
+                                        navController.popBackStack()
+                                    }else -> Unit
+                                }
+                                vm.onEvent(event)
+                            }
+
+                        )
+                    }
+
+                }
+
+                val scaffoldState = rememberBottomSheetScaffoldState()
+                mainState.currentSong?.let { song ->
+                    BottomSheetScaffold(
+                        scaffoldState = scaffoldState,
+                        sheetPeekHeight = 140.dp,
+                        sheetDragHandle = {},
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                        sheetShape = RectangleShape,
+                        sheetContent = {
+                            Box(modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    shape = RectangleShape,
+                                    color = Color.White
+                                )) {
+                                val showMusicPlayer = scaffoldState.bottomSheetState.currentValue.name == "PartiallyExpanded"
+                                AnimatedContent(
+                                    targetState = showMusicPlayer,
+                                    transitionSpec = {
+                                        fadeIn(animationSpec = tween(1)).togetherWith(fadeOut(animationSpec = tween(1)))
+                                    },
+                                    label = "SongViewToMusicPlayerTransition"
+                                ) { isMusicPlayer ->
+                                    if (!isMusicPlayer) {
+                                        SongView(
+                                            onEvent = { event ->
+                                                vmMainScreen.onEvent(event)},
+                                            state = mainState,
+                                            animatedVisibilityScope = this
+                                        )
+
+                                    } else {
+                                        MusicPlayer(
+                                            onEvent = { event ->
+                                                vmMainScreen.onEvent(event)},
+                                            state = mainState,
+                                            animatedVisibilityScope = this
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    ) { }
+
+                }
+
             }
+
+
+
 
         }
+
+
+
+
+
     }
 
 

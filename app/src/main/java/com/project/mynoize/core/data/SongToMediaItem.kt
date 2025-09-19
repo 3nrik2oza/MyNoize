@@ -14,7 +14,7 @@ fun Song.toMediaItem(): MediaItem {
                 .setArtist(artistName)
                 .setAlbumTitle(albumName)
                 .setArtworkUri(imageUrl.toUri())
-                .setDescription(mediaId)
+                .setDescription(id)
                 .build()
         )
         .build()

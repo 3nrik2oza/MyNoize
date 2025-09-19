@@ -1,5 +1,8 @@
 package com.project.mynoize.activities.main.presentation.favorite_screen
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -20,15 +24,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.project.mynoize.activities.main.presentation.music_screen.PlaylistScrollElement
+import com.project.mynoize.R
+import com.project.mynoize.activities.main.presentation.favorite_screen.components.PlaylistScrollElement
+import com.project.mynoize.core.data.Playlist
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun FavoriteScreen(){
+fun SharedTransitionScope.FavoriteScreen(
+    state: FavoriteScreenState,
+    onEvent: (FavoriteScreenEvent) -> Unit,
+    animatedVisibilityScope: AnimatedVisibilityScope
+){
+
     Column(
         Modifier.fillMaxSize()
             .padding(start = 10.dp, top= 20.dp)
@@ -64,6 +76,8 @@ fun FavoriteScreen(){
             text= "Playlists"
         )
 
+        Spacer(Modifier.size(10.dp))
+
         LazyRow {
 
             item{
@@ -72,14 +86,15 @@ fun FavoriteScreen(){
                 )
             }
 
-            items(10){
+            itemsIndexed(state.playlists){ index, playlist ->
                 PlaylistScrollElement(
-                    modifier = Modifier.size(100.dp)
+                    modifier = Modifier.size(100.dp),
+                    playlist = playlist,
+                    onEvent = onEvent,
+                    animatedVisibilityScope = animatedVisibilityScope
                 )
             }
         }
-
-        Spacer(Modifier.size(10.dp))
 
         Text(
             fontSize = 23.sp,
@@ -96,7 +111,10 @@ fun FavoriteScreen(){
 
             items(10){
                 PlaylistScrollElement(
-                    modifier = Modifier.size(100.dp)
+                    modifier = Modifier.size(100.dp),
+                    playlist = Playlist(),
+                    onEvent = onEvent,
+                    animatedVisibilityScope = animatedVisibilityScope
                 )
             }
         }
@@ -108,23 +126,23 @@ fun FavoriteScreen(){
 
 @Composable
 fun AddPlaylistScrollElement(
-    text:String = ""
+    text:String = "",
 ){
     Column (
-        modifier = Modifier.padding(start= 10.dp, end=10.dp, top = 10.dp),
+        modifier = Modifier.padding(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ){
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.size(100.dp)
-                .background(Color.DarkGray)
-                .border(2.dp, Color.Black)
+                .border(1.dp, Color.Black)
         ){
 
             Icon(
-                imageVector = Icons.Default.Add,
+                painter = painterResource(R.drawable.ic_add),
                 contentDescription = "Add",
-                modifier = Modifier.size(50.dp))
+                modifier = Modifier.size(50.dp)
+            )
 
         }
         Text(
@@ -185,10 +203,13 @@ fun AddArtistsScrollElement(){
 
 }
 
-
+/*
 @Preview(showBackground = true)
 @Composable
 fun FavoriteScreenPreview(){
-    FavoriteScreen()
+    FavoriteScreen(
+        state = FavoriteScreenState(),
+        onEvent = {}
+    )
 
-}
+}*/

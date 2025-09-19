@@ -56,7 +56,7 @@ class ExoPlayerManager(
         }
 
         scope.launch {
-            val song = songs.find{ song -> song.mediaId == dataStore.mediaId.first().toString() }
+            val song = songs.find{ song -> song.id == dataStore.mediaId.first().toString() }
             _currentSong.update { song?.toMediaItem()?.mediaMetadata  }
             _currentPosition.value = dataStore.position.first()?.toLong() ?: 0L
             exoPlayer?.seekTo(songs.indexOf(song),_currentPosition.value*1000)

@@ -27,7 +27,7 @@ class CreateArtistViewModel(
     private val auth: AuthRepository
 ): ViewModel() {
 
-    val _alertDialogState = MutableStateFlow(AlertDialogState())
+    private val _alertDialogState = MutableStateFlow(AlertDialogState())
     val alertDialogState = _alertDialogState.asStateFlow()
 
     private val _state = MutableStateFlow(CreateArtistState())

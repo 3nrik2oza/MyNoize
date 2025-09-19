@@ -1,7 +1,7 @@
 package com.project.mynoize.core.data
 
-class Song (
-    var mediaId: String = "",
+data class Song (
+    var id: String = "",
     val title: String = "",
     val artistId: String = "",
     val artistName: String = "",

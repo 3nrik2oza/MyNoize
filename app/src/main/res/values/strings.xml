@@ -9,6 +9,8 @@
     <string name="error_incorrect_password">Password is invalid</string>
 
     <string name="successfully_account_created">Account has been created successfully</string>
+    <string name="successfully_added_songs_to_playlist">Songs have been added to playlist successfully"</string>
+    
     <string name="error_enter_username">Please enter your username</string>
     <string name="error_username_too_long">Username is too long</string>
     <string name="error_password_too_short">Password is too short</string>
