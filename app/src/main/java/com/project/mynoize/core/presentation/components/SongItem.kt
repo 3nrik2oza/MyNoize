@@ -56,7 +56,9 @@ fun SongItem(
     Column {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth().height(80.dp),
+            modifier = Modifier.clickable(onClick = {
+                playlistScreenEvent(PlaylistScreenEvent.OnSongClicked(index))
+            }).fillMaxWidth().height(80.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
 

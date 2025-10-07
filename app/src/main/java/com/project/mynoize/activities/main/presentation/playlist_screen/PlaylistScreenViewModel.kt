@@ -7,6 +7,7 @@ import com.project.mynoize.core.data.repositories.PlaylistRepository
 import com.project.mynoize.core.data.repositories.SongRepository
 import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.core.presentation.AlertDialogState
+import com.project.mynoize.managers.ExoPlayerManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -15,7 +16,8 @@ import kotlinx.coroutines.launch
 class PlaylistScreenViewModel(
     private val playlistRepository: PlaylistRepository,
     private val songRepository: SongRepository,
-    private val artistRepository: ArtistRepository
+    private val artistRepository: ArtistRepository,
+    private val exoPlayerManager: ExoPlayerManager
 ): ViewModel() {
 
     private val _alertDialogState = MutableStateFlow(AlertDialogState())
@@ -29,23 +31,26 @@ class PlaylistScreenViewModel(
         when(event){
             is PlaylistScreenEvent.SetPlaylistId -> setPlaylistData(event.playlistId)
             is PlaylistScreenEvent.OnMoreClick -> onMoreClicked(event.index)
-            is PlaylistScreenEvent.OnRemoveSongClick -> {
-                val songs = state.value.playlist.songs - state.value.selectedSong().id
-
-                viewModelScope.launch {
-                    playlistRepository.updateSongsInPlaylist(songs, state.value.playlist.id).onSuccess {
-                        _state.update { it.copy(isSheetOpen = false, playlist = it.playlist.copy(songs = songs), songs = it.songs - it.selectedSong()) }
-                    }
-                }
-            }
+            is PlaylistScreenEvent.OnRemoveSongClick -> removeSongFromPlaylist()
             is PlaylistScreenEvent.OnDismissAlertDialog -> _state.update { it.copy(isSheetOpen = false) }
+            is PlaylistScreenEvent.OnSongClicked ->{
+                exoPlayerManager.initializePlayer(songs = state.value.songs, play = true, viewModelScope, index = event.index)
+            }
             else ->{
 
             }
         }
     }
 
+    private fun removeSongFromPlaylist(){
+        val songs = state.value.playlist.songs - state.value.selectedSong().id
 
+        viewModelScope.launch {
+            playlistRepository.updateSongsInPlaylist(songs, state.value.playlist.id).onSuccess {
+                _state.update { it.copy(isSheetOpen = false, playlist = it.playlist.copy(songs = songs), songs = it.songs - it.selectedSong()) }
+            }
+        }
+    }
 
     private fun onMoreClicked(index: Int){
         viewModelScope.launch {

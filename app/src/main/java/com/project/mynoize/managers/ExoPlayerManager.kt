@@ -45,7 +45,7 @@ class ExoPlayerManager(
     val dataStore = UserInformation(context)
 
 
-    fun initializePlayer(songs: List<Song> = listOf(), play: Boolean = true, scope: CoroutineScope) {
+    fun initializePlayer(songs: List<Song> = listOf(), play: Boolean = true, scope: CoroutineScope, index: Int = -1) {
 
 
         songList.value = songs
@@ -56,11 +56,12 @@ class ExoPlayerManager(
         }
 
         scope.launch {
-            val song = songs.find{ song -> song.id == dataStore.mediaId.first().toString() }
+            val song = if(index == -1) songs.find{ song -> song.id == dataStore.mediaId.first().toString() } else songs[index]
             _currentSong.update { song?.toMediaItem()?.mediaMetadata  }
-            _currentPosition.value = dataStore.position.first()?.toLong() ?: 0L
+            _currentPosition.value = if(index == -1) dataStore.position.first()?.toLong() ?: 0L else 0L
             exoPlayer?.seekTo(songs.indexOf(song),_currentPosition.value*1000)
             exoPlayer?.prepare()
+            if(play) exoPlayer?.playWhenReady
             _isPlaying.update { play }
         }
 

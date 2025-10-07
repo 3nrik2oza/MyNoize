@@ -26,6 +26,7 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val appModule = module{
+
     single{
         AuthRepository()
     }
@@ -40,34 +41,25 @@ val appModule = module{
     }
     single { PlaylistRepository() }
 
-    single {
-        AlbumRepository()
-    }
-    single {
-        CreateSongValidation()
-    }
+    single { AlbumRepository() }
+    single { CreateSongValidation() }
 
     single { CreatePlaylistValidation() }
 
-    single {
-        SignInValidation()
-    }
-    single {
-        SignUpValidation()
-    }
+    single { SignInValidation() }
 
-    single {
-        CreateArtistValidation()
-    }
-    single {
-        ExoPlayerManager(context = get<Application>())
-    }
+    single { SignUpValidation() }
+
+    single { CreateArtistValidation() }
+
+    single { ExoPlayerManager(context = get<Application>()) }
+
 
     viewModel { MainScreenViewModel(get(), get()) }
 
     viewModel { FavoriteScreenViewModel(get(), get()) }
 
-    viewModel { PlaylistScreenViewModel(get(), get(), get()) }
+    viewModel { PlaylistScreenViewModel(get(), get(), get(), get()) }
 
     viewModel { SelectSongsViewModel(get(), get()) }
 
