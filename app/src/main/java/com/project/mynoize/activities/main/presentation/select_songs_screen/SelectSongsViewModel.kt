@@ -12,6 +12,7 @@ import com.project.mynoize.core.presentation.UiText
 import com.project.mynoize.core.presentation.toErrorMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.collections.plus
@@ -44,9 +45,12 @@ class SelectSongsViewModel(
         when(event){
             is SelectSongsEvent.OnSongClicked -> { addRemoveSong(event.index, event.add)
             }
-            is SelectSongsEvent.SetPlaylist -> { _state.update {  state ->
-                state.copy(playlist = playlistRepository.lastLoadedPlaylists.find { it.id == event.playlistId }!!)
-            }
+            is SelectSongsEvent.SetPlaylist -> {
+                viewModelScope.launch {
+                    _state.update {  state ->
+                        state.copy(playlist = playlistRepository.list.first().find { it.id == event.playlistId }!!)
+                    }
+                }
             }
             is SelectSongsEvent.OnFinishClick -> { addSongsToPlaylist()
             }

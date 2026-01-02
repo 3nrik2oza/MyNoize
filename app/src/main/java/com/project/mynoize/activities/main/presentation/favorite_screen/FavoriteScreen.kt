@@ -82,7 +82,10 @@ fun SharedTransitionScope.FavoriteScreen(
 
             item{
                 AddPlaylistScrollElement(
-                    text = "Add playlist"
+                    text = "Add playlist",
+                    createNew = {
+                        onEvent(FavoriteScreenEvent.OnCreatePlaylist)
+                    }
                 )
             }
 
@@ -105,7 +108,8 @@ fun SharedTransitionScope.FavoriteScreen(
 
             item{
                 AddPlaylistScrollElement(
-                    text = "Add album"
+                    text = "Add album",
+                    createNew = {}
                 )
             }
 
@@ -127,6 +131,7 @@ fun SharedTransitionScope.FavoriteScreen(
 @Composable
 fun AddPlaylistScrollElement(
     text:String = "",
+    createNew: () -> Unit
 ){
     Column (
         modifier = Modifier.padding(10.dp),
@@ -136,6 +141,9 @@ fun AddPlaylistScrollElement(
             contentAlignment = Alignment.Center,
             modifier = Modifier.size(100.dp)
                 .border(1.dp, Color.Black)
+                .clickable{
+                    createNew()
+                }
         ){
 
             Icon(

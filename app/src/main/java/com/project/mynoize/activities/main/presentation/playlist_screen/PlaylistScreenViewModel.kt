@@ -1,5 +1,6 @@
 package com.project.mynoize.activities.main.presentation.playlist_screen
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.mynoize.core.data.repositories.ArtistRepository
@@ -10,6 +11,8 @@ import com.project.mynoize.core.presentation.AlertDialogState
 import com.project.mynoize.managers.ExoPlayerManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -34,7 +37,7 @@ class PlaylistScreenViewModel(
             is PlaylistScreenEvent.OnRemoveSongClick -> removeSongFromPlaylist()
             is PlaylistScreenEvent.OnDismissAlertDialog -> _state.update { it.copy(isSheetOpen = false) }
             is PlaylistScreenEvent.OnSongClicked ->{
-                exoPlayerManager.initializePlayer(songs = state.value.songs, play = true, viewModelScope, index = event.index)
+                exoPlayerManager.initializePlayer(songs = state.value.songs, play = true, viewModelScope, index = event.index, playlistId = state.value.playlist.id)
             }
             else ->{
 
@@ -63,12 +66,15 @@ class PlaylistScreenViewModel(
     }
 
     private fun setPlaylistData(playlistId: String){
-        _state.update { state->
-            state.copy(
-                playlist = playlistRepository.lastLoadedPlaylists.find{ it.id == playlistId }!!
-            )
-        }
+
         viewModelScope.launch {
+
+            _state.update { state->
+                state.copy(
+                    playlist = playlistRepository.list.first().find{ it.id == playlistId }!!
+                )
+            }
+
             songRepository.getSongByIds(state.value.playlist.songs).onSuccess { songs ->
                 _state.update {
                     it.copy(

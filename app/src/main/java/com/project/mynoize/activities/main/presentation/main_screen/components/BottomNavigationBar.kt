@@ -58,12 +58,12 @@ fun BottomNavigationBar(
             title = "Create",
             icon = R.drawable.ic_add,
             route = CreateArtistScreen
-        ),
+        ),/*
         NavigationItem(
             title = "Show",
             icon = R.drawable.ic_show,
             route = ShowMusic
-        ),
+        ),*/
         NavigationItem(
             title = "Profile",
             icon = R.drawable.ic_profile,

@@ -162,6 +162,9 @@ fun MainScreen(
                                         is FavoriteScreenEvent.OnPlaylistClicked -> {
                                             navController.navigate(PlaylistView(playlistId = event.playlistId))
                                         }
+                                        is FavoriteScreenEvent.OnCreatePlaylist -> {
+                                            navController.navigate(CreatePlaylistScreen)
+                                        }
                                         //else -> Unit
                                     }
                                     vm.onEvent(event)
@@ -228,7 +231,7 @@ fun MainScreen(
 
                     }
 
-
+/*
 
                     composable<ShowMusic> {
                         val state by vmMainScreen.state.collectAsState()
@@ -240,7 +243,7 @@ fun MainScreen(
 
                             }
                         )
-                    }
+                    }*/
 
                     composable<ProfileScreen> {
                         ProfileScreen(

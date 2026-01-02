@@ -3,11 +3,15 @@ package com.project.mynoize.core.data.repositories
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
+import com.google.firebase.firestore.snapshots
+import com.google.firebase.firestore.toObjects
 import com.project.mynoize.core.data.Playlist
 import com.project.mynoize.core.domain.FbError
 import com.project.mynoize.core.domain.Result
 import com.project.mynoize.core.domain.Result.Error
 import com.project.mynoize.util.Constants
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 
 class PlaylistRepository {
@@ -16,6 +20,15 @@ class PlaylistRepository {
 
     var lastLoadedPlaylists = listOf<Playlist>()
 
+    var list : Flow<List<Playlist>> = db.collection(Constants.PLAYLIST_COLLECTION)
+        .snapshots()
+        .map { snapshots ->
+            snapshots.documents.map { doc ->
+                doc.toObject(Playlist::class.java)!!.copy(
+                    id = doc.id
+                )
+            }
+        }
 
     suspend fun updateSongsInPlaylist(songs: List<String>, id: String): Result<Unit, FbError.Firestore> {
         return try {

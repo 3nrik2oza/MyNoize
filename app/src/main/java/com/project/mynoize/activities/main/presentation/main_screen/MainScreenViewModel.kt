@@ -1,26 +1,39 @@
 package com.project.mynoize.activities.main.presentation.main_screen
 
+import android.annotation.SuppressLint
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.project.mynoize.core.data.Song
+import com.project.mynoize.core.data.repositories.PlaylistRepository
+import com.project.mynoize.core.data.repositories.SongRepository
+import com.project.mynoize.core.domain.onError
+import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.managers.ExoPlayerManager
 import com.project.mynoize.util.Constants
+import com.project.mynoize.util.UserInformation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+@SuppressLint("SuspiciousIndentation")
 class MainScreenViewModel (
     val playerManager: ExoPlayerManager,
-    application: Application) : AndroidViewModel(application){
+    private val playlistRepository: PlaylistRepository,
+    private val songRepository: SongRepository,
+    private val dataStore: UserInformation,
+    application: Application) : AndroidViewModel(application) {
 
-  //  val dataStore = UserInformation(application)
+//    val dataStore = UserInformation(application)
 
 
     val _state = MutableStateFlow(MainScreenState())
@@ -35,8 +48,6 @@ class MainScreenViewModel (
 
 
         viewModelScope.launch {
-        //    lastId = dataStore.mediaId.first().toString()
-        //    lastPosition = dataStore.position.first()?.toLong() ?: 0L
 
             combine(
                 playerManager.currentSong,
@@ -57,6 +68,21 @@ class MainScreenViewModel (
 
         }
 
+        viewModelScope.launch {
+            val playlist = playlistRepository.list.first().find{ it.id == dataStore.playlistId.first().toString()} ?: return@launch
+
+            songRepository.getSongByIds(playlist.songs).onSuccess { songs ->
+                _state.update {
+                    it.copy(
+                        songList = songs
+                    )
+                }
+                playerManager.initializePlayer(songs = songs, play = false, scope = viewModelScope, playlistId = playlist.id)
+            }
+
+        }
+
+        /*
         var list = mutableListOf<Song>()
             Firebase.firestore.collection(Constants.SONG_COLLECTION).get()
                 .addOnSuccessListener { result ->
@@ -71,7 +97,7 @@ class MainScreenViewModel (
                     _state.update { it.copy(songList = list) }
 
                     playerManager.initializePlayer(songs = list, play = false, scope = viewModelScope)
-                }
+                }*/
 
         viewModelScope.launch {
             savePosition()

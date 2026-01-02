@@ -7,6 +7,7 @@ import com.project.mynoize.core.data.repositories.PlaylistRepository
 import com.project.mynoize.core.domain.onSuccess
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class FavoriteScreenViewModel(
@@ -19,9 +20,8 @@ class FavoriteScreenViewModel(
 
     init {
         viewModelScope.launch {
-            playlistRepository.getPlaylist(auth.getCurrentUserId()).onSuccess {
-                _state.value = _state.value.copy(playlists = it)
-
+            playlistRepository.list.collect { playlists ->
+                _state.update { it.copy(playlists = playlists) }
             }
         }
 
@@ -30,6 +30,7 @@ class FavoriteScreenViewModel(
     fun onEvent(event: FavoriteScreenEvent){
         when(event){
             is FavoriteScreenEvent.OnPlaylistClicked -> {}
+            else -> {}
         }
     }
 

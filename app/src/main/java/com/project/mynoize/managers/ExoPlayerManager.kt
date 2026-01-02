@@ -24,6 +24,7 @@ import kotlinx.coroutines.runBlocking
 
 class ExoPlayerManager(
     private val context: Context,
+    private val dataStore: UserInformation
 ) {
     private var exoPlayer: ExoPlayer? = null
 
@@ -42,11 +43,28 @@ class ExoPlayerManager(
     private val _duration= MutableStateFlow(exoPlayer?.currentPosition ?: 0L)
     val duration: StateFlow<Long> = _duration
 
-    val dataStore = UserInformation(context)
+   // val dataStore = UserInformation(context)
 
 
-    fun initializePlayer(songs: List<Song> = listOf(), play: Boolean = true, scope: CoroutineScope, index: Int = -1) {
+    fun initializePlayer(songs: List<Song> = listOf(), play: Boolean = true, scope: CoroutineScope, index: Int = -1, playlistId: String) {
 
+        if(exoPlayer != null){
+            //exoPlayer?.release()
+            songList.value = songs
+            val mediaItem = songList.value.map { song -> song.toMediaItem() }
+            exoPlayer?.setMediaItems(mediaItem)
+            scope.launch {
+                val song = if(index == -1) songs.find{ song -> song.id == dataStore.mediaId.first().toString() } else songs[index]
+                _currentSong.update { song?.toMediaItem()?.mediaMetadata  }
+                _currentPosition.value = if(index == -1) dataStore.position.first()?.toLong() ?: 0L else 0L
+                exoPlayer?.seekTo(songs.indexOf(song),_currentPosition.value*1000)
+                exoPlayer?.prepare()
+                exoPlayer?.playWhenReady = play
+                _isPlaying.update { play }
+                dataStore.updatePlaylist(playlistId = playlistId)
+            }
+            return
+        }
 
         songList.value = songs
         val mediaItems = songList.value.map { song -> song.toMediaItem() }
@@ -61,8 +79,9 @@ class ExoPlayerManager(
             _currentPosition.value = if(index == -1) dataStore.position.first()?.toLong() ?: 0L else 0L
             exoPlayer?.seekTo(songs.indexOf(song),_currentPosition.value*1000)
             exoPlayer?.prepare()
-            if(play) exoPlayer?.playWhenReady
+            exoPlayer?.playWhenReady = play
             _isPlaying.update { play }
+            dataStore.updatePlaylist(playlistId = playlistId)
         }
 
 
@@ -131,6 +150,7 @@ class ExoPlayerManager(
         }
 
         exoPlayer?.release()
+        exoPlayer = null
     }
 
 }

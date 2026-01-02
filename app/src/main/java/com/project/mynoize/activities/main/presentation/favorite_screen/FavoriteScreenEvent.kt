@@ -1,8 +1,10 @@
 package com.project.mynoize.activities.main.presentation.favorite_screen
 
 
-sealed class FavoriteScreenEvent {
+sealed interface FavoriteScreenEvent {
 
-    class OnPlaylistClicked(val playlistId: String) : FavoriteScreenEvent()
+    class OnPlaylistClicked(val playlistId: String) : FavoriteScreenEvent
+
+    object OnCreatePlaylist: FavoriteScreenEvent
 
 }

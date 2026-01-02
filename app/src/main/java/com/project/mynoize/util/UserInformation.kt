@@ -19,6 +19,10 @@ class UserInformation(
         preferences[positionKey]
     }
 
+    val playlistId = context.dataStore.data.map { preferences ->
+        preferences[playlistKey]
+    }
+
     suspend fun updateMediaId(id: String) =
         context.dataStore.edit { settings ->
             settings[mediaKey] = id
@@ -29,10 +33,15 @@ class UserInformation(
             settings[positionKey] = position.toString()
         }
 
+    suspend fun updatePlaylist(playlistId: String) =
+        context.dataStore.edit { settings ->
+            settings[playlistKey] = playlistId
+        }
 
     companion object {
         val mediaKey = stringPreferencesKey("media_id_key")
         val positionKey = stringPreferencesKey("position_key")
+        val playlistKey = stringPreferencesKey("playlist_id_key")
     }
 
 }

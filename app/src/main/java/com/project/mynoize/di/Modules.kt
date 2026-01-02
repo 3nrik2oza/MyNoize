@@ -22,6 +22,7 @@ import com.project.mynoize.activities.signin.domain.SignUpValidation
 import com.project.mynoize.core.data.AuthRepository
 import com.project.mynoize.core.data.repositories.PlaylistRepository
 import com.project.mynoize.managers.ExoPlayerManager
+import com.project.mynoize.util.UserInformation
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
@@ -52,10 +53,13 @@ val appModule = module{
 
     single { CreateArtistValidation() }
 
-    single { ExoPlayerManager(context = get<Application>()) }
+    single { UserInformation(context = get<Application>()) }
+
+    single { ExoPlayerManager(context = get<Application>(), get()) }
 
 
-    viewModel { MainScreenViewModel(get(), get()) }
+
+    viewModel { MainScreenViewModel(get(), get(), get(), get(), get()) }
 
     viewModel { FavoriteScreenViewModel(get(), get()) }
 
