@@ -136,7 +136,7 @@ fun SongItem(
                         contentDescription = "Add song to the playlist",
                         modifier = Modifier.clickable(onClick = {
                             playlistScreenEvent(
-                                PlaylistScreenEvent.OnMoreClick(
+                                PlaylistScreenEvent.OnMoreSongClick(
                                     index = index
                                 )
                             )

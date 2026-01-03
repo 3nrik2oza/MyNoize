@@ -31,14 +31,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.project.mynoize.activities.main.FavoriteScreen
-import com.project.mynoize.activities.main.MainView
 import com.project.mynoize.activities.main.MusicScreen
 import com.project.mynoize.activities.main.ProfileScreen
 import com.project.mynoize.activities.main.presentation.main_screen.components.BottomNavigationBar
@@ -63,7 +61,6 @@ import com.project.mynoize.activities.main.FavoriteScreenRoot
 import com.project.mynoize.activities.main.MusicPlayer
 import com.project.mynoize.activities.main.PlaylistView
 import com.project.mynoize.activities.main.SelectSongsScreen
-import com.project.mynoize.activities.main.ShowMusic
 import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistEvent
 import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistScreen
 import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistViewModel
@@ -197,6 +194,9 @@ fun MainScreen(
                                         is PlaylistScreenEvent.OnAddSongClick -> {
                                             navController.navigate(SelectSongsScreen(playlistId = arg.playlistId))
                                         }
+                                        is PlaylistScreenEvent.OnPlaylistModifyClicked -> {
+                                            navController.navigate(CreatePlaylistScreen(playlistId = arg.playlistId))
+                                        }
                                         else -> Unit
                                     }
                                     vm.onEvent(event)
@@ -301,8 +301,26 @@ fun MainScreen(
                     }
 
                     composable<CreatePlaylistScreen> {
+                        /*
 
+                                                   val arg = it.toRoute<PlaylistView>()
+
+
+                            val vm: PlaylistScreenViewModel = koinViewModel<PlaylistScreenViewModel>()
+
+                            LaunchedEffect(true) {
+                                vm.onEvent(PlaylistScreenEvent.SetPlaylistId(arg.playlistId))
+                            }
+                        */
+
+                        val arg = it.toRoute<CreatePlaylistScreen>()
                         val vm: CreatePlaylistViewModel = koinViewModel<CreatePlaylistViewModel>()
+
+                        LaunchedEffect(true) {
+                            if(arg.playlistId != ""){
+                                vm.onEvent(CreatePlaylistEvent.OnModifyPlaylist(playlistId = arg.playlistId))
+                            }
+                        }
 
                         val state by vm.state.collectAsStateWithLifecycle()
                         val alertDialogState by vm.alertDialogState.collectAsStateWithLifecycle()

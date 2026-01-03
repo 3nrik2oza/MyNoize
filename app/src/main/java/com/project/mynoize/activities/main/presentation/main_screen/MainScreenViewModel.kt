@@ -2,18 +2,12 @@ package com.project.mynoize.activities.main.presentation.main_screen
 
 import android.annotation.SuppressLint
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
-import com.project.mynoize.core.data.Song
 import com.project.mynoize.core.data.repositories.PlaylistRepository
 import com.project.mynoize.core.data.repositories.SongRepository
-import com.project.mynoize.core.domain.onError
 import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.managers.ExoPlayerManager
-import com.project.mynoize.util.Constants
 import com.project.mynoize.util.UserInformation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -21,7 +15,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -33,10 +26,9 @@ class MainScreenViewModel (
     private val dataStore: UserInformation,
     application: Application) : AndroidViewModel(application) {
 
-//    val dataStore = UserInformation(application)
 
 
-    val _state = MutableStateFlow(MainScreenState())
+    private val _state = MutableStateFlow(MainScreenState())
     val state = _state.asStateFlow()
 
 
@@ -128,7 +120,6 @@ class MainScreenViewModel (
 
     suspend fun savePosition(){
         while (true){
-        //    dataStore.updatePosition(playerManager.getPosition())
             delay(1000)
         }
 
@@ -138,9 +129,6 @@ class MainScreenViewModel (
     fun onSongClick(position: Int){
         playerManager.playSong(position)
 
-        viewModelScope.launch {
-        //    dataStore.updateMediaId(song.mediaId)
-        }
 
         onEventUi(MainActivityUiEvent.ShowNotification)
 

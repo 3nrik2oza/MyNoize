@@ -68,6 +68,7 @@
     <string name="error_playlist_name_too_long">Playlist name is too long</string>
     <string name="error_select_playlist_image">Please select playlist image</string>
     <string name="playlist_added_successfully">Playlist added successfully</string>
+    <string name="playlist_updated_successfully">Playlist updated successfully</string>
 
 
 

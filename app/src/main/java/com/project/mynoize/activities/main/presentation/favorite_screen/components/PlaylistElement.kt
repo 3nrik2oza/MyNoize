@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,7 +49,7 @@ fun SharedTransitionScope.PlaylistScrollElement(
     ){
         Column{
 
-            val painter = rememberAsyncImagePainter(model = playlist.image)
+            val painter = rememberAsyncImagePainter(model = playlist.imageLink)
 
             val painterState = painter.state
 
@@ -82,13 +83,14 @@ fun SharedTransitionScope.PlaylistScrollElement(
                     ){
                         Image(
                             painter = painter,
+                            contentScale = ContentScale.FillBounds,
                             contentDescription = "Playlist image",
                             modifier = modifier
                                 .border(1.dp, Color.Black)
                                 .clickable(
                                     onClick = {onEvent(FavoriteScreenEvent.OnPlaylistClicked(playlist.id))})
                                 .sharedElement(
-                                    sharedContentState = rememberSharedContentState(key = "image/${playlist.image}"),
+                                    sharedContentState = rememberSharedContentState(key = "image/${playlist.imageLink}"),
                                     animatedVisibilityScope = animatedVisibilityScope,
                                     boundsTransform = {_,_ ->
                                         tween(durationMillis = 1000)

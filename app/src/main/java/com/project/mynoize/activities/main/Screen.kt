@@ -19,9 +19,9 @@ interface AppScreen
 
     @Serializable
     data class SelectSongsScreen(val playlistId: String) : AppScreen
-
+/*
     @Serializable
-    object ShowMusic : AppScreen
+    object ShowMusic : AppScreen*/
 
     @Serializable
     object ProfileScreen : AppScreen
@@ -33,4 +33,4 @@ interface AppScreen
     object CreateSongScreen : AppScreen
 
     @Serializable
-    object CreatePlaylistScreen: AppScreen
+    data class CreatePlaylistScreen(val playlistId: String): AppScreen

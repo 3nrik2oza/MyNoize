@@ -63,7 +63,7 @@ val appModule = module{
 
     viewModel { FavoriteScreenViewModel(get(), get()) }
 
-    viewModel { PlaylistScreenViewModel(get(), get(), get(), get()) }
+    viewModel { PlaylistScreenViewModel(get(), get(), get(), get(), get()) }
 
     viewModel { SelectSongsViewModel(get(), get()) }
 

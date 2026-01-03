@@ -9,9 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
@@ -29,13 +27,14 @@ import androidx.compose.ui.unit.sp
 import com.project.mynoize.activities.main.ui.theme.LatoFontFamily
 import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
 import com.project.mynoize.activities.main.ui.theme.Red
-import com.project.mynoize.activities.signin.ui.theme.Color1
 
 @Composable
 fun MessageAlertDialog(
     onDismiss: () -> Unit,
     message: String = "This is the message",
-    warning: Boolean
+    warning: Boolean,
+    hasConfirmButton: Boolean = false,
+    onConfirm: () -> Unit = {}
 ){
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -70,16 +69,36 @@ fun MessageAlertDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Text(
-                    text = "Close",
-                    color = Color.White,
-                    fontSize = 15.sp,
-                    modifier = Modifier
-                        .background(color = Red, shape = RectangleShape)
-                        .padding(horizontal = 10.dp, vertical = 5.dp)
-                        .clickable(onClick = onDismiss),
-                    fontFamily = LatoFontFamily
-                )
+                Row {
+                    Text(
+                        text = "Close",
+                        color = Color.White,
+                        fontSize = 15.sp,
+                        modifier = Modifier
+                            .background(color = Red, shape = RectangleShape)
+                            .padding(horizontal = 10.dp, vertical = 5.dp)
+                            .clickable(onClick = onDismiss),
+                        fontFamily = LatoFontFamily
+                    )
+
+                    if(hasConfirmButton){
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        Text(
+                            text = "Confirm",
+                            color = Color.White,
+                            fontSize = 15.sp,
+                            modifier = Modifier
+                                .background(color = Red, shape = RectangleShape)
+                                .padding(horizontal = 10.dp, vertical = 5.dp)
+                                .clickable(onClick = onConfirm),
+                            fontFamily = LatoFontFamily
+                        )
+                    }
+
+                }
+
+
 
             }
         }

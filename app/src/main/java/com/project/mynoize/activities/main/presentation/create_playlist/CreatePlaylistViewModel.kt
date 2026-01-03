@@ -1,5 +1,6 @@
 package com.project.mynoize.activities.main.presentation.create_playlist
 
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.mynoize.R
@@ -16,6 +17,7 @@ import com.project.mynoize.core.presentation.UiText
 import com.project.mynoize.core.presentation.toErrorMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -50,6 +52,13 @@ class CreatePlaylistViewModel(
             is CreatePlaylistEvent.OnDismissAlertDialog -> {
                 _alertDialogState.update { it.copy(show = false) }
             }
+            is CreatePlaylistEvent.OnModifyPlaylist -> {
+                viewModelScope.launch {
+                    val playlist = playlistRepository.list.first().find{ it.id == event.playlistId }!!
+                    _state.update { it.copy(playlistName = playlist.name, playlistImage = playlist.imageLink.toUri(), playlist = playlist) }
+                }
+
+            }
             is CreatePlaylistEvent.OnAddPlaylistClick -> addPlaylist()
             is CreatePlaylistEvent.OnBackClick -> Unit
         }
@@ -79,6 +88,67 @@ class CreatePlaylistViewModel(
             return
         }
 
+        if(state.value.playlist != null){
+            val oldPlayList = state.value.playlist!!
+            var playlist = oldPlayList.copy(name = state.value.playlistName)
+            if(oldPlayList.imageLink.toUri() != state.value.playlistImage){
+                val fileName = "playlist_image/${state.value.playlistImage!!.lastPathSegment}"
+
+
+                viewModelScope.launch {
+                    storageRepository.addToStorage(
+                        file = state.value.playlistImage!!,
+                        path = fileName
+                    ).onError { error ->
+                        _alertDialogState.update {
+                            it.copy(
+                                show = true,
+                                warning = true,
+                                message = error.toErrorMessage()
+                            )
+                        }
+                        _state.update { it.copy(loading = false) }
+                    }.onSuccess {
+                        storageRepository.removeFromStorage(oldPlayList.imagePath)
+                        playlist = playlist.copy(imagePath = fileName, imageLink = it)
+
+                        viewModelScope.launch {
+                            playlistRepository.updatePlaylist(playlist).onError { error ->
+                                _alertDialogState.update {
+                                    it.copy(
+                                        show = true,
+                                        warning = true,
+                                        message = error.toErrorMessage()
+                                    )
+                                }
+                                _state.update { it.copy(loading = false) }
+                            }.onSuccess {
+                                _state.update { it.copy(loading = false) }
+                                _alertDialogState.update { it.copy(show = true, warning = false, message = UiText.StringResource(R.string.playlist_updated_successfully)) }
+                            }
+                        }
+                    }
+                }
+                return
+            }
+            viewModelScope.launch {
+                playlistRepository.updatePlaylist(playlist).onError { error ->
+                    _alertDialogState.update {
+                        it.copy(
+                            show = true,
+                            warning = true,
+                            message = error.toErrorMessage()
+                        )
+                    }
+                    _state.update { it.copy(loading = false) }
+                }.onSuccess {
+                    _state.update { it.copy(loading = false) }
+                    _alertDialogState.update { it.copy(show = true, warning = false, message = UiText.StringResource(R.string.playlist_updated_successfully)) }
+                }
+            }
+            return
+        }
+
         val fileName = "playlist_image/${state.value.playlistImage!!.lastPathSegment}"
 
         var playlist = Playlist()
@@ -96,7 +166,7 @@ class CreatePlaylistViewModel(
                 }
                 _state.update { it.copy(loading = false) }
             }.onSuccess {
-                playlist = createPlaylist(it)
+                playlist = createPlaylist(it, imagePath = fileName)
             }
 
             playlistRepository.createPlaylist(playlist).onError { error ->
@@ -116,11 +186,12 @@ class CreatePlaylistViewModel(
         }
     }
 
-    fun createPlaylist(image: String): Playlist{
+    fun createPlaylist(imageLink: String, imagePath: String): Playlist{
         return Playlist(
             name = state.value.playlistName,
             creator = auth.getCurrentUserId(),
-            image = image,
+            imageLink = imageLink,
+            imagePath = imagePath,
             songs = listOf(),
             artists = listOf()
         )
