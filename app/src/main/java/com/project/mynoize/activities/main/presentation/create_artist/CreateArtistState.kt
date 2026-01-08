@@ -1,6 +1,7 @@
 package com.project.mynoize.activities.main.presentation.create_artist
 
 import android.net.Uri
+import com.project.mynoize.core.data.Artist
 import com.project.mynoize.core.presentation.UiText
 
 data class CreateArtistState(
@@ -8,5 +9,6 @@ data class CreateArtistState(
     val artistName: String = "",
     val artistNameError: UiText? = null,
     val artistImage: Uri? = null,
-    val artistImageError: UiText? = null
+    val artistImageError: UiText? = null,
+    val artistToModify: Artist? = null,
 )

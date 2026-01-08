@@ -49,7 +49,7 @@ fun PlaylistOptionsBottomSheet(playlist: Playlist, event: (PlaylistScreenEvent) 
                 .size(80.dp),
             contentAlignment = Alignment.Center
         ){
-            ImageWithLoading(playlist.imageLink)
+            ImageWithLoading(playlist.imageLink, isFavorite = playlist.name == "Favorites")
         }
 
         Spacer(Modifier.height(20.dp))

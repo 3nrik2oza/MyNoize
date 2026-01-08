@@ -48,7 +48,8 @@ fun SongItem(
     index: Int = 0,
     selectSongsEvent: (SelectSongsEvent) -> Unit = {},
     playlistScreenEvent: (PlaylistScreenEvent) -> Unit = {},
-    inPlaylistView: Boolean
+    inPlaylistView: Boolean,
+    showMore: Boolean = true,
 ) {
 
     var songSelected by remember { mutableStateOf(false) }
@@ -127,21 +128,25 @@ fun SongItem(
                 Row {
 
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_heart_empty),
-                        contentDescription = "Add song to the playlist"
+                        painter = painterResource(id = if(song.favorite) R.drawable.ic_heart else R.drawable.ic_heart_empty),
+                        contentDescription = if(song.favorite) "Remove song from favorite" else "Add song to favorite",
+                        modifier = Modifier.clickable{ playlistScreenEvent(PlaylistScreenEvent.OnSongFavoriteToggle(song)) }
                     )
 
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Add song to the playlist",
-                        modifier = Modifier.clickable(onClick = {
-                            playlistScreenEvent(
-                                PlaylistScreenEvent.OnMoreSongClick(
-                                    index = index
+                    if(showMore){
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Add song to the playlist",
+                            modifier = Modifier.clickable(onClick = {
+                                playlistScreenEvent(
+                                    PlaylistScreenEvent.OnMoreSongClick(
+                                        index = index
+                                    )
                                 )
-                            )
-                        })
-                    )
+                            })
+                        )
+                    }
+
                 }
             }else{
                 Icon(

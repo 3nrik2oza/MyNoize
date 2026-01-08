@@ -10,5 +10,6 @@ data class Song (
     val albumId: String = "",
     val creatorId: String = "",
     val imageUrl: String = "",
-    var position: Int = 0
+    var position: Int = 0,
+    val favorite: Boolean = false,
 )

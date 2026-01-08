@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.mynoize.core.data.AuthRepository
 import com.project.mynoize.core.data.repositories.PlaylistRepository
-import com.project.mynoize.core.domain.onSuccess
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -20,7 +19,7 @@ class FavoriteScreenViewModel(
 
     init {
         viewModelScope.launch {
-            playlistRepository.list.collect { playlists ->
+            playlistRepository.playlistsWithFavorites.collect { playlists ->
                 _state.update { it.copy(playlists = playlists) }
             }
         }

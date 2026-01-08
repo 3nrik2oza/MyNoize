@@ -6,5 +6,6 @@ object Constants{
     val ALBUM_COLLECTION = "albums"
     val SONG_COLLECTION = "songs"
     val PLAYLIST_COLLECTION = "playlists"
+    val USER_COLLECTION = "users"
 
 }

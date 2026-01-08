@@ -28,7 +28,6 @@ import com.project.mynoize.activities.main.CreateArtistScreen
 import com.project.mynoize.activities.main.FavoriteScreenRoot
 import com.project.mynoize.activities.main.MusicScreen
 import com.project.mynoize.activities.main.ProfileScreen
-import com.project.mynoize.activities.main.ShowMusic
 import com.project.mynoize.activities.main.ui.theme.DarkGray
 import com.project.mynoize.activities.main.ui.theme.LightGray
 import com.project.mynoize.core.data.NavigationItem
@@ -57,7 +56,7 @@ fun BottomNavigationBar(
         NavigationItem(
             title = "Create",
             icon = R.drawable.ic_add,
-            route = CreateArtistScreen
+            route = CreateArtistScreen(artistId = "")
         ),/*
         NavigationItem(
             title = "Show",

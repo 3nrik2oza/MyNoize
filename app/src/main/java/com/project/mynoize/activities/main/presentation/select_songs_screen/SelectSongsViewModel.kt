@@ -48,7 +48,7 @@ class SelectSongsViewModel(
             is SelectSongsEvent.SetPlaylist -> {
                 viewModelScope.launch {
                     _state.update {  state ->
-                        state.copy(playlist = playlistRepository.list.first().find { it.id == event.playlistId }!!)
+                        state.copy(playlist = playlistRepository.playlistList.first().find { it.id == event.playlistId }!!)
                     }
                 }
             }

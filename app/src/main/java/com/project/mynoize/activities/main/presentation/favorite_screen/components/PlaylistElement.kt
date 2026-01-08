@@ -70,11 +70,23 @@ fun SharedTransitionScope.PlaylistScrollElement(
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = modifier
+                            .border(1.dp, Color.Black)
+                            .clickable(
+                                onClick = {onEvent(FavoriteScreenEvent.OnPlaylistClicked(playlist.id))})
                     ){
-                        Icon(
-                            imageVector = Icons.Default.BrokenImage,
-                            contentDescription = "Error loading image"
-                        )
+                        if(playlist.name == "Favorites"){
+                            Icon(
+                                painter = painterResource(R.drawable.ic_heart),
+                                contentDescription = "Playlist icon",
+                                modifier = Modifier.size(40.dp)
+                            )
+                        }else{
+                            Icon(
+                                imageVector =  Icons.Default.BrokenImage,
+                                contentDescription = "Error loading image"
+                            )
+                        }
+
                     }
                 }
                 else -> {
@@ -93,7 +105,7 @@ fun SharedTransitionScope.PlaylistScrollElement(
                                     sharedContentState = rememberSharedContentState(key = "image/${playlist.imageLink}"),
                                     animatedVisibilityScope = animatedVisibilityScope,
                                     boundsTransform = {_,_ ->
-                                        tween(durationMillis = 1000)
+                                        tween(durationMillis = 300)
                                     }
                                 )
 

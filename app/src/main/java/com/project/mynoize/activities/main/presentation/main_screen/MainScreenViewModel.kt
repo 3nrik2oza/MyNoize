@@ -61,7 +61,7 @@ class MainScreenViewModel (
         }
 
         viewModelScope.launch {
-            val playlist = playlistRepository.list.first().find{ it.id == dataStore.playlistId.first().toString()} ?: return@launch
+            val playlist = playlistRepository.playlistsWithFavorites.first().find{ it.id == dataStore.playlistId.first().toString()} ?: return@launch
 
             songRepository.getSongByIds(playlist.songs).onSuccess { songs ->
                 _state.update {

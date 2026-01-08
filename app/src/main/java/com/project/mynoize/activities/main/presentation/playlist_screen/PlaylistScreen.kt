@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,10 +20,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.Mode
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -35,14 +32,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImagePainter
-import coil.compose.rememberAsyncImagePainter
 import com.project.mynoize.R
+import com.project.mynoize.activities.main.presentation.playlist_screen.components.ImageWithLoading
 import com.project.mynoize.activities.main.presentation.playlist_screen.components.PlaylistOptionsBottomSheet
 import com.project.mynoize.activities.main.presentation.playlist_screen.components.SongOptionsBottomSheet
 import com.project.mynoize.activities.main.ui.theme.DarkGray
@@ -65,6 +60,7 @@ fun SharedTransitionScope.PlaylistScreen(
 ){
 
     val sheetState = rememberModalBottomSheetState()
+    val blockInput = animatedVisibilityScope.transition.isRunning
 
 
     if(alertDialogState.show){
@@ -113,22 +109,25 @@ fun SharedTransitionScope.PlaylistScreen(
                     contentDescription = "Back",
                     Modifier.size(35.dp)
                         .clickable{
+                            if(blockInput) return@clickable
                             onEvent(PlaylistScreenEvent.OnBackClick)
                         }
                 )
 
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = "Options",
-                    Modifier.size(35.dp)
-                        .clickable(onClick = { onEvent(PlaylistScreenEvent.OnMorePlaylistClick) }
-                        )
-                )
+                if(state.playlist.name != "Favorites"){
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "Options",
+                        Modifier.size(35.dp)
+                            .clickable(onClick = {
+                                if(blockInput) return@clickable
+                                onEvent(PlaylistScreenEvent.OnMorePlaylistClick) }
+                            )
+                    )
+                }
+
             }
 
-            val painter = rememberAsyncImagePainter(model = state.playlist.imageLink)
-
-            val painterState = painter.state
 
             Box(
                 modifier = Modifier
@@ -137,37 +136,13 @@ fun SharedTransitionScope.PlaylistScreen(
                     .sharedElement(
                         animatedVisibilityScope = animatedVisibilityScope,
                         boundsTransform = { _, _ ->
-                            tween(durationMillis = 1000)
+                            tween(durationMillis = 300)
                         },
                         sharedContentState = rememberSharedContentState(key = "image/${state.playlist.imageLink}")
                     ),
                 contentAlignment = Alignment.Center
             ){
-                when(painterState){
-                    is AsyncImagePainter.State.Loading ->{
-                        Image(
-                            painter = painter,
-                            contentDescription = null,
-                            modifier = Modifier.matchParentSize()
-                        )
-                        CircularProgressIndicator()
-                    }
-                    is AsyncImagePainter.State.Error ->{
-                        Icon(
-                            imageVector = Icons.Default.BrokenImage,
-                            contentDescription = "Error loading image"
-                        )
-                    }
-                    else -> {
-                        Image(
-                            painter = painter,
-                            contentScale = ContentScale.FillBounds,
-                            contentDescription = "Image",
-                            modifier = Modifier.fillMaxSize()
-
-                        )
-                    }
-                }
+                ImageWithLoading(image = state.playlist.imageLink, isFavorite = state.playlist.name == "Favorites")
             }
 
 
@@ -181,20 +156,24 @@ fun SharedTransitionScope.PlaylistScreen(
                 modifier = Modifier.padding(top = 15.dp)
             )
 
-            Text(
-                text = "ADD SONGS",
-                fontSize = 25.sp,
-                modifier = Modifier
-                    .padding(vertical = 5.dp, horizontal = 10.dp)
-                    .clickable(onClick = {
-                        onEvent(PlaylistScreenEvent.OnAddSongClick)
-                    })
-                    .border(width = 1.dp, shape = RectangleShape, color = Red)
-                    .padding(horizontal = 30.dp, vertical = 8.dp)
-                ,
-                fontFamily = LatoFontFamily,
-                color = Red
-            )
+            if(state.playlist.name != "Favorites"){
+                Text(
+                    text = "ADD SONGS",
+                    fontSize = 25.sp,
+                    modifier = Modifier
+                        .padding(vertical = 5.dp, horizontal = 10.dp)
+                        .clickable(onClick = {
+                            if(blockInput) return@clickable
+                            onEvent(PlaylistScreenEvent.OnAddSongClick)
+                        })
+                        .border(width = 1.dp, shape = RectangleShape, color = Red)
+                        .padding(horizontal = 30.dp, vertical = 8.dp)
+                    ,
+                    fontFamily = LatoFontFamily,
+                    color = Red
+                )
+            }
+
 
             Row {
                 Icon(
@@ -202,16 +181,22 @@ fun SharedTransitionScope.PlaylistScreen(
                     contentDescription = "Play random",
                     Modifier.size(35.dp)
                         .clickable{
+                            if(blockInput) return@clickable
                             onEvent(PlaylistScreenEvent.OnPlayRandom)
                         }
                 )
 
-                Icon(
-                    imageVector = Icons.Default.Mode,
-                    contentDescription = "Modify",
-                    Modifier.size(35.dp)
-                        .clickable(onClick = { onEvent(PlaylistScreenEvent.OnPlaylistModifyClicked(playlistId = state.playlist.id)) })
-                )
+                if(state.playlist.name != "Favorites"){
+                    Icon(
+                        imageVector = Icons.Default.Mode,
+                        contentDescription = "Modify",
+                        Modifier.size(35.dp)
+                            .clickable(onClick = {
+                                if(blockInput) return@clickable
+                                onEvent(PlaylistScreenEvent.OnPlaylistModifyClicked(playlistId = state.playlist.id)) })
+                    )
+                }
+
             }
         }
 
@@ -222,6 +207,8 @@ fun SharedTransitionScope.PlaylistScreen(
             SongItem(
                 song = song,
                 playlistScreenEvent = { event ->
+                    if(blockInput) return@SongItem
+
                     onEvent(event)
                 },
                 index = index,

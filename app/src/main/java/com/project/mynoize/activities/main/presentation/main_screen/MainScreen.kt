@@ -54,6 +54,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.toRoute
 import com.project.mynoize.R
+import com.project.mynoize.activities.main.ArtistView
 import com.project.mynoize.activities.main.CreateArtistScreen
 import com.project.mynoize.activities.main.CreatePlaylistScreen
 import com.project.mynoize.activities.main.CreateSongScreen
@@ -61,6 +62,9 @@ import com.project.mynoize.activities.main.FavoriteScreenRoot
 import com.project.mynoize.activities.main.MusicPlayer
 import com.project.mynoize.activities.main.PlaylistView
 import com.project.mynoize.activities.main.SelectSongsScreen
+import com.project.mynoize.activities.main.presentation.artist_screen.ArtistScreen
+import com.project.mynoize.activities.main.presentation.artist_screen.ArtistScreenEvent
+import com.project.mynoize.activities.main.presentation.artist_screen.ArtistScreenViewModel
 import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistEvent
 import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistScreen
 import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistViewModel
@@ -149,7 +153,7 @@ fun MainScreen(
                     ){
 
                         composable<FavoriteScreen>{
-                            val vm: FavoriteScreenViewModel =koinViewModel<FavoriteScreenViewModel>()
+                            val vm: FavoriteScreenViewModel = koinViewModel<FavoriteScreenViewModel>()
 
                             val state by vm.state.collectAsStateWithLifecycle()
                             FavoriteScreen(
@@ -160,7 +164,7 @@ fun MainScreen(
                                             navController.navigate(PlaylistView(playlistId = event.playlistId))
                                         }
                                         is FavoriteScreenEvent.OnCreatePlaylist -> {
-                                            navController.navigate(CreatePlaylistScreen)
+                                            navController.navigate(CreatePlaylistScreen(playlistId = ""))
                                         }
                                         //else -> Unit
                                     }
@@ -170,9 +174,35 @@ fun MainScreen(
                             )
                         }
 
+                        composable<ArtistView> {
+                            val arg = it.toRoute<ArtistView>()
+
+                            val vm: ArtistScreenViewModel = koinViewModel<ArtistScreenViewModel>()
+
+                            LaunchedEffect(true) {
+                                vm.onEvent(ArtistScreenEvent.SetArtistId(arg.artistId))
+                            }
+                            val state by vm.state.collectAsStateWithLifecycle()
+
+                            ArtistScreen(
+                                state = state,
+                                onEvent = { event ->
+                                    when(event){
+                                        is ArtistScreenEvent.OnBackClick -> {
+                                            navController.popBackStack()
+                                        }
+                                        is ArtistScreenEvent.OnModifyArtist -> {
+                                            navController.navigate(CreateArtistScreen(artistId = arg.artistId))
+                                        }
+                                        else -> Unit
+                                    }
+                                    vm.onEvent(event)
+                                }
+                            )
+                        }
+
                         composable<PlaylistView> {
                             val arg = it.toRoute<PlaylistView>()
-
 
                             val vm: PlaylistScreenViewModel = koinViewModel<PlaylistScreenViewModel>()
 
@@ -196,6 +226,9 @@ fun MainScreen(
                                         }
                                         is PlaylistScreenEvent.OnPlaylistModifyClicked -> {
                                             navController.navigate(CreatePlaylistScreen(playlistId = arg.playlistId))
+                                        }
+                                        is PlaylistScreenEvent.OnArtistClick -> {
+                                            navController.navigate(ArtistView(artistId = event.artistId))
                                         }
                                         else -> Unit
                                     }
@@ -251,8 +284,15 @@ fun MainScreen(
                         )
                     }
 
-                    composable<CreateArtistScreen> { backStackEntry ->
+                    composable<CreateArtistScreen> {
+                        val arg = it.toRoute<CreateArtistScreen>()
                         val vm: CreateArtistViewModel = koinViewModel<CreateArtistViewModel>()
+
+                        LaunchedEffect(true) {
+                            if(arg.artistId != "") {
+                                vm.onEvent(CreateArtistEvent.OnModifyArtist(artistId = arg.artistId))
+                            }
+                        }
 
                         val state by vm.state.collectAsStateWithLifecycle()
                         val alertDialogState by vm.alertDialogState.collectAsStateWithLifecycle()
@@ -268,9 +308,10 @@ fun MainScreen(
                                 vm.onEvent(event)
                             }
                         )
+
                     }
 
-                    composable<CreateSongScreen> { backStackEntry ->
+                    composable<CreateSongScreen> {
                         val vm = koinViewModel<CreateSongViewModel>()
 
                         val createSongState by vm.createSongState.collectAsStateWithLifecycle()
@@ -301,18 +342,6 @@ fun MainScreen(
                     }
 
                     composable<CreatePlaylistScreen> {
-                        /*
-
-                                                   val arg = it.toRoute<PlaylistView>()
-
-
-                            val vm: PlaylistScreenViewModel = koinViewModel<PlaylistScreenViewModel>()
-
-                            LaunchedEffect(true) {
-                                vm.onEvent(PlaylistScreenEvent.SetPlaylistId(arg.playlistId))
-                            }
-                        */
-
                         val arg = it.toRoute<CreatePlaylistScreen>()
                         val vm: CreatePlaylistViewModel = koinViewModel<CreatePlaylistViewModel>()
 
@@ -343,7 +372,7 @@ fun MainScreen(
                 }
 
                 val scaffoldState = rememberBottomSheetScaffoldState()
-                mainState.currentSong?.let { song ->
+                mainState.currentSong?.let {
                     BottomSheetScaffold(
                         scaffoldState = scaffoldState,
                         sheetPeekHeight = 140.dp,
@@ -361,7 +390,7 @@ fun MainScreen(
                                 AnimatedContent(
                                     targetState = showMusicPlayer,
                                     transitionSpec = {
-                                        fadeIn(animationSpec = tween(1)).togetherWith(fadeOut(animationSpec = tween(1)))
+                                        fadeIn(animationSpec = tween()).togetherWith(fadeOut(animationSpec = tween(1)))
                                     },
                                     label = "SongViewToMusicPlayerTransition"
                                 ) { isMusicPlayer ->
@@ -423,7 +452,7 @@ fun MainScreen(
                     title = "Add Artist",
                     description = "Add your favorite artist to platform so that you can add his songs to your list",
                     onClick = {
-                        navController.navigate(CreateArtistScreen)
+                        navController.navigate(CreateArtistScreen(artistId = ""))
                         closeBottomSheet()
                     }
                 )

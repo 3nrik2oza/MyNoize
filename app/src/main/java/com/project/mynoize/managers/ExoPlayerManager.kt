@@ -12,6 +12,8 @@ import com.project.mynoize.core.data.Song
 import com.project.mynoize.core.data.toMediaItem
 import com.project.mynoize.util.UserInformation
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -43,7 +45,8 @@ class ExoPlayerManager(
     private val _duration= MutableStateFlow(exoPlayer?.currentPosition ?: 0L)
     val duration: StateFlow<Long> = _duration
 
-   // val dataStore = UserInformation(context)
+
+    private val playerScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
 
     fun initializePlayer(
@@ -55,7 +58,7 @@ class ExoPlayerManager(
             songList.value = songs
             val mediaItem = songList.value.map { song -> song.toMediaItem() }
             exoPlayer?.setMediaItems(mediaItem)
-            scope.launch {
+            playerScope.launch {
                 exoPlayer?.shuffleModeEnabled = shuffle
                 if(!shuffle){
                     val song = if(index == -1) songs.find{ song -> song.id == dataStore.mediaId.first().toString() } else songs[index]
@@ -81,7 +84,7 @@ class ExoPlayerManager(
             setMediaItems(mediaItems)
         }
 
-        scope.launch {
+        playerScope.launch {
             exoPlayer?.shuffleModeEnabled = shuffle
             if(!shuffle){
                 val song = if(index == -1) songs.find{ song -> song.id == dataStore.mediaId.first().toString() } else songs[index]
@@ -109,7 +112,7 @@ class ExoPlayerManager(
             override fun onPlaybackStateChanged(playbackState: Int) {
                 if(playbackState == Player.STATE_READY){
                     _duration.value = exoPlayer!!.duration
-                    scope.launch {
+                    playerScope.launch {
                         dataStore.updateMediaId(currentSong.value?.description.toString())
                     }
 
@@ -120,7 +123,7 @@ class ExoPlayerManager(
             }
         })
 
-        scope.launch {
+        playerScope.launch {
             while(isActive){
                 _currentPosition.value = exoPlayer?.currentPosition ?: 0L
                 delay(500)

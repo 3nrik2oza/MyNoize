@@ -4,22 +4,27 @@ import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.snapshots
+import com.project.mynoize.core.data.AuthRepository
 import com.project.mynoize.core.data.Playlist
 import com.project.mynoize.core.domain.FbError
 import com.project.mynoize.core.domain.Result
 import com.project.mynoize.core.domain.Result.Error
 import com.project.mynoize.util.Constants
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 
-class PlaylistRepository {
+class PlaylistRepository(
+    private val auth: AuthRepository,
+    private val userRepository: UserRepository
+){
 
     private val db = FirebaseFirestore.getInstance()
 
     var lastLoadedPlaylists = listOf<Playlist>()
 
-    var list : Flow<List<Playlist>> = db.collection(Constants.PLAYLIST_COLLECTION)
+    var playlistList : Flow<List<Playlist>> = db.collection(Constants.PLAYLIST_COLLECTION)
         .snapshots()
         .map { snapshots ->
             snapshots.documents.map { doc ->
@@ -27,6 +32,19 @@ class PlaylistRepository {
                     id = doc.id
                 )
             }
+        }
+
+    var favoritePlaylist: Flow<Playlist> = userRepository.user.map{ user ->
+        Playlist(id = auth.getCurrentUserId(), name = "Favorites",
+            creator = auth.getCurrentUserId(), songs = user.favoriteSongs)
+    }
+
+    val playlistsWithFavorites: Flow<List<Playlist>> =
+        combine(
+            playlistList,
+            favoritePlaylist
+        ){ playlists, favorite ->
+            listOf(favorite) + playlists
         }
 
     suspend fun updateSongsInPlaylist(songs: List<String>, id: String): Result<Unit, FbError.Firestore> {

@@ -28,7 +28,11 @@ import com.project.mynoize.core.data.Song
 
 
 @Composable
-fun SongOptionsBottomSheet(song: Song, artist: Artist, event: (PlaylistScreenEvent) -> Unit){
+fun SongOptionsBottomSheet(
+    song: Song,
+    artist: Artist,
+    event: (PlaylistScreenEvent) -> Unit
+){
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -55,20 +59,27 @@ fun SongOptionsBottomSheet(song: Song, artist: Artist, event: (PlaylistScreenEve
 
         Spacer(Modifier.height(15.dp))
 
-        Box(
-            modifier = Modifier
-                .size(80.dp),
-            contentAlignment = Alignment.Center
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.clickable{
+                event(PlaylistScreenEvent.OnArtistClick(artist.id))
+            }
         ){
-            ImageWithLoading(artist.image)
+            Box(
+                modifier = Modifier
+                    .size(80.dp),
+                contentAlignment = Alignment.Center
+            ){
+                ImageWithLoading(artist.imageLink)
 
+            }
+
+            Spacer(Modifier.height(5.dp))
+
+            Text(
+                text = artist.name
+            )
         }
-
-        Spacer(Modifier.height(5.dp))
-
-        Text(
-            text = song.artistName
-        )
 
         Spacer(Modifier.height(20.dp))
 

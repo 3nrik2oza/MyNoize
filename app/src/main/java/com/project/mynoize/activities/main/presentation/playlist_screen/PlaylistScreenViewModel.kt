@@ -6,6 +6,7 @@ import com.project.mynoize.core.data.repositories.ArtistRepository
 import com.project.mynoize.core.data.repositories.PlaylistRepository
 import com.project.mynoize.core.data.repositories.SongRepository
 import com.project.mynoize.core.data.repositories.StorageRepository
+import com.project.mynoize.core.data.repositories.UserRepository
 import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.core.presentation.AlertDialogState
 import com.project.mynoize.managers.ExoPlayerManager
@@ -21,7 +22,8 @@ class PlaylistScreenViewModel(
     private val playlistRepository: PlaylistRepository,
     private val songRepository: SongRepository,
     private val artistRepository: ArtistRepository,
-    private val exoPlayerManager: ExoPlayerManager
+    private val exoPlayerManager: ExoPlayerManager,
+    private val userRepository: UserRepository
 ): ViewModel() {
 
     private val _alertDialogState = MutableStateFlow(AlertDialogState())
@@ -29,6 +31,22 @@ class PlaylistScreenViewModel(
 
     private val _state = MutableStateFlow(PlaylistScreenState())
     val state = _state.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            playlistRepository.favoritePlaylist.collect { playlist ->
+                if (playlist != null) {
+                    _state.update { state ->
+                        state.copy(favoriteList = playlist) }
+
+                    _state.update { state ->
+                        state.copy(songs = state.songs.map { it.copy(favorite = playlist.songs.contains(it.id)) })
+                    }
+                }
+
+            }
+        }
+    }
 
 
     fun onEvent(event: PlaylistScreenEvent){
@@ -46,6 +64,15 @@ class PlaylistScreenViewModel(
             }
             is PlaylistScreenEvent.OnToggleDeletePlaylist -> { _state.update { it.copy(deletePlaylistSheetOpen = !it.deletePlaylistSheetOpen) } }
             is PlaylistScreenEvent.OnDeletePlaylist -> { deletePlaylist() }
+
+            is PlaylistScreenEvent.OnSongFavoriteToggle ->{
+                viewModelScope.launch {
+                    userRepository.updateFavoriteSongs(event.song.id, event.song.favorite)
+                }
+            }
+            is PlaylistScreenEvent.OnArtistClick -> {
+                _state.update { it.copy(isSheetOpen = false) }
+            }
             else ->{
 
             }
@@ -74,27 +101,23 @@ class PlaylistScreenViewModel(
     private fun onMoreSongClicked(index: Int){
         viewModelScope.launch {
 
-            artistRepository.getArtist(state.value.songs[index].artistId).onSuccess { artist ->
-                _state.update { it.copy(artist = artist, isSheetOpen = true, selectedSongIndex = index, sheetType = BottomSheetType.SONG) }
+            val artist = artistRepository.artists.first().find { it.id == state.value.songs[index].artistId }
+
+            if(artist != null){
+                _state.update { it.copy(artist = artist, isSheetOpen = true, selectedSongIndex = index) }
             }
         }
     }
 
     private fun setPlaylistData(playlistId: String){
-
         viewModelScope.launch {
 
-            _state.update { state->
-                state.copy(
-                    playlist = playlistRepository.list.first().find{ it.id == playlistId }!!
-                )
-            }
-
-            songRepository.getSongByIds(state.value.playlist.songs).onSuccess { songs ->
-                _state.update {
-                    it.copy(
-                        songs = songs
-                    )
+            playlistRepository.playlistsWithFavorites.collect { playlists ->
+                _state.update { state ->
+                    state.copy(playlist = playlists.find { it.id == playlistId}!!)
+                }
+                songRepository.getSongByIds(state.value.playlist.songs).onSuccess { songs ->
+                    _state.update { state -> state.copy(songs = songs.map { it.copy(favorite = state.favoriteList.songs.contains(it.id)) }) }
                 }
             }
         }

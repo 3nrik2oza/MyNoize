@@ -1,6 +1,7 @@
 package com.project.mynoize.di
 
 import android.app.Application
+import com.project.mynoize.activities.main.presentation.artist_screen.ArtistScreenViewModel
 import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistViewModel
 import com.project.mynoize.activities.main.presentation.create_artist.domain.CreateArtistValidation
 import com.project.mynoize.activities.main.presentation.create_playlist.CreatePlaylistViewModel
@@ -21,6 +22,7 @@ import com.project.mynoize.activities.signin.domain.SignInValidation
 import com.project.mynoize.activities.signin.domain.SignUpValidation
 import com.project.mynoize.core.data.AuthRepository
 import com.project.mynoize.core.data.repositories.PlaylistRepository
+import com.project.mynoize.core.data.repositories.UserRepository
 import com.project.mynoize.managers.ExoPlayerManager
 import com.project.mynoize.util.UserInformation
 import org.koin.core.module.dsl.viewModel
@@ -40,7 +42,12 @@ val appModule = module{
     single {
         SongRepository()
     }
-    single { PlaylistRepository() }
+
+    single {
+        UserRepository(get())
+    }
+
+    single { PlaylistRepository(get(), get()) }
 
     single { AlbumRepository() }
     single { CreateSongValidation() }
@@ -58,12 +65,13 @@ val appModule = module{
     single { ExoPlayerManager(context = get<Application>(), get()) }
 
 
+    viewModel { ArtistScreenViewModel(get(), get(), get(), get()) }
 
     viewModel { MainScreenViewModel(get(), get(), get(), get(), get()) }
 
     viewModel { FavoriteScreenViewModel(get(), get()) }
 
-    viewModel { PlaylistScreenViewModel(get(), get(), get(), get(), get()) }
+    viewModel { PlaylistScreenViewModel(get(), get(), get(), get(), get(), get()) }
 
     viewModel { SelectSongsViewModel(get(), get()) }
 
