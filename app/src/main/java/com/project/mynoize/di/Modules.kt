@@ -11,6 +11,7 @@ import com.project.mynoize.activities.main.presentation.create_song.domain.Creat
 import com.project.mynoize.activities.main.presentation.favorite_screen.FavoriteScreenViewModel
 import com.project.mynoize.activities.main.presentation.main_screen.MainScreenViewModel
 import com.project.mynoize.activities.main.presentation.playlist_screen.PlaylistScreenViewModel
+import com.project.mynoize.activities.main.presentation.search_screen.SearchScreenViewModel
 import com.project.mynoize.activities.main.presentation.select_songs_screen.SelectSongsViewModel
 import com.project.mynoize.core.data.repositories.AlbumRepository
 import com.project.mynoize.core.data.repositories.ArtistRepository
@@ -34,7 +35,7 @@ val appModule = module{
         AuthRepository()
     }
     single{
-        ArtistRepository()
+        ArtistRepository(get())
     }
     single{
         StorageRepository()
@@ -69,7 +70,7 @@ val appModule = module{
 
     viewModel { MainScreenViewModel(get(), get(), get(), get(), get()) }
 
-    viewModel { FavoriteScreenViewModel(get(), get()) }
+    viewModel { FavoriteScreenViewModel(get(), get(), get()) }
 
     viewModel { PlaylistScreenViewModel(get(), get(), get(), get(), get(), get()) }
 
@@ -80,6 +81,8 @@ val appModule = module{
     viewModel { CreateSongViewModel(get(), get(), get(), get(), get(), get()) }
 
     viewModel { CreateArtistViewModel(get(), get(), get(), get()) }
+
+    viewModel { SearchScreenViewModel(get(), get(), get(), get(), get(), get()) }
 
     viewModel { SignInViewModel(get(), get()) }
 

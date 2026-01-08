@@ -15,6 +15,10 @@ interface AppScreen
     object FavoriteScreenRoot : AppScreen
 
     @Serializable
+    object SearchScreen : AppScreen
+
+
+    @Serializable
     data class ArtistView(val artistId: String) : AppScreen
 
     @Serializable

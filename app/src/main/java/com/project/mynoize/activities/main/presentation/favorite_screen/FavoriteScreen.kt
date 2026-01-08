@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.project.mynoize.R
 import com.project.mynoize.activities.main.presentation.favorite_screen.components.PlaylistScrollElement
+import com.project.mynoize.core.data.Artist
 import com.project.mynoize.core.data.Playlist
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -60,13 +62,13 @@ fun SharedTransitionScope.FavoriteScreen(
 
         LazyRow {
 
-            item{
-                AddArtistsScrollElement()
+            itemsIndexed(state.artists){ index, artist ->
+                ArtistsScrollElement(
+                    artist = artist,
+                    onClick = {onEvent(FavoriteScreenEvent.OnArtistClicked(artist.id))}
+                )
             }
 
-            items(10){
-                ArtistsScrollElement()
-            }
         }
 
         Spacer(Modifier.size(10.dp))
@@ -79,16 +81,6 @@ fun SharedTransitionScope.FavoriteScreen(
         Spacer(Modifier.size(10.dp))
 
         LazyRow {
-
-            item{
-                AddPlaylistScrollElement(
-                    text = "Add playlist",
-                    createNew = {
-                        onEvent(FavoriteScreenEvent.OnCreatePlaylist)
-                    }
-                )
-            }
-
             itemsIndexed(state.playlists){ index, playlist ->
                 PlaylistScrollElement(
                     modifier = Modifier.size(100.dp),
@@ -161,25 +153,29 @@ fun AddPlaylistScrollElement(
 }
 
 @Composable
-fun ArtistsScrollElement(){
+fun ArtistsScrollElement(
+    artist: Artist,
+    onClick: () -> Unit
+){
     Column (
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(10.dp)
     ){
 
         AsyncImage(
-            model = "",
+            model = artist.imageLink,
             contentDescription = "Artist image",
+            contentScale = ContentScale.FillBounds,
             modifier = Modifier
                 .size(100.dp)
                 .clip(CircleShape)
                 .border(2.dp, Color.Black, CircleShape)
                 .clickable{
-
+                    onClick()
                 }
         )
 
-        Text("Artis name")
+        Text(artist.name)
     }
 
 }
@@ -195,7 +191,6 @@ fun AddArtistsScrollElement(){
             Modifier
                 .size(100.dp)
                 .clip(CircleShape)
-                .background(Color.DarkGray)
                 .border(2.dp, Color.Black, CircleShape),
             contentAlignment = Alignment.Center
         ){

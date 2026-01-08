@@ -4,16 +4,19 @@ import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.snapshots
+import com.project.mynoize.core.data.Artist
 import com.project.mynoize.core.data.AuthRepository
 import com.project.mynoize.core.data.Playlist
 import com.project.mynoize.core.domain.FbError
 import com.project.mynoize.core.domain.Result
 import com.project.mynoize.core.domain.Result.Error
+import com.project.mynoize.core.domain.Result.Success
 import com.project.mynoize.util.Constants
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
+import org.koin.core.qualifier.named
 
 class PlaylistRepository(
     private val auth: AuthRepository,
@@ -46,6 +49,38 @@ class PlaylistRepository(
         ){ playlists, favorite ->
             listOf(favorite) + playlists
         }
+
+
+    suspend fun getPlaylistsContaining(q: String): Result<List<Playlist>, FbError.Firestore> {
+        return try {
+            val snapshot = db.collection(Constants.PLAYLIST_COLLECTION)
+                .whereGreaterThanOrEqualTo("nameLower", q)
+                .whereLessThan("nameLower", q + "\uf8ff")
+                .limit(25)
+                .get()
+                .await()
+
+            return Success(snapshot.documents.map{ document ->
+                document.toObject(Playlist::class.java)!!.apply {
+                    id = document.id
+                }
+            })
+        }catch (e: FirebaseFirestoreException){
+            when(e.code){
+                FirebaseFirestoreException.Code.PERMISSION_DENIED -> Error(FbError.Firestore.PERMISSION_DENIED)
+                FirebaseFirestoreException.Code.UNAVAILABLE -> Error(FbError.Firestore.UNAVAILABLE)
+                FirebaseFirestoreException.Code.ABORTED -> Error(FbError.Firestore.ABORTED)
+                FirebaseFirestoreException.Code.NOT_FOUND -> Error(FbError.Firestore.NOT_FOUND)
+                FirebaseFirestoreException.Code.ALREADY_EXISTS -> Error(FbError.Firestore.ALREADY_EXISTS)
+                FirebaseFirestoreException.Code.DEADLINE_EXCEEDED -> Error(FbError.Firestore.DEADLINE_EXCEEDED)
+                FirebaseFirestoreException.Code.CANCELLED -> Error(FbError.Firestore.CANCELLED)
+                else -> Error(FbError.Firestore.UNKNOWN)
+            }
+        }catch (_: Exception){
+            Error(FbError.Firestore.UNKNOWN)
+        }
+
+    }
 
     suspend fun updateSongsInPlaylist(songs: List<String>, id: String): Result<Unit, FbError.Firestore> {
         return try {
@@ -83,7 +118,7 @@ class PlaylistRepository(
     suspend fun createPlaylist(playlist: Playlist): Result<Unit, FbError.Firestore> {
         return try {
             val docRef = db.collection(Constants.PLAYLIST_COLLECTION)
-                .add(playlist)
+                .add(playlist.copy(nameLower = playlist.name.lowercase()))
                 .await()
 
             Result.Success(Unit)
@@ -107,7 +142,7 @@ class PlaylistRepository(
         return try {
             val docRef = db.collection(Constants.PLAYLIST_COLLECTION)
                 .document(playlist.id)
-                .set(playlist)
+                .set(playlist.copy(nameLower = playlist.name.lowercase()))
                 .await()
 
             Result.Success(Unit)

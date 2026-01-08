@@ -75,6 +75,37 @@ class SongRepository{
     suspend fun getAllSongs(): Result<List<Song>, FbError.Firestore>{
         return try {
             val snapshot = db.collection(Constants.SONG_COLLECTION)
+                .limit(25)
+                .get()
+                .await()
+
+            return Success(snapshot.documents.map{ document ->
+                document.toObject(Song::class.java)!!.apply {
+                    id = document.id
+                }
+            })
+        }catch (e: FirebaseFirestoreException){
+            when(e.code){
+                FirebaseFirestoreException.Code.PERMISSION_DENIED -> Error(FbError.Firestore.PERMISSION_DENIED)
+                FirebaseFirestoreException.Code.UNAVAILABLE -> Error(FbError.Firestore.UNAVAILABLE)
+                FirebaseFirestoreException.Code.ABORTED -> Error(FbError.Firestore.ABORTED)
+                FirebaseFirestoreException.Code.NOT_FOUND -> Error(FbError.Firestore.NOT_FOUND)
+                FirebaseFirestoreException.Code.ALREADY_EXISTS -> Error(FbError.Firestore.ALREADY_EXISTS)
+                FirebaseFirestoreException.Code.DEADLINE_EXCEEDED -> Error(FbError.Firestore.DEADLINE_EXCEEDED)
+                FirebaseFirestoreException.Code.CANCELLED -> Error(FbError.Firestore.CANCELLED)
+                else -> Error(FbError.Firestore.UNKNOWN)
+            }
+        }catch (_: Exception){
+            Error(FbError.Firestore.UNKNOWN)
+        }
+    }
+
+    suspend fun getAllSongsContaining(q: String): Result<List<Song>, FbError.Firestore>{
+        return try {
+            val snapshot = db.collection(Constants.SONG_COLLECTION)
+                .whereGreaterThanOrEqualTo("titleLower", q)
+                .whereLessThan("titleLower", q + "\uf8ff")
+                .limit(25)
                 .get()
                 .await()
 
@@ -104,7 +135,7 @@ class SongRepository{
     ): EmptyResult<DataError.Remote>{
         return  try {
             val docRef = db.collection(Constants.SONG_COLLECTION)
-                .add(song)
+                .add(song.copy(titleLower = song.title.lowercase()))
                 .await()
 
             Success(Unit)

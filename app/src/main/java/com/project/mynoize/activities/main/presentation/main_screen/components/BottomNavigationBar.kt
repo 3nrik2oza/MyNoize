@@ -7,6 +7,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -28,6 +30,7 @@ import com.project.mynoize.activities.main.CreateArtistScreen
 import com.project.mynoize.activities.main.FavoriteScreenRoot
 import com.project.mynoize.activities.main.MusicScreen
 import com.project.mynoize.activities.main.ProfileScreen
+import com.project.mynoize.activities.main.SearchScreen
 import com.project.mynoize.activities.main.ui.theme.DarkGray
 import com.project.mynoize.activities.main.ui.theme.LightGray
 import com.project.mynoize.core.data.NavigationItem
@@ -64,9 +67,9 @@ fun BottomNavigationBar(
             route = ShowMusic
         ),*/
         NavigationItem(
-            title = "Profile",
-            icon = R.drawable.ic_profile,
-            route = ProfileScreen
+            title = "Search",//"Profile",
+            icon = R.drawable.ic_search,//R.drawable.ic_profile,
+            route = SearchScreen//ProfileScreen
         )
 
     )

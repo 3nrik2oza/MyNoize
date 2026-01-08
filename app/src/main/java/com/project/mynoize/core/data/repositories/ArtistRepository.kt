@@ -9,12 +9,15 @@ import com.project.mynoize.core.domain.FbError
 import com.project.mynoize.core.domain.Result
 import com.project.mynoize.core.domain.Result.*
 import com.project.mynoize.util.Constants
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 
 class ArtistRepository(
-
+    private val userRepository: UserRepository
 ) {
     private val db = FirebaseFirestore.getInstance()
 
@@ -29,9 +32,57 @@ class ArtistRepository(
             }
         }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    var favoriteArtists: Flow<List<Artist>> = userRepository.user.flatMapLatest { user ->
+        val favoritesIds = user.favoriteArtists
+
+        if(favoritesIds.isEmpty()){
+            flowOf(emptyList())
+        }else{
+            db.collection(Constants.ARTIST_COLLECTION)
+                .whereIn("id", favoritesIds)
+                .snapshots()
+                .map { snapshot ->
+                snapshot.toObjects(Artist::class.java)
+                }
+        }
+    }
+
     suspend fun getArtists(): Result<List<Artist>, FbError.Firestore> {
         return try {
             val snapshot = db.collection(Constants.ARTIST_COLLECTION)
+                .limit(25)
+                .get()
+                .await()
+
+            return Success(snapshot.documents.map{ document ->
+                document.toObject(Artist::class.java)!!.apply {
+                    id = document.id
+                }
+            })
+        }catch (e: FirebaseFirestoreException){
+            when(e.code){
+                FirebaseFirestoreException.Code.PERMISSION_DENIED -> Error(FbError.Firestore.PERMISSION_DENIED)
+                FirebaseFirestoreException.Code.UNAVAILABLE -> Error(FbError.Firestore.UNAVAILABLE)
+                FirebaseFirestoreException.Code.ABORTED -> Error(FbError.Firestore.ABORTED)
+                FirebaseFirestoreException.Code.NOT_FOUND -> Error(FbError.Firestore.NOT_FOUND)
+                FirebaseFirestoreException.Code.ALREADY_EXISTS -> Error(FbError.Firestore.ALREADY_EXISTS)
+                FirebaseFirestoreException.Code.DEADLINE_EXCEEDED -> Error(FbError.Firestore.DEADLINE_EXCEEDED)
+                FirebaseFirestoreException.Code.CANCELLED -> Error(FbError.Firestore.CANCELLED)
+                else -> Error(FbError.Firestore.UNKNOWN)
+            }
+        }catch (_: Exception){
+            Error(FbError.Firestore.UNKNOWN)
+        }
+
+    }
+
+    suspend fun getArtistsContaining(q: String): Result<List<Artist>, FbError.Firestore> {
+        return try {
+            val snapshot = db.collection(Constants.ARTIST_COLLECTION)
+                .whereGreaterThanOrEqualTo("nameLower", q)
+                .whereLessThan("nameLower", q + "\uf8ff")
+                .limit(25)
                 .get()
                 .await()
 
@@ -60,7 +111,7 @@ class ArtistRepository(
     suspend fun createArtist(artist: Artist): EmptyResult<FbError.Firestore>{
         return try{
             val docRef = db.collection(Constants.ARTIST_COLLECTION)
-                .add(artist)
+                .add(artist.copy(nameLower = artist.name.lowercase()))
                 .await()
 
             Success(Unit)
@@ -85,7 +136,7 @@ class ArtistRepository(
         return try{
             val docRef = db.collection(Constants.ARTIST_COLLECTION)
                 .document(artist.id)
-                .set(artist)
+                .set(artist.copy(nameLower = artist.name.lowercase()))
                 .await()
 
             Success(Unit)

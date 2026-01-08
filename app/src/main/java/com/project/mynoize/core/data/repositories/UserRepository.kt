@@ -38,6 +38,18 @@ class UserRepository(
         return updateUser(updatedUser)
     }
 
+    suspend fun updateFavoritePlaylist(playlistId: String, favorite: Boolean): EmptyResult<FbError.Firestore>{
+        val user = user.first()
+        val updatedUser = user.copy(favoritePlaylists = if(!favorite) user.favoritePlaylists + playlistId else user.favoritePlaylists - playlistId)
+        return updateUser(updatedUser)
+    }
+
+    suspend fun updateFavoriteAlbums(albumId: String, favorite: Boolean): EmptyResult<FbError.Firestore> {
+        val user = user.first()
+        val updatedUser = user.copy(favoriteAlbums = if(!favorite) user.favoriteAlbums + albumId else user.favoriteAlbums - albumId)
+        return updateUser(updatedUser)
+    }
+
     suspend fun updateUser(user: User): EmptyResult<FbError.Firestore> {
         return try {
             val docRef = db.collection(Constants.USER_COLLECTION)

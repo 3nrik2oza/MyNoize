@@ -3,6 +3,7 @@ package com.project.mynoize.core.data
 data class Song (
     var id: String = "",
     val title: String = "",
+    val titleLower: String = "",
     val artistId: String = "",
     val artistName: String = "",
     val songUrl: String = "",

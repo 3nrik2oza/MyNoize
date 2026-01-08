@@ -61,6 +61,7 @@ import com.project.mynoize.activities.main.CreateSongScreen
 import com.project.mynoize.activities.main.FavoriteScreenRoot
 import com.project.mynoize.activities.main.MusicPlayer
 import com.project.mynoize.activities.main.PlaylistView
+import com.project.mynoize.activities.main.SearchScreen
 import com.project.mynoize.activities.main.SelectSongsScreen
 import com.project.mynoize.activities.main.presentation.artist_screen.ArtistScreen
 import com.project.mynoize.activities.main.presentation.artist_screen.ArtistScreenEvent
@@ -83,6 +84,9 @@ import com.project.mynoize.activities.main.presentation.playlist_screen.Playlist
 import com.project.mynoize.activities.main.presentation.playlist_screen.PlaylistScreenEvent
 import com.project.mynoize.activities.main.presentation.playlist_screen.PlaylistScreenViewModel
 import com.project.mynoize.activities.main.presentation.profile_screen.ProfileScreen
+import com.project.mynoize.activities.main.presentation.search_screen.SearchScreen
+import com.project.mynoize.activities.main.presentation.search_screen.SearchScreenEvent
+import com.project.mynoize.activities.main.presentation.search_screen.SearchScreenViewModel
 import com.project.mynoize.activities.main.presentation.select_songs_screen.SelectSongsEvent
 import com.project.mynoize.activities.main.presentation.select_songs_screen.SelectSongsScreen
 import com.project.mynoize.activities.main.presentation.select_songs_screen.SelectSongsViewModel
@@ -90,6 +94,7 @@ import com.project.mynoize.activities.main.ui.theme.DarkGray
 import com.project.mynoize.activities.main.ui.theme.LatoFontFamily
 import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
 import com.project.mynoize.activities.main.ui.theme.Red
+import com.project.mynoize.core.data.SearchItem
 import org.koin.androidx.compose.koinViewModel
 
 @SuppressLint("UnusedSharedTransitionModifierParameter")
@@ -160,6 +165,9 @@ fun MainScreen(
                                 state = state,
                                 onEvent = { event ->
                                     when(event){
+                                        is FavoriteScreenEvent.OnArtistClicked -> {
+                                            navController.navigate(ArtistView(artistId = event.artistId))
+                                        }
                                         is FavoriteScreenEvent.OnPlaylistClicked -> {
                                             navController.navigate(PlaylistView(playlistId = event.playlistId))
                                         }
@@ -277,6 +285,33 @@ fun MainScreen(
                             }
                         )
                     }*/
+
+                    composable<SearchScreen> {
+                        val vm: SearchScreenViewModel = koinViewModel<SearchScreenViewModel>()
+
+                        val state by vm.state.collectAsStateWithLifecycle()
+
+                        SearchScreen(
+                            state = state,
+                            onEvent = { event ->
+                                when(event){
+                                    is SearchScreenEvent.OnSearchItemClicked -> {
+                                        when(event.item){
+                                            is SearchItem.PlaylistItem -> {
+                                                navController.navigate(PlaylistView(playlistId = event.item.playlist.id))
+                                            }
+                                            is SearchItem.ArtistItem -> {
+                                                navController.navigate(ArtistView(artistId = event.item.artist.id))
+                                            }
+                                            else -> {}
+                                        }
+                                    }
+                                    else -> {}
+                                }
+                                vm.onEvent(event)
+                            }
+                        )
+                    }
 
                     composable<ProfileScreen> {
                         ProfileScreen(
