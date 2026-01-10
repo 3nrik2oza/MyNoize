@@ -32,26 +32,25 @@ class SearchScreenViewModel(
 
     private var searchJob: Job? = null
 
-
     init {
         viewModelScope.launch {
-            val favSongs = userRepo.user.first().favoriteSongs
-
-            songsRepository.getAllSongs().onSuccess { songs ->
-                _state.update { it.copy(searchItems = songs.map { song -> SearchItem.SongItem(song.copy(favorite = favSongs.contains(song.id))) }) }
+            playlistsRepository.userPlaylists.collect { playlists ->
+                _state.update { it.copy(userPlaylists = playlists) }
             }
         }
     }
 
+
     fun onEvent(event: SearchScreenEvent){
+        if(state.value.isInvisibleLoading) return
         when(event){
             is SearchScreenEvent.OnSearchQueryChange -> {
                 if(event.query.length > 30) return
-                _state.value = _state.value.copy(searchQuery = event.query)
+                _state.value = _state.value.copy(searchQuery = event.query, isLoading = true)
                 updateSearchJob()
             }
             is SearchScreenEvent.OnSearchTypeChange -> {
-                _state.value = _state.value.copy(selectedSearchType = event.type)
+                _state.value = _state.value.copy(selectedSearchType = event.type, isLoading = true)
                 updateSearchJob()
             }
             is SearchScreenEvent.OnSearchItemFavoriteClicked -> favoriteClicked(event.item)
@@ -63,6 +62,21 @@ class SearchScreenViewModel(
                     }
                     else -> {}
                 }
+            }
+            is SearchScreenEvent.OnMoreOptionsSongClick -> onMoreSongClicked(event.selectedSong)
+            is SearchScreenEvent.OnToggleMoreOptionsSheet -> { _state.update { it.copy(isSheetOpen = !_state.value.isSheetOpen) } }
+            is SearchScreenEvent.OnToggleSelectPlaylistSheet -> { _state.update { it.copy(selectPlaylistSheet = !_state.value.selectPlaylistSheet) } }
+            is SearchScreenEvent.OnUpdateSearchItems -> {
+                _state.update { it.copy(isInvisibleLoading = true) }
+                updateSearchJob(0)
+            }
+
+            is SearchScreenEvent.OnPlaylistSelected ->{
+                _state.update { it.copy(selectPlaylistSheet = false) }
+                viewModelScope.launch {
+                    playlistsRepository.updateSongsInPlaylist(songs = event.playlist.songs + state.value.selectedSong!!.id, id = event.playlist.id)
+                }
+
             }
 
         }
@@ -96,55 +110,63 @@ class SearchScreenViewModel(
             }
         }
     }
+
+    private fun onMoreSongClicked(selectedSong: SearchItem.SongItem){
+        viewModelScope.launch {
+            artistsRepository.getArtist(selectedSong.song.artistId).onSuccess { artist ->
+                _state.update { it.copy(selectedArtist = artist, isSheetOpen = true, selectedSong = selectedSong) }
+            }
+        }
+    }
     
-    private fun updateSearchJob(){
+    private fun updateSearchJob(delay: Long = 500){
         searchJob?.cancel()
         searchJob = when(state.value.selectedSearchType){
-            SearchTypes.SONGS -> getSongs()
-            SearchTypes.ARTISTS -> getArtists()
-            SearchTypes.PLAYLISTS -> getPlaylists()
-            SearchTypes.ALBUMS -> getAlbums()
+            SearchTypes.SONGS -> getSongs(delay)
+            SearchTypes.ARTISTS -> getArtists(delay)
+            SearchTypes.PLAYLISTS -> getPlaylists(delay)
+            SearchTypes.ALBUMS -> getAlbums(delay)
         }
     }
 
-    private fun getSongs() =
+    private fun getSongs(delay: Long) =
         viewModelScope.launch {
-            delay(500)
+            delay(delay)
             val favSongs = userRepo.user.first().favoriteSongs
 
             songsRepository.getAllSongsContaining(state.value.searchQuery.lowercase()).onSuccess { songs ->
-                _state.update { it.copy(searchItems = songs.map { song -> SearchItem.SongItem(song.copy(favorite = favSongs.contains(song.id))) }) }
+                _state.update { it.copy(searchItems = songs.map { song -> SearchItem.SongItem(song.copy(favorite = favSongs.contains(song.id))) }, isLoading = false, isInvisibleLoading = false) }
             }
         }
 
-    private fun getArtists() =
+    private fun getArtists(delay: Long) =
         viewModelScope.launch {
-            delay(500)
+            delay(delay)
             val favArtists = userRepo.user.first().favoriteArtists
 
             artistsRepository.getArtistsContaining(state.value.searchQuery.lowercase()).onSuccess { artists ->
-                _state.update { it.copy(searchItems = artists.map { artist -> SearchItem.ArtistItem(artist.copy(favorite = favArtists.contains(artist.id))) }) }
+                _state.update { it.copy(searchItems = artists.map { artist -> SearchItem.ArtistItem(artist.copy(favorite = favArtists.contains(artist.id))) }, isLoading = false, isInvisibleLoading = false) }
             }
 
         }
 
-    private fun getPlaylists() =
+    private fun getPlaylists(delay: Long) =
         viewModelScope.launch {
-            delay(500)
+            delay(delay)
             val favPlaylists = userRepo.user.first().favoritePlaylists
 
             playlistsRepository.getPlaylistsContaining(state.value.searchQuery.lowercase()).onSuccess { playlists ->
-                _state.update { it.copy(searchItems = playlists.map { playlist -> SearchItem.PlaylistItem(playlist.copy(favorite = favPlaylists.contains(playlist.id))) }) }
+                _state.update { it.copy(searchItems = playlists.map { playlist -> SearchItem.PlaylistItem(playlist.copy(favorite = favPlaylists.contains(playlist.id))) }, isLoading = false, isInvisibleLoading = false) }
             }
         }
 
-    private fun getAlbums() =
+    private fun getAlbums(delay: Long) =
         viewModelScope.launch {
-            delay(500)
+            delay(delay)
             val favAlbums = userRepo.user.first().favoriteAlbums
 
             albumsRepository.getAllAlbumsContaining(state.value.searchQuery.lowercase()).onSuccess { albums ->
-                _state.update { it.copy(searchItems = albums.map { album -> SearchItem.AlbumItem(album.copy(favorite = favAlbums.contains(album.id))) }) }
+                _state.update { it.copy(searchItems = albums.map { album -> SearchItem.AlbumItem(album.copy(favorite = favAlbums.contains(album.id))) }, isLoading = false) }
             }
         }
 

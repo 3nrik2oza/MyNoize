@@ -121,7 +121,7 @@ fun SharedTransitionScope.SongView(
 
 
         Box(Modifier.sharedElement(
-            sharedContentState = rememberSharedContentState(key = "image/${state.currentSong!!.artworkUri}"),
+            sharedContentState = rememberSharedContentState(key = "image1/${state.currentSong!!.artworkUri}"),
             animatedVisibilityScope = animatedVisibilityScope,
             boundsTransform = {_,_ ->
                 tween(durationMillis = 500)

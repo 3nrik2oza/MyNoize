@@ -21,8 +21,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,17 +41,33 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import com.project.mynoize.R
+import com.project.mynoize.activities.main.presentation.playlist_screen.PlaylistScreenEvent
+import com.project.mynoize.activities.main.presentation.playlist_screen.components.SongOptionsBottomSheet
 import com.project.mynoize.activities.main.ui.theme.DarkGray
 import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
 import com.project.mynoize.activities.main.ui.theme.Red
+import com.project.mynoize.core.data.Artist
 import com.project.mynoize.core.data.SearchItem
 import com.project.mynoize.core.presentation.components.CustomSearchBar
+import com.project.mynoize.core.presentation.components.SelectPlaylistDialog
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
     state: SearchScreenState = SearchScreenState(),
     onEvent: (SearchScreenEvent) -> Unit = {}
 ){
+
+    val sheetState = rememberModalBottomSheetState()
+
+    if(state.selectPlaylistSheet){
+        SelectPlaylistDialog(
+            playlists = state.userPlaylists.filter { !it.songs.contains(state.selectedSong!!.id) },
+            onPlaylistClick = { onEvent(SearchScreenEvent.OnPlaylistSelected(it)) },
+            onDismiss = { onEvent(SearchScreenEvent.OnToggleSelectPlaylistSheet) }
+        )
+    }
+
     Column(
         Modifier.fillMaxSize()
             .padding(start = 10.dp, end = 10.dp, top= 20.dp),
@@ -76,15 +95,45 @@ fun SearchScreen(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        LazyColumn{
-            itemsIndexed(state.searchItems){ index, item ->
-                SearchElement(item = item, onEvent = onEvent)
+        if(state.isLoading){
+            Spacer(Modifier.height(20.dp))
+            CircularProgressIndicator()
+        }else {
+            LazyColumn{
+                itemsIndexed(state.searchItems){ _, item ->
+                    SearchElement(item = item, onEvent = onEvent)
+                }
             }
         }
-
-
-
     }
+
+    if(state.isSheetOpen){
+        ModalBottomSheet(
+            sheetState = sheetState,
+            onDismissRequest = { onEvent(SearchScreenEvent.OnToggleMoreOptionsSheet) },
+            containerColor = Color.White,
+            shape = RectangleShape,
+            dragHandle = {}
+        ) {
+            SongOptionsBottomSheet(
+                song = state.selectedSong!!.song,
+                artist = state.selectedArtist ?: Artist(),
+                removeFromPlaylistButton = false,
+                event = { event ->
+                    when(event){
+                        is PlaylistScreenEvent.OnArtistClick -> {
+                            onEvent(SearchScreenEvent.OnToggleMoreOptionsSheet)
+                            onEvent(SearchScreenEvent.OnSearchItemClicked(SearchItem.ArtistItem(state.selectedArtist!!)))
+                        }
+                        is PlaylistScreenEvent.OnSongFavoriteToggle -> onEvent(SearchScreenEvent.OnSearchItemFavoriteClicked(SearchItem.SongItem(state.selectedSong.song)))
+                        is PlaylistScreenEvent.OnToggleSelectPlaylistSheet -> { onEvent(SearchScreenEvent.OnToggleSelectPlaylistSheet) }
+                        is PlaylistScreenEvent.OnDismissAlertDialog -> { onEvent(SearchScreenEvent.OnToggleMoreOptionsSheet) }
+                        else -> {}
+                    }
+                })
+        }
+    }
+
 }
 
 @Preview
@@ -175,13 +224,16 @@ fun SearchElement(
                     modifier = Modifier.clickable{ onEvent(SearchScreenEvent.OnSearchItemFavoriteClicked(item)) }
                 )
 
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = "Add song to the playlist",
-                    modifier = Modifier.clickable(onClick = {
+                if(item is SearchItem.SongItem){
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "Add song to the playlist",
+                        modifier = Modifier.clickable(onClick = {
+                            onEvent(SearchScreenEvent.OnMoreOptionsSongClick(item))
+                        })
+                    )
+                }
 
-                    })
-                )
 
             }
 

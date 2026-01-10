@@ -41,6 +41,7 @@ import com.project.mynoize.core.data.Playlist
 fun SharedTransitionScope.PlaylistScrollElement(
     modifier: Modifier = Modifier,
     playlist: Playlist,
+    isPlaylist: Boolean = true,
     onEvent: (FavoriteScreenEvent) -> Unit,
     animatedVisibilityScope: AnimatedVisibilityScope
 ){
@@ -72,7 +73,11 @@ fun SharedTransitionScope.PlaylistScrollElement(
                         modifier = modifier
                             .border(1.dp, Color.Black)
                             .clickable(
-                                onClick = {onEvent(FavoriteScreenEvent.OnPlaylistClicked(playlist.id))})
+                                onClick = {
+                                    val id =
+                                        if (isPlaylist) playlist.id else playlist.artists[0] + "/" + playlist.id
+                                    onEvent(FavoriteScreenEvent.OnPlaylistClicked(id, isPlaylist))
+                                })
                     ){
                         if(playlist.name == "Favorites"){
                             Icon(
@@ -95,16 +100,25 @@ fun SharedTransitionScope.PlaylistScrollElement(
                     ){
                         Image(
                             painter = painter,
-                            contentScale = ContentScale.FillBounds,
+                            contentScale = ContentScale.Crop,
                             contentDescription = "Playlist image",
                             modifier = modifier
                                 .border(1.dp, Color.Black)
                                 .clickable(
-                                    onClick = {onEvent(FavoriteScreenEvent.OnPlaylistClicked(playlist.id))})
+                                    onClick = {
+                                        val id =
+                                            if (isPlaylist) playlist.id else playlist.artists[0] + "/" + playlist.id
+                                        onEvent(
+                                            FavoriteScreenEvent.OnPlaylistClicked(
+                                                id,
+                                                isPlaylist
+                                            )
+                                        )
+                                    })
                                 .sharedElement(
                                     sharedContentState = rememberSharedContentState(key = "image/${playlist.imageLink}"),
                                     animatedVisibilityScope = animatedVisibilityScope,
-                                    boundsTransform = {_,_ ->
+                                    boundsTransform = { _, _ ->
                                         tween(durationMillis = 300)
                                     }
                                 )

@@ -7,13 +7,16 @@ import com.project.mynoize.util.BottomSheetType
 
 data class PlaylistScreenState(
     val playlist: Playlist = Playlist(),
+    val isPlaylist: Boolean = true,
     val favoriteList: Playlist = Playlist(),
     val songs: List<Song> = listOf(),
     val isSheetOpen: Boolean = false,
+    val selectPlaylistSheet: Boolean = false,
     val sheetType: BottomSheetType = BottomSheetType.SONG,
     val deletePlaylistSheetOpen : Boolean = false,
     val selectedSongIndex: Int = 0,
-    val artist: Artist = Artist()
+    val artist: Artist = Artist(),
+    val userPlaylists: List<Playlist> = listOf(),
 ){
 
     fun selectedSong():Song{

@@ -52,8 +52,6 @@ fun SongItem(
     showMore: Boolean = true,
 ) {
 
-    var songSelected by remember { mutableStateOf(false) }
-
     Column {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -150,14 +148,13 @@ fun SongItem(
                 }
             }else{
                 Icon(
-                    imageVector = if(songSelected) Icons.Default.Check else Icons.Default.LibraryMusic,
+                    imageVector = if(song.favorite) Icons.Default.Check else Icons.Default.LibraryMusic,
                     contentDescription = "Add song to the playlist",
                     modifier = Modifier.clickable(onClick = {
-                        songSelected = !songSelected
                         selectSongsEvent(
                             SelectSongsEvent.OnSongClicked(
                                 index = index,
-                                add = songSelected
+                                add = !song.favorite
                             )
                         )
                     })

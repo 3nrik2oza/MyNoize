@@ -3,7 +3,6 @@ package com.project.mynoize.activities.main.presentation.favorite_screen
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -33,7 +32,6 @@ import coil.compose.AsyncImage
 import com.project.mynoize.R
 import com.project.mynoize.activities.main.presentation.favorite_screen.components.PlaylistScrollElement
 import com.project.mynoize.core.data.Artist
-import com.project.mynoize.core.data.Playlist
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -62,7 +60,7 @@ fun SharedTransitionScope.FavoriteScreen(
 
         LazyRow {
 
-            itemsIndexed(state.artists){ index, artist ->
+            itemsIndexed(state.artists){ _, artist ->
                 ArtistsScrollElement(
                     artist = artist,
                     onClick = {onEvent(FavoriteScreenEvent.OnArtistClicked(artist.id))}
@@ -81,7 +79,7 @@ fun SharedTransitionScope.FavoriteScreen(
         Spacer(Modifier.size(10.dp))
 
         LazyRow {
-            itemsIndexed(state.playlists){ index, playlist ->
+            itemsIndexed(state.playlists){ _, playlist ->
                 PlaylistScrollElement(
                     modifier = Modifier.size(100.dp),
                     playlist = playlist,
@@ -97,18 +95,11 @@ fun SharedTransitionScope.FavoriteScreen(
         )
 
         LazyRow {
-
-            item{
-                AddPlaylistScrollElement(
-                    text = "Add album",
-                    createNew = {}
-                )
-            }
-
-            items(10){
+            itemsIndexed(state.albums){ _, playlist ->
                 PlaylistScrollElement(
                     modifier = Modifier.size(100.dp),
-                    playlist = Playlist(),
+                    playlist = playlist,
+                    isPlaylist = false,
                     onEvent = onEvent,
                     animatedVisibilityScope = animatedVisibilityScope
                 )
@@ -165,11 +156,11 @@ fun ArtistsScrollElement(
         AsyncImage(
             model = artist.imageLink,
             contentDescription = "Artist image",
-            contentScale = ContentScale.FillBounds,
+            contentScale = ContentScale.Crop,
             modifier = Modifier
                 .size(100.dp)
                 .clip(CircleShape)
-                .border(2.dp, Color.Black, CircleShape)
+                .border(1.dp, Color.Black, CircleShape)
                 .clickable{
                     onClick()
                 }

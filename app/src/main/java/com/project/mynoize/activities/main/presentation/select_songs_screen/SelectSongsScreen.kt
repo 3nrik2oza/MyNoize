@@ -106,8 +106,8 @@ fun SelectSongsScreen(
             contentAlignment = Alignment.Center
         ){
             CustomSearchBar(
-                searchQuery = "",
-                onSearchQueryChange = {},
+                searchQuery = state.query,
+                onSearchQueryChange = { onEvent(SelectSongsEvent.OnSearchQueryChange(it)) },
                 onImeSearch = {}
             )
         }

@@ -63,7 +63,7 @@ fun ImageWithLoading(image: String, isFavorite: Boolean = false, boxSize: Dp = 1
                 painter = painter,
                 contentDescription = "Image",
                 modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.FillBounds
+                contentScale = ContentScale.Crop
             )
         }
     }

@@ -31,6 +31,7 @@ import com.project.mynoize.core.data.Song
 fun SongOptionsBottomSheet(
     song: Song,
     artist: Artist,
+    removeFromPlaylistButton: Boolean = true,
     event: (PlaylistScreenEvent) -> Unit
 ){
     Column(
@@ -85,29 +86,47 @@ fun SongOptionsBottomSheet(
 
         HorizontalDivider(
             color = DarkGray,
-            thickness = 1.dp
+            thickness = 1.dp,
+            modifier = Modifier.padding(bottom = 20.dp)
         )
+
+        if(removeFromPlaylistButton){
+            Text(
+                text = "Remove from playlist",
+                modifier = Modifier
+                    .clickable(onClick = {event(PlaylistScreenEvent.OnRemoveSongClick)})
+                    .fillMaxWidth()
+                    .padding(bottom = 10.dp)
+                    .padding(horizontal = 20.dp),
+                textAlign = TextAlign.Start
+            )
+        }
+
 
 
         Text(
-            text = "Remove from playlist",
+            text = if(song.favorite) "Remove from favorites" else "Add to favorites",
             modifier = Modifier
-                .clickable(onClick = {event(PlaylistScreenEvent.OnRemoveSongClick)})
+                .clickable{
+                    event(PlaylistScreenEvent.OnDismissAlertDialog)
+                    event(PlaylistScreenEvent.OnSongFavoriteToggle(song))
+                }
                 .fillMaxWidth()
-                .padding(top = 20.dp, bottom = 10.dp)
+                .padding(bottom = 10.dp)
                 .padding(horizontal = 20.dp),
             textAlign = TextAlign.Start
         )
 
         Text(
-            text = "Add/Remove from favorites",
-            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp).padding(horizontal = 20.dp),
-            textAlign = TextAlign.Start
-        )
-
-        Text(
             text = "Add to Playlist",
-            modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp).padding(horizontal = 20.dp),
+            modifier = Modifier
+                .clickable{
+                    event(PlaylistScreenEvent.OnDismissAlertDialog)
+                    event(PlaylistScreenEvent.OnToggleSelectPlaylistSheet)
+                }
+                .fillMaxWidth()
+                .padding(bottom = 20.dp)
+                .padding(horizontal = 20.dp),
             textAlign = TextAlign.Start
         )
 

@@ -6,5 +6,6 @@ import com.project.mynoize.core.data.Playlist
 data class FavoriteScreenState(
     val playlists: List<Playlist> = emptyList(),
     val artists: List<Artist> = emptyList(),
+    val albums: List<Playlist> = emptyList(),
     val addSheetActive: Boolean = false,
 )

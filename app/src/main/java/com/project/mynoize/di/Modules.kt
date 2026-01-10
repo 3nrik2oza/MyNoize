@@ -50,7 +50,7 @@ val appModule = module{
 
     single { PlaylistRepository(get(), get()) }
 
-    single { AlbumRepository() }
+    single { AlbumRepository(get()) }
     single { CreateSongValidation() }
 
     single { CreatePlaylistValidation() }
@@ -70,9 +70,9 @@ val appModule = module{
 
     viewModel { MainScreenViewModel(get(), get(), get(), get(), get()) }
 
-    viewModel { FavoriteScreenViewModel(get(), get(), get()) }
+    viewModel { FavoriteScreenViewModel(get(), get(), get(), get()) }
 
-    viewModel { PlaylistScreenViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { PlaylistScreenViewModel(get(), get(), get(), get(), get(), get(), get()) }
 
     viewModel { SelectSongsViewModel(get(), get()) }
 

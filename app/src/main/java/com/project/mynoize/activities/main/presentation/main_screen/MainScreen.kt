@@ -49,6 +49,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
@@ -169,7 +172,7 @@ fun MainScreen(
                                             navController.navigate(ArtistView(artistId = event.artistId))
                                         }
                                         is FavoriteScreenEvent.OnPlaylistClicked -> {
-                                            navController.navigate(PlaylistView(playlistId = event.playlistId))
+                                            navController.navigate(PlaylistView(playlistId = event.playlistId, playList = event.isPlaylist))
                                         }
                                         is FavoriteScreenEvent.OnCreatePlaylist -> {
                                             navController.navigate(CreatePlaylistScreen(playlistId = ""))
@@ -215,7 +218,7 @@ fun MainScreen(
                             val vm: PlaylistScreenViewModel = koinViewModel<PlaylistScreenViewModel>()
 
                             LaunchedEffect(true) {
-                                vm.onEvent(PlaylistScreenEvent.SetPlaylistId(arg.playlistId))
+                                vm.onEvent(PlaylistScreenEvent.SetPlaylistId(arg.playlistId, arg.playList))
                             }
 
                             val state by vm.state.collectAsStateWithLifecycle()
@@ -272,22 +275,22 @@ fun MainScreen(
 
                     }
 
-/*
-
-                    composable<ShowMusic> {
-                        val state by vmMainScreen.state.collectAsState()
-
-                        MainView(
-                            state,
-                            onEvent = { event->
-                                vmMainScreen.onEvent(event)
-
-                            }
-                        )
-                    }*/
-
                     composable<SearchScreen> {
                         val vm: SearchScreenViewModel = koinViewModel<SearchScreenViewModel>()
+
+                        val lifecycleOwner = LocalLifecycleOwner.current
+
+                        DisposableEffect(lifecycleOwner) {
+                            val observer = LifecycleEventObserver { _, event ->
+                                if(event == Lifecycle.Event.ON_RESUME){
+                                    vm.onEvent(SearchScreenEvent.OnUpdateSearchItems)
+                                }
+                            }
+                            lifecycleOwner.lifecycle.addObserver(observer)
+                            onDispose {
+                                lifecycleOwner.lifecycle.removeObserver(observer)
+                            }
+                        }
 
                         val state by vm.state.collectAsStateWithLifecycle()
 
@@ -298,10 +301,14 @@ fun MainScreen(
                                     is SearchScreenEvent.OnSearchItemClicked -> {
                                         when(event.item){
                                             is SearchItem.PlaylistItem -> {
-                                                navController.navigate(PlaylistView(playlistId = event.item.playlist.id))
+                                                navController.navigate(PlaylistView(playlistId = event.item.playlist.id, playList = true))
                                             }
                                             is SearchItem.ArtistItem -> {
                                                 navController.navigate(ArtistView(artistId = event.item.artist.id))
+                                            }
+                                            is SearchItem.AlbumItem -> {
+                                                val album = event.item.album
+                                                navController.navigate(PlaylistView(playlistId = album.artist+"/"+album.id, playList = false))
                                             }
                                             else -> {}
                                         }

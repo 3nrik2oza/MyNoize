@@ -22,7 +22,7 @@ interface AppScreen
     data class ArtistView(val artistId: String) : AppScreen
 
     @Serializable
-    data class PlaylistView(val playlistId: String) : AppScreen
+    data class PlaylistView(val playlistId: String, val playList: Boolean) : AppScreen
 
     @Serializable
     data class SelectSongsScreen(val playlistId: String) : AppScreen

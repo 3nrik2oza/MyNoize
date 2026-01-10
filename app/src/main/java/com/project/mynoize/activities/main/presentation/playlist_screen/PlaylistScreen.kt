@@ -47,6 +47,7 @@ import com.project.mynoize.activities.main.ui.theme.Red
 import com.project.mynoize.core.presentation.AlertDialogState
 import com.project.mynoize.core.presentation.asString
 import com.project.mynoize.core.presentation.components.MessageAlertDialog
+import com.project.mynoize.core.presentation.components.SelectPlaylistDialog
 import com.project.mynoize.core.presentation.components.SongItem
 import com.project.mynoize.util.BottomSheetType
 
@@ -91,6 +92,14 @@ fun SharedTransitionScope.PlaylistScreen(
         )
     }
 
+    if(state.selectPlaylistSheet){
+        SelectPlaylistDialog(
+            playlists = state.userPlaylists.filter { !it.songs.contains(state.selectedSong().id) },
+            onPlaylistClick = {onEvent(PlaylistScreenEvent.OnPlaylistSelected(it))},
+            onDismiss = {onEvent(PlaylistScreenEvent.OnToggleSelectPlaylistSheet)}
+        )
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -114,7 +123,7 @@ fun SharedTransitionScope.PlaylistScreen(
                         }
                 )
 
-                if(state.playlist.name != "Favorites"){
+                if(state.playlist.name != "Favorites" &&  state.isPlaylist){
                     Icon(
                         imageVector = Icons.Default.MoreVert,
                         contentDescription = "Options",
@@ -156,7 +165,7 @@ fun SharedTransitionScope.PlaylistScreen(
                 modifier = Modifier.padding(top = 15.dp)
             )
 
-            if(state.playlist.name != "Favorites"){
+            if(state.playlist.name != "Favorites" &&  state.isPlaylist){
                 Text(
                     text = "ADD SONGS",
                     fontSize = 25.sp,
@@ -186,7 +195,7 @@ fun SharedTransitionScope.PlaylistScreen(
                         }
                 )
 
-                if(state.playlist.name != "Favorites"){
+                if(state.playlist.name != "Favorites" &&  state.isPlaylist){
                     Icon(
                         imageVector = Icons.Default.Mode,
                         contentDescription = "Modify",
@@ -207,7 +216,6 @@ fun SharedTransitionScope.PlaylistScreen(
             SongItem(
                 song = song,
                 playlistScreenEvent = { event ->
-                    if(blockInput) return@SongItem
 
                     onEvent(event)
                 },

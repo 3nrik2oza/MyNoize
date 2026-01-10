@@ -54,7 +54,7 @@ class CreatePlaylistViewModel(
             }
             is CreatePlaylistEvent.OnModifyPlaylist -> {
                 viewModelScope.launch {
-                    val playlist = playlistRepository.playlistList.first().find{ it.id == event.playlistId }!!
+                    val playlist = playlistRepository.userPlaylists.first().find{ it.id == event.playlistId }!!
                     _state.update { it.copy(playlistName = playlist.name, playlistImage = playlist.imageLink.toUri(), playlist = playlist) }
                 }
 

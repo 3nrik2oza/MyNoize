@@ -55,7 +55,7 @@ class CreateSongViewModel(
         viewModelScope.launch {
             artistRepository.getArtists().onSuccess { list ->
                 artistListState.update { it.copy(list = list) }
-            }.onError { error ->
+            }.onError { _ ->
                 alertDialogState.update {
                     it.copy(show = true, message = UiText.StringResource(R.string.error_loading_artist_failed))
                 }
@@ -147,7 +147,7 @@ class CreateSongViewModel(
 
     fun loadAlbums(index: Int){
         viewModelScope.launch{
-            albumRepository.getAlbum(artistListState.value.list[index].id)
+            albumRepository.getAlbums(artistListState.value.list[index].id)
                 .onSuccess { list ->
                     albumListState.update { it.copy(list = list) }
                 }

@@ -77,6 +77,32 @@ class ArtistRepository(
 
     }
 
+    suspend fun getArtist(artistId: String): Result<Artist, FbError.Firestore> {
+        return try {
+            val snapshot = db.collection(Constants.ARTIST_COLLECTION).document(artistId)
+                .get()
+                .await()
+
+            val artist = snapshot.toObject(Artist::class.java)!!.copy(id = snapshot.id)
+
+            return Success(artist)
+        }catch (e: FirebaseFirestoreException){
+            when(e.code){
+                FirebaseFirestoreException.Code.PERMISSION_DENIED -> Error(FbError.Firestore.PERMISSION_DENIED)
+                FirebaseFirestoreException.Code.UNAVAILABLE -> Error(FbError.Firestore.UNAVAILABLE)
+                FirebaseFirestoreException.Code.ABORTED -> Error(FbError.Firestore.ABORTED)
+                FirebaseFirestoreException.Code.NOT_FOUND -> Error(FbError.Firestore.NOT_FOUND)
+                FirebaseFirestoreException.Code.ALREADY_EXISTS -> Error(FbError.Firestore.ALREADY_EXISTS)
+                FirebaseFirestoreException.Code.DEADLINE_EXCEEDED -> Error(FbError.Firestore.DEADLINE_EXCEEDED)
+                FirebaseFirestoreException.Code.CANCELLED -> Error(FbError.Firestore.CANCELLED)
+                else -> Error(FbError.Firestore.UNKNOWN)
+            }
+        }catch (_: Exception){
+            Error(FbError.Firestore.UNKNOWN)
+        }
+
+    }
+
     suspend fun getArtistsContaining(q: String): Result<List<Artist>, FbError.Firestore> {
         return try {
             val snapshot = db.collection(Constants.ARTIST_COLLECTION)

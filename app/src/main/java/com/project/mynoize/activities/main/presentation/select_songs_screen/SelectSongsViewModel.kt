@@ -10,6 +10,8 @@ import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.core.presentation.AlertDialogState
 import com.project.mynoize.core.presentation.UiText
 import com.project.mynoize.core.presentation.toErrorMessage
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
@@ -28,17 +30,10 @@ class SelectSongsViewModel(
     private val _alertDialogState = MutableStateFlow(AlertDialogState())
     val alertDialogState = _alertDialogState.asStateFlow()
 
+    private var searchJob: Job? = null
+
     init {
-        viewModelScope.launch {
-            songRepository.getAllSongs().onSuccess { songs ->
-                val idsSet = _state.value.playlist.songs.toSet()
-                _state.update { state ->
-                    state.copy(
-                        songs = songs.filterNot { it.id in idsSet }
-                    )
-                }
-            }
-        }
+        updateSongs(0)
     }
 
     fun onEvent(event: SelectSongsEvent){
@@ -48,14 +43,34 @@ class SelectSongsViewModel(
             is SelectSongsEvent.SetPlaylist -> {
                 viewModelScope.launch {
                     _state.update {  state ->
-                        state.copy(playlist = playlistRepository.playlistList.first().find { it.id == event.playlistId }!!)
+                        state.copy(playlist = playlistRepository.userPlaylists.first().find { it.id == event.playlistId }!!)
                     }
                 }
             }
             is SelectSongsEvent.OnFinishClick -> { addSongsToPlaylist()
             }
+            is SelectSongsEvent.OnSearchQueryChange -> {
+                if (event.query.length > 30) return
+                _state.value = _state.value.copy(query = event.query)
+                searchJob?.cancel()
+                searchJob = updateSongs()
+            }
             else -> {}
         }
+    }
+
+    fun updateSongs(delay: Long = 500) =
+        viewModelScope.launch {
+            delay(delay)
+            songRepository.getAllSongsContaining(state.value.query).onSuccess { songs ->
+                val idsSet = _state.value.playlist.songs.toSet()
+                _state.update { state ->
+                    state.copy(
+                        songs = songs.filterNot { it.id in idsSet }.map { it.copy(favorite = state.selectedSongs.contains(it)) }
+                    )
+                }
+            }
+
     }
 
     private fun addSongsToPlaylist(){
@@ -88,16 +103,20 @@ class SelectSongsViewModel(
     }
 
     private fun addRemoveSong(index: Int, add: Boolean){
+        val songsUpdated = _state.value.songs.toMutableList()
+        songsUpdated[index] = songsUpdated[index].copy(favorite = add)
         if(add){
             _state.update {
                 it.copy(
-                    selectedSongs = it.selectedSongs + it.songs[index]
+                    selectedSongs = it.selectedSongs + it.songs[index],
+                    songs = songsUpdated
                 )
             }
         }else{
             _state.update {
                 it.copy(
-                    selectedSongs = it.selectedSongs - it.songs[index]
+                    selectedSongs = it.selectedSongs - it.songs[index],
+                    songs = songsUpdated
                 )
             }
         }

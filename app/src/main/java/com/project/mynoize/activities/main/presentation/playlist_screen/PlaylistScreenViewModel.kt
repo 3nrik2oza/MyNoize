@@ -2,6 +2,7 @@ package com.project.mynoize.activities.main.presentation.playlist_screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.project.mynoize.core.data.repositories.AlbumRepository
 import com.project.mynoize.core.data.repositories.ArtistRepository
 import com.project.mynoize.core.data.repositories.PlaylistRepository
 import com.project.mynoize.core.data.repositories.SongRepository
@@ -11,6 +12,7 @@ import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.core.presentation.AlertDialogState
 import com.project.mynoize.managers.ExoPlayerManager
 import com.project.mynoize.util.BottomSheetType
+import com.project.mynoize.util.toPlaylist
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
@@ -23,7 +25,8 @@ class PlaylistScreenViewModel(
     private val songRepository: SongRepository,
     private val artistRepository: ArtistRepository,
     private val exoPlayerManager: ExoPlayerManager,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val albumRepository: AlbumRepository
 ): ViewModel() {
 
     private val _alertDialogState = MutableStateFlow(AlertDialogState())
@@ -34,16 +37,19 @@ class PlaylistScreenViewModel(
 
     init {
         viewModelScope.launch {
-            playlistRepository.favoritePlaylist.collect { playlist ->
-                if (playlist != null) {
-                    _state.update { state ->
-                        state.copy(favoriteList = playlist) }
+            playlistRepository.favoriteSongsPlaylist.collect { playlist ->
+                _state.update { state ->
+                    state.copy(favoriteList = playlist) }
 
-                    _state.update { state ->
-                        state.copy(songs = state.songs.map { it.copy(favorite = playlist.songs.contains(it.id)) })
-                    }
+                _state.update { state ->
+                    state.copy(songs = state.songs.map { it.copy(favorite = playlist.songs.contains(it.id)) })
                 }
 
+            }
+        }
+        viewModelScope.launch {
+            playlistRepository.userPlaylists.collect { playlists ->
+                _state.update { it.copy(userPlaylists = playlists) }
             }
         }
     }
@@ -51,7 +57,7 @@ class PlaylistScreenViewModel(
 
     fun onEvent(event: PlaylistScreenEvent){
         when(event){
-            is PlaylistScreenEvent.SetPlaylistId -> setPlaylistData(event.playlistId)
+            is PlaylistScreenEvent.SetPlaylistId -> setPlaylistData(event.playlistId, event.isPlaylist)
             is PlaylistScreenEvent.OnMoreSongClick -> onMoreSongClicked(event.index)
             is PlaylistScreenEvent.OnMorePlaylistClick -> onMorePlaylistClicked()
             is PlaylistScreenEvent.OnRemoveSongClick -> removeSongFromPlaylist()
@@ -73,6 +79,16 @@ class PlaylistScreenViewModel(
             is PlaylistScreenEvent.OnArtistClick -> {
                 _state.update { it.copy(isSheetOpen = false) }
             }
+            is PlaylistScreenEvent.OnToggleSelectPlaylistSheet ->{
+                _state.update { it.copy(selectPlaylistSheet = !it.selectPlaylistSheet) }
+            }
+            is PlaylistScreenEvent.OnPlaylistSelected ->{
+                _state.update { it.copy(selectPlaylistSheet = false) }
+                viewModelScope.launch {
+                    playlistRepository.updateSongsInPlaylist(songs = event.playlist.songs + state.value.selectedSong().id, id = event.playlist.id)
+                }
+
+            }
             else ->{
 
             }
@@ -85,13 +101,23 @@ class PlaylistScreenViewModel(
     }
 
     private fun removeSongFromPlaylist(){
-        val songs = state.value.playlist.songs - state.value.selectedSong().id
+        val currentState = state.value
+        val songs = currentState.playlist.songs - currentState.selectedSong().id
+        if(currentState.playlist.name == "Favorites"){
+            viewModelScope.launch {
+                userRepository.updateFavoriteSongs(currentState.selectedSong().id, currentState.selectedSong().favorite).onSuccess {
+                    _state.update { it.copy(isSheetOpen = false) }
+                }
+            }
+            return
+        }
 
         viewModelScope.launch {
-            playlistRepository.updateSongsInPlaylist(songs, state.value.playlist.id).onSuccess {
-                _state.update { it.copy(isSheetOpen = false, playlist = it.playlist.copy(songs = songs), songs = it.songs - it.selectedSong()) }
+            playlistRepository.updateSongsInPlaylist(songs, currentState.playlist.id).onSuccess {
+                _state.update { it.copy(isSheetOpen = false) }
             }
         }
+
     }
 
     private fun onMorePlaylistClicked(){
@@ -109,18 +135,31 @@ class PlaylistScreenViewModel(
         }
     }
 
-    private fun setPlaylistData(playlistId: String){
-        viewModelScope.launch {
-
-            playlistRepository.playlistsWithFavorites.collect { playlists ->
-                _state.update { state ->
-                    state.copy(playlist = playlists.find { it.id == playlistId}!!)
+    private fun setPlaylistData(playlistId: String, isPlaylist: Boolean){
+        if(isPlaylist){
+            viewModelScope.launch {
+                playlistRepository.playlistsWithFavorites.collect { playlists ->
+                    _state.update { state ->
+                        state.copy(playlist = playlists.find { it.id == playlistId}!!)
+                    }
+                    songRepository.getSongByIds(state.value.playlist.songs).onSuccess { songs ->
+                        _state.update { state -> state.copy(songs = songs.map { it.copy(favorite = state.favoriteList.songs.contains(it.id)) }) }
+                    }
                 }
-                songRepository.getSongByIds(state.value.playlist.songs).onSuccess { songs ->
+            }
+            return
+        }
+        viewModelScope.launch {
+            albumRepository.getAlbum(playlistId).collect { album ->
+                _state.update { state ->
+                    state.copy(playlist = album.toPlaylist(), isPlaylist = false)
+                }
+
+                songRepository.getSongByAlbumId(album.id).onSuccess { songs ->
                     _state.update { state -> state.copy(songs = songs.map { it.copy(favorite = state.favoriteList.songs.contains(it.id)) }) }
                 }
             }
         }
 
-    }
+        }
 }

@@ -4,7 +4,6 @@ import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.snapshots
-import com.project.mynoize.core.data.Artist
 import com.project.mynoize.core.data.AuthRepository
 import com.project.mynoize.core.data.Playlist
 import com.project.mynoize.core.domain.FbError
@@ -12,11 +11,14 @@ import com.project.mynoize.core.domain.Result
 import com.project.mynoize.core.domain.Result.Error
 import com.project.mynoize.core.domain.Result.Success
 import com.project.mynoize.util.Constants
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
-import org.koin.core.qualifier.named
+import kotlin.collections.map
 
 class PlaylistRepository(
     private val auth: AuthRepository,
@@ -27,7 +29,18 @@ class PlaylistRepository(
 
     var lastLoadedPlaylists = listOf<Playlist>()
 
+    /*
     var playlistList : Flow<List<Playlist>> = db.collection(Constants.PLAYLIST_COLLECTION)
+        .snapshots()
+        .map { snapshots ->
+            snapshots.documents.map { doc ->
+                doc.toObject(Playlist::class.java)!!.copy(
+                    id = doc.id
+                )
+            }
+        }*/
+
+    val userPlaylists: Flow<List<Playlist>> = db.collection(Constants.PLAYLIST_COLLECTION).whereEqualTo("creator", auth.getCurrentUserId())
         .snapshots()
         .map { snapshots ->
             snapshots.documents.map { doc ->
@@ -37,17 +50,34 @@ class PlaylistRepository(
             }
         }
 
-    var favoritePlaylist: Flow<Playlist> = userRepository.user.map{ user ->
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val favoritePlaylists: Flow<List<Playlist>> = userRepository.user.flatMapLatest { user ->
+        val favoritesIds = user.favoritePlaylists
+
+        if(favoritesIds.isEmpty()){
+            flowOf(emptyList())
+        }else{
+            db.collection(Constants.PLAYLIST_COLLECTION)
+                .whereIn("id", favoritesIds)
+                .snapshots()
+                .map { snapshot ->
+                    snapshot.toObjects(Playlist::class.java)
+                }
+        }
+    }
+
+    var favoriteSongsPlaylist: Flow<Playlist> = userRepository.user.map{ user ->
         Playlist(id = auth.getCurrentUserId(), name = "Favorites",
             creator = auth.getCurrentUserId(), songs = user.favoriteSongs)
     }
 
     val playlistsWithFavorites: Flow<List<Playlist>> =
         combine(
-            playlistList,
-            favoritePlaylist
-        ){ playlists, favorite ->
-            listOf(favorite) + playlists
+            userPlaylists,
+            favoriteSongsPlaylist,
+            favoritePlaylists
+        ){ createdPlaylists, favoriteSongs, favoritePlaylists ->
+            listOf(favoriteSongs) + createdPlaylists + favoritePlaylists
         }
 
 
@@ -56,6 +86,7 @@ class PlaylistRepository(
             val snapshot = db.collection(Constants.PLAYLIST_COLLECTION)
                 .whereGreaterThanOrEqualTo("nameLower", q)
                 .whereLessThan("nameLower", q + "\uf8ff")
+                .whereNotEqualTo("creator", auth.getCurrentUserId())
                 .limit(25)
                 .get()
                 .await()

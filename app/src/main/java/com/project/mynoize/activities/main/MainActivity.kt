@@ -112,7 +112,6 @@ class MainActivity : ComponentActivity() {
                                     applicationContext, MusicService::class.java).also {
                                     startService(it)
                                 }
-                                musicServiceStarted = true
                             }
 
                         }
@@ -241,7 +240,7 @@ fun SharedTransitionScope.MusicPlayer(
                 Modifier
                     .size(45.dp)
                     .sharedElement(
-                        sharedContentState = rememberSharedContentState(key = "image/${state.currentSong!!.artworkUri}"),
+                        sharedContentState = rememberSharedContentState(key = "image1/${state.currentSong!!.artworkUri}"),
                         animatedVisibilityScope = animatedVisibilityScope,
                         boundsTransform = {_,_ ->
                             tween(durationMillis = 500)
