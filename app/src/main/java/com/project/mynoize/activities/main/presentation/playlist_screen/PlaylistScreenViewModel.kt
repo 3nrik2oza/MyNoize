@@ -2,6 +2,7 @@ package com.project.mynoize.activities.main.presentation.playlist_screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.project.mynoize.core.data.AuthRepository
 import com.project.mynoize.core.data.repositories.AlbumRepository
 import com.project.mynoize.core.data.repositories.ArtistRepository
 import com.project.mynoize.core.data.repositories.PlaylistRepository
@@ -26,7 +27,8 @@ class PlaylistScreenViewModel(
     private val artistRepository: ArtistRepository,
     private val exoPlayerManager: ExoPlayerManager,
     private val userRepository: UserRepository,
-    private val albumRepository: AlbumRepository
+    private val albumRepository: AlbumRepository,
+    private val authRepository: AuthRepository
 ): ViewModel() {
 
     private val _alertDialogState = MutableStateFlow(AlertDialogState())
@@ -138,9 +140,9 @@ class PlaylistScreenViewModel(
     private fun setPlaylistData(playlistId: String, isPlaylist: Boolean){
         if(isPlaylist){
             viewModelScope.launch {
-                playlistRepository.playlistsWithFavorites.collect { playlists ->
+                playlistRepository.getPlaylist(playlistId).collect { playlist ->
                     _state.update { state ->
-                        state.copy(playlist = playlists.find { it.id == playlistId}!!)
+                        state.copy(playlist = playlist, isUserCreator = playlist.creator == authRepository.getCurrentUserId())
                     }
                     songRepository.getSongByIds(state.value.playlist.songs).onSuccess { songs ->
                         _state.update { state -> state.copy(songs = songs.map { it.copy(favorite = state.favoriteList.songs.contains(it.id)) }) }

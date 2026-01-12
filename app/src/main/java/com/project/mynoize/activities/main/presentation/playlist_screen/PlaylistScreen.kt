@@ -123,7 +123,7 @@ fun SharedTransitionScope.PlaylistScreen(
                         }
                 )
 
-                if(state.playlist.name != "Favorites" &&  state.isPlaylist){
+                if(state.playlist.name != "Favorites" &&  state.isPlaylist && state.isUserCreator){
                     Icon(
                         imageVector = Icons.Default.MoreVert,
                         contentDescription = "Options",
@@ -165,7 +165,7 @@ fun SharedTransitionScope.PlaylistScreen(
                 modifier = Modifier.padding(top = 15.dp)
             )
 
-            if(state.playlist.name != "Favorites" &&  state.isPlaylist){
+            if(state.playlist.name != "Favorites" &&  state.isPlaylist && state.isUserCreator){
                 Text(
                     text = "ADD SONGS",
                     fontSize = 25.sp,
@@ -195,7 +195,7 @@ fun SharedTransitionScope.PlaylistScreen(
                         }
                 )
 
-                if(state.playlist.name != "Favorites" &&  state.isPlaylist){
+                if(state.playlist.name != "Favorites" &&  state.isPlaylist && state.isUserCreator){
                     Icon(
                         imageVector = Icons.Default.Mode,
                         contentDescription = "Modify",
@@ -240,7 +240,7 @@ fun SharedTransitionScope.PlaylistScreen(
             dragHandle = {}
         ) {
             when(state.sheetType){
-                BottomSheetType.SONG -> SongOptionsBottomSheet(state.selectedSong(), artist = state.artist, event = onEvent)
+                BottomSheetType.SONG -> SongOptionsBottomSheet(state.selectedSong(), artist = state.artist, event = onEvent, isCreator = state.isUserCreator)
                 BottomSheetType.PLAYLIST -> PlaylistOptionsBottomSheet(playlist = state.playlist, event = onEvent)
             }
         }

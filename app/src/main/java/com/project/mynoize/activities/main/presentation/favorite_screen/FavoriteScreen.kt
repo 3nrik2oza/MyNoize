@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
@@ -27,6 +29,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.project.mynoize.R
@@ -58,7 +61,7 @@ fun SharedTransitionScope.FavoriteScreen(
             text= "Artists"
         )
 
-        LazyRow {
+        LazyRow(Modifier.heightIn(min = 100.dp)) {
 
             itemsIndexed(state.artists){ _, artist ->
                 ArtistsScrollElement(
@@ -78,7 +81,7 @@ fun SharedTransitionScope.FavoriteScreen(
 
         Spacer(Modifier.size(10.dp))
 
-        LazyRow {
+        LazyRow(Modifier.heightIn(min = 100.dp)) {
             itemsIndexed(state.playlists){ _, playlist ->
                 PlaylistScrollElement(
                     modifier = Modifier.size(100.dp),
@@ -94,7 +97,7 @@ fun SharedTransitionScope.FavoriteScreen(
             text= "Albums"
         )
 
-        LazyRow {
+        LazyRow(Modifier.heightIn(min = 100.dp)) {
             itemsIndexed(state.albums){ _, playlist ->
                 PlaylistScrollElement(
                     modifier = Modifier.size(100.dp),
@@ -111,37 +114,7 @@ fun SharedTransitionScope.FavoriteScreen(
     }
 }
 
-@Composable
-fun AddPlaylistScrollElement(
-    text:String = "",
-    createNew: () -> Unit
-){
-    Column (
-        modifier = Modifier.padding(10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ){
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(100.dp)
-                .border(1.dp, Color.Black)
-                .clickable{
-                    createNew()
-                }
-        ){
 
-            Icon(
-                painter = painterResource(R.drawable.ic_add),
-                contentDescription = "Add",
-                modifier = Modifier.size(50.dp)
-            )
-
-        }
-        Text(
-            fontSize = 12.sp,
-            text = text
-        )
-    }
-}
 
 @Composable
 fun ArtistsScrollElement(

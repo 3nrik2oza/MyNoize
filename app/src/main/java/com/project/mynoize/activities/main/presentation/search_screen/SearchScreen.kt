@@ -130,7 +130,9 @@ fun SearchScreen(
                         is PlaylistScreenEvent.OnDismissAlertDialog -> { onEvent(SearchScreenEvent.OnToggleMoreOptionsSheet) }
                         else -> {}
                     }
-                })
+                },
+                isCreator = false
+            )
         }
     }
 

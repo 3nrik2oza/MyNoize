@@ -17,6 +17,7 @@ data class PlaylistScreenState(
     val selectedSongIndex: Int = 0,
     val artist: Artist = Artist(),
     val userPlaylists: List<Playlist> = listOf(),
+    val isUserCreator: Boolean = false,
 ){
 
     fun selectedSong():Song{

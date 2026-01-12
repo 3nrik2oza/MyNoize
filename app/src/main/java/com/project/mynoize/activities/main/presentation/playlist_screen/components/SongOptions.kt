@@ -32,7 +32,8 @@ fun SongOptionsBottomSheet(
     song: Song,
     artist: Artist,
     removeFromPlaylistButton: Boolean = true,
-    event: (PlaylistScreenEvent) -> Unit
+    event: (PlaylistScreenEvent) -> Unit,
+    isCreator: Boolean
 ){
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -90,7 +91,7 @@ fun SongOptionsBottomSheet(
             modifier = Modifier.padding(bottom = 20.dp)
         )
 
-        if(removeFromPlaylistButton){
+        if(removeFromPlaylistButton && isCreator){
             Text(
                 text = "Remove from playlist",
                 modifier = Modifier

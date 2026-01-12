@@ -3,6 +3,9 @@
 package com.project.mynoize.activities.main.presentation.main_screen
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
@@ -38,9 +41,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.project.mynoize.activities.main.FavoriteScreen
 import com.project.mynoize.activities.main.MusicScreen
-import com.project.mynoize.activities.main.ProfileScreen
 import com.project.mynoize.activities.main.presentation.main_screen.components.BottomNavigationBar
-import com.project.mynoize.activities.main.presentation.profile_screen.ProfileScreenViewModel
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.graphics.Color
@@ -83,10 +84,11 @@ import com.project.mynoize.activities.main.presentation.favorite_screen.Favorite
 import com.project.mynoize.activities.main.presentation.favorite_screen.FavoriteScreenViewModel
 import com.project.mynoize.activities.main.presentation.main_screen.components.SongView
 import com.project.mynoize.activities.main.presentation.music_screen.MusicScreen
+import com.project.mynoize.activities.main.presentation.music_screen.MusicScreenEvent
+import com.project.mynoize.activities.main.presentation.music_screen.MusicScreenViewModel
 import com.project.mynoize.activities.main.presentation.playlist_screen.PlaylistScreen
 import com.project.mynoize.activities.main.presentation.playlist_screen.PlaylistScreenEvent
 import com.project.mynoize.activities.main.presentation.playlist_screen.PlaylistScreenViewModel
-import com.project.mynoize.activities.main.presentation.profile_screen.ProfileScreen
 import com.project.mynoize.activities.main.presentation.search_screen.SearchScreen
 import com.project.mynoize.activities.main.presentation.search_screen.SearchScreenEvent
 import com.project.mynoize.activities.main.presentation.search_screen.SearchScreenViewModel
@@ -97,6 +99,7 @@ import com.project.mynoize.activities.main.ui.theme.DarkGray
 import com.project.mynoize.activities.main.ui.theme.LatoFontFamily
 import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
 import com.project.mynoize.activities.main.ui.theme.Red
+import com.project.mynoize.activities.signin.SignInActivity
 import com.project.mynoize.core.data.SearchItem
 import org.koin.androidx.compose.koinViewModel
 
@@ -104,9 +107,9 @@ import org.koin.androidx.compose.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    vmProfileScreen: ProfileScreenViewModel,
+    vmMusicScreen: MusicScreenViewModel,
     vmMainScreen: MainScreenViewModel,
-    mainState: MainScreenState
+    mainState: MainScreenState,
 ){
 
     val navController = rememberNavController()
@@ -154,8 +157,19 @@ fun MainScreen(
                     modifier = Modifier.padding(innerPadding)
                 ){
                     composable<MusicScreen>{
-                        MusicScreen()
+                        val vm: MusicScreenViewModel = koinViewModel<MusicScreenViewModel>()
+
+                        val state by vm.state.collectAsStateWithLifecycle()
+
+
+                        MusicScreen(
+                            state= state,
+                            onEvent = { event ->
+                                vmMusicScreen.onEvent(event)
+                            }
+                        )
                     }
+
                     navigation<FavoriteScreenRoot>(
                         startDestination = FavoriteScreen
                     ){
@@ -319,12 +333,12 @@ fun MainScreen(
                             }
                         )
                     }
-
+/*
                     composable<ProfileScreen> {
                         ProfileScreen(
                             vm = vmProfileScreen
                         )
-                    }
+                    }*/
 
                     composable<CreateArtistScreen> {
                         val arg = it.toRoute<CreateArtistScreen>()
@@ -515,7 +529,7 @@ fun MainScreen(
                     title = "Create playlist",
                     description = "Create playlists so that you or maybe others can enjoy your songs",
                     onClick = {
-                        navController.navigate(CreatePlaylistScreen)
+                        navController.navigate(CreatePlaylistScreen(""))
                         closeBottomSheet()
                     }
                 )

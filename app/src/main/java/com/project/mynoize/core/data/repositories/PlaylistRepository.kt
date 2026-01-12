@@ -1,6 +1,8 @@
 package com.project.mynoize.core.data.repositories
 
+import android.R
 import android.util.Log
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.snapshots
@@ -58,10 +60,14 @@ class PlaylistRepository(
             flowOf(emptyList())
         }else{
             db.collection(Constants.PLAYLIST_COLLECTION)
-                .whereIn("id", favoritesIds)
+                .whereIn(FieldPath.documentId(), favoritesIds)
                 .snapshots()
                 .map { snapshot ->
-                    snapshot.toObjects(Playlist::class.java)
+                    snapshot.documents.map { doc ->
+                        doc.toObject(Playlist::class.java)!!.copy(
+                            id = doc.id
+                        )
+                    }
                 }
         }
     }
@@ -79,6 +85,16 @@ class PlaylistRepository(
         ){ createdPlaylists, favoriteSongs, favoritePlaylists ->
             listOf(favoriteSongs) + createdPlaylists + favoritePlaylists
         }
+
+
+    fun getPlaylist(id: String): Flow<Playlist>{
+        return db.collection(Constants.PLAYLIST_COLLECTION)
+            .document(id)
+            .snapshots()
+            .map { snapshot ->
+                snapshot.toObject(Playlist::class.java) as Playlist
+            }
+    }
 
 
     suspend fun getPlaylistsContaining(q: String): Result<List<Playlist>, FbError.Firestore> {
@@ -110,7 +126,6 @@ class PlaylistRepository(
         }catch (_: Exception){
             Error(FbError.Firestore.UNKNOWN)
         }
-
     }
 
     suspend fun updateSongsInPlaylist(songs: List<String>, id: String): Result<Unit, FbError.Firestore> {
@@ -192,6 +207,9 @@ class PlaylistRepository(
             Error(FbError.Firestore.UNKNOWN)
         }
     }
+
+
+
 
     fun deletePlaylist(playlistId: String){
         db.collection(Constants.PLAYLIST_COLLECTION).document(playlistId).delete()

@@ -10,6 +10,7 @@ import com.project.mynoize.activities.main.presentation.create_song.CreateSongVi
 import com.project.mynoize.activities.main.presentation.create_song.domain.CreateSongValidation
 import com.project.mynoize.activities.main.presentation.favorite_screen.FavoriteScreenViewModel
 import com.project.mynoize.activities.main.presentation.main_screen.MainScreenViewModel
+import com.project.mynoize.activities.main.presentation.music_screen.MusicScreenViewModel
 import com.project.mynoize.activities.main.presentation.playlist_screen.PlaylistScreenViewModel
 import com.project.mynoize.activities.main.presentation.search_screen.SearchScreenViewModel
 import com.project.mynoize.activities.main.presentation.select_songs_screen.SelectSongsViewModel
@@ -65,6 +66,7 @@ val appModule = module{
 
     single { ExoPlayerManager(context = get<Application>(), get()) }
 
+    viewModel { MusicScreenViewModel() }
 
     viewModel { ArtistScreenViewModel(get(), get(), get(), get()) }
 
@@ -72,7 +74,7 @@ val appModule = module{
 
     viewModel { FavoriteScreenViewModel(get(), get(), get(), get()) }
 
-    viewModel { PlaylistScreenViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { PlaylistScreenViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
 
     viewModel { SelectSongsViewModel(get(), get()) }
 

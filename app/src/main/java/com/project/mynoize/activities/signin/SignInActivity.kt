@@ -60,6 +60,7 @@ class SignInActivity : ComponentActivity() {
                 ){
                     composable<SplashScreen> {
                         LaunchedEffect(key1 = Unit) {
+
                             if(googleAuthUiClient.getSignedInUser() != null) {
                                 val intent = Intent(applicationContext.applicationContext, MainActivity::class.java)
                                 startActivity(intent)

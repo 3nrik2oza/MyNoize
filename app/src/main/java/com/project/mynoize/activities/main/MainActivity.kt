@@ -52,7 +52,7 @@ import com.project.mynoize.activities.main.presentation.main_screen.MainScreenSt
 import com.project.mynoize.activities.main.ui.PlayButton
 import com.project.mynoize.activities.main.ui.theme.MyNoizeTheme
 import com.project.mynoize.activities.main.presentation.main_screen.MainScreenViewModel
-import com.project.mynoize.activities.main.presentation.profile_screen.ProfileScreenViewModel
+import com.project.mynoize.activities.main.presentation.music_screen.MusicScreenViewModel
 import com.project.mynoize.activities.signin.SignInActivity
 import com.project.mynoize.core.data.Song
 import com.project.mynoize.notification.MusicService
@@ -61,7 +61,7 @@ import org.koin.androidx.compose.koinViewModel
 
 class MainActivity : ComponentActivity() {
 
-    val vmProfileScreenView: ProfileScreenViewModel by viewModels()
+    val vmMusicScreen: MusicScreenViewModel by viewModels()
 
     lateinit var vmMainScreen: MainScreenViewModel
 
@@ -90,7 +90,7 @@ class MainActivity : ComponentActivity() {
             var musicServiceStarted by remember { mutableStateOf(false) }
 
             LaunchedEffect(Unit) {
-                vmProfileScreenView.uiEvent.collect { event ->
+                vmMusicScreen.uiEvent.collect { event ->
                     when(event){
                         is MainActivityUiEvent.NavigateToSignIn -> {
                             val intent = Intent(applicationContext.applicationContext, SignInActivity::class.java)
@@ -124,9 +124,9 @@ class MainActivity : ComponentActivity() {
 
 
                 MainScreen(
-                    vmProfileScreenView,
+                    vmMusicScreen,
                     vmMainScreen,
-                    state
+                    state,
                 )
             }
         }
@@ -135,7 +135,12 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         vmMainScreen.playerManager.releasePlayer()
-        stopService(intent1)
+        try {
+            startService(intent1)
+        }
+        catch (e: Exception){
+
+        }
     }
 }
 
