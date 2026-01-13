@@ -93,7 +93,7 @@ class AlbumRepository(
         }
     }
 
-    suspend fun createAlbum(album: Album): EmptyResult<DataError.Remote>{
+    suspend fun createAlbum(album: Album): Result<String,DataError.Remote> {
         return try {
             val albumRef = db.collection(Constants.ARTIST_COLLECTION)
                 .document(album.artist)
@@ -107,8 +107,8 @@ class AlbumRepository(
 
             albumRef.set(albumWithId).await()
 
-            Result.Success(Unit)
-        }catch (_: Exception){
+            Result.Success(albumRef.id)
+        } catch (_: Exception) {
             Result.Error(DataError.Remote.SERVER)
         }
     }

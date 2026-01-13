@@ -260,8 +260,8 @@ class CreateSongViewModel(
                 album = createAlbumType(albumName = albumName, imageUrl =  it)
             }
             albumRepository.createAlbum(album)
-                .onSuccess {
-                    albumListState.update { it.copy(list = albumListState.value.list + album) }
+                .onSuccess { id ->
+                    albumListState.update { it.copy(list = albumListState.value.list + album.copy(id = id)) }
                     createSongState.update { it.copy(showCreateAlbum = false) }
                     createAlbumDialogState.update { it.copy(loading = false) }
                 }
