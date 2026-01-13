@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.MoreVert
@@ -69,7 +70,7 @@ fun SearchScreen(
     }
 
     Column(
-        Modifier.fillMaxSize()
+        Modifier.background(Color.White).fillMaxSize()
             .padding(start = 10.dp, end = 10.dp, top= 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -168,6 +169,7 @@ fun SearchElement(
             ){
                 Box(
                     modifier = Modifier
+                        .border(1.dp, Color.Black, RectangleShape)
                         .size(80.dp),
                     contentAlignment = Alignment.Center
                 ){

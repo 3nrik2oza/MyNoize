@@ -77,12 +77,15 @@ class PlaylistRepository(
         }
 
 
-    fun getPlaylist(id: String): Flow<Playlist>{
+    fun getPlaylist(id: String): Flow<Playlist> {
         return db.collection(Constants.PLAYLIST_COLLECTION)
             .document(id)
             .snapshots()
             .map { snapshot ->
-                snapshot.toObject(Playlist::class.java) as Playlist
+                val playlist = snapshot.toObject(Playlist::class.java)
+                    ?: throw IllegalStateException("Playlist not found")
+
+                playlist.copy(id = snapshot.id)
             }
     }
 
@@ -152,17 +155,7 @@ class PlaylistRepository(
         return try {
             val docRef = db.collection(Constants.PLAYLIST_COLLECTION)
                 .document(id)
-                .update(
-                    mapOf(
-                        "songs" to songs,
-                    )
-                )
-                .await()
-            lastLoadedPlaylists = lastLoadedPlaylists.map { playlist ->
-                if(playlist.id == id) playlist.copy(songs = songs) else playlist
-            }
-            Log.d("PlaylistRepository", "updateSongsInPlaylist: ${lastLoadedPlaylists.find { it.id == id }?.songs }}")
-            Log.d("PlaylistRepository", "songs: ${songs }}")
+                .update( mapOf( "songs" to songs) )
             Result.Success(Unit)
         }catch (e: FirebaseFirestoreException){
             when(e.code){
@@ -175,7 +168,8 @@ class PlaylistRepository(
                 FirebaseFirestoreException.Code.CANCELLED -> Error(FbError.Firestore.CANCELLED)
                 else -> Error(FbError.Firestore.UNKNOWN)
             }
-        }catch (_: Exception){
+        }catch (e: Exception){
+            Log.d(e.toString(), "")
             Error(FbError.Firestore.UNKNOWN)
         }
     }

@@ -1,5 +1,6 @@
 package com.project.mynoize.core.data.repositories
 
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.snapshots
@@ -40,7 +41,7 @@ class ArtistRepository(
             flowOf(emptyList())
         }else{
             db.collection(Constants.ARTIST_COLLECTION)
-                .whereIn("id", favoritesIds)
+                .whereIn(FieldPath.documentId(), favoritesIds)
                 .snapshots()
                 .map { snapshot ->
                 snapshot.toObjects(Artist::class.java)
@@ -136,9 +137,9 @@ class ArtistRepository(
 
     suspend fun createArtist(artist: Artist): EmptyResult<FbError.Firestore>{
         return try{
-            val docRef = db.collection(Constants.ARTIST_COLLECTION)
-                .add(artist.copy(nameLower = artist.name.lowercase()))
-                .await()
+            val docRef = db.collection(Constants.ARTIST_COLLECTION).document()
+
+            docRef.set(artist.copy(id = docRef.id,nameLower = artist.name.lowercase())).await()
 
             Success(Unit)
         }catch (e: FirebaseFirestoreException){

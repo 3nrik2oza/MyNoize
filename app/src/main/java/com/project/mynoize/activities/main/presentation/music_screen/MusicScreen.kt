@@ -1,6 +1,7 @@
 package com.project.mynoize.activities.main.presentation.music_screen
 
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -44,7 +45,7 @@ fun MusicScreen(
 ){
 
     Column(
-        Modifier.fillMaxSize()
+        Modifier.background(Color.White).fillMaxSize()
             .padding(start = 10.dp)
             .verticalScroll(rememberScrollState())
     ) {

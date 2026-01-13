@@ -3,6 +3,7 @@ package com.project.mynoize.activities.main.presentation.favorite_screen
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -37,7 +38,9 @@ fun SharedTransitionScope.FavoriteScreen(
 ){
 
     Column(
-        Modifier.fillMaxSize()
+        Modifier
+            .background(color = Color.White)
+            .fillMaxSize()
             .padding(start = 10.dp, top= 20.dp)
     ) {
         Text(
