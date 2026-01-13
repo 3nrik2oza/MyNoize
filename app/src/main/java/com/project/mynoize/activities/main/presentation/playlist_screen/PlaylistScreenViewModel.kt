@@ -140,14 +140,27 @@ class PlaylistScreenViewModel(
     private fun setPlaylistData(playlistId: String, isPlaylist: Boolean){
         if(isPlaylist){
             viewModelScope.launch {
-                playlistRepository.getPlaylist(playlistId).collect { playlist ->
-                    _state.update { state ->
-                        state.copy(playlist = playlist, isUserCreator = playlist.creator == authRepository.getCurrentUserId())
+                if(playlistId == authRepository.getCurrentUserId()){
+                    playlistRepository.favoriteSongsPlaylist.collect { playlist ->
+                        _state.update { state ->
+                            state.copy(playlist = playlist, isUserCreator = false)
+                        }
+                        songRepository.getSongByIds(state.value.playlist.songs).onSuccess { songs ->
+                            _state.update { state -> state.copy(songs = songs.map { it.copy(favorite = state.favoriteList.songs.contains(it.id)) }) }
+                        }
                     }
-                    songRepository.getSongByIds(state.value.playlist.songs).onSuccess { songs ->
-                        _state.update { state -> state.copy(songs = songs.map { it.copy(favorite = state.favoriteList.songs.contains(it.id)) }) }
+                    return@launch
+                }else{
+                    playlistRepository.getPlaylist(playlistId).collect { playlist ->
+                        _state.update { state ->
+                            state.copy(playlist = playlist, isUserCreator = playlist.creator == authRepository.getCurrentUserId())
+                        }
+                        songRepository.getSongByIds(state.value.playlist.songs).onSuccess { songs ->
+                            _state.update { state -> state.copy(songs = songs.map { it.copy(favorite = state.favoriteList.songs.contains(it.id)) }) }
+                        }
                     }
                 }
+
             }
             return
         }

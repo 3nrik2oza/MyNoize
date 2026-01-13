@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.project.mynoize.core.data.AuthRepository
 import com.project.mynoize.core.data.repositories.PlaylistRepository
 import com.project.mynoize.core.data.repositories.SongRepository
 import com.project.mynoize.core.domain.onSuccess
@@ -23,6 +24,7 @@ class MainScreenViewModel (
     val playerManager: ExoPlayerManager,
     private val playlistRepository: PlaylistRepository,
     private val songRepository: SongRepository,
+    private val auth: AuthRepository,
     private val dataStore: UserInformation,
     application: Application) : AndroidViewModel(application) {
 
@@ -115,6 +117,14 @@ class MainScreenViewModel (
             is MainScreenEvent.OnPlayPauseToggleClick -> playPauseToggle()
             is MainScreenEvent.OnSongClick -> onSongClick(event.position)
             is MainScreenEvent.SeekTo -> playerManager.seekTo(event.position)
+            is MainScreenEvent.OnLogoutClick -> {
+                auth.signOut()
+
+                viewModelScope.launch {
+                    delay(1000)
+                    _uiEvent.emit(MainActivityUiEvent.NavigateToSignIn)
+                }
+            }
         }
     }
 
@@ -124,6 +134,8 @@ class MainScreenViewModel (
         }
 
     }
+
+
 
 
     fun onSongClick(position: Int){

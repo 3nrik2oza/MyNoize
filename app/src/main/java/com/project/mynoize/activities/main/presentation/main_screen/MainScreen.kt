@@ -3,9 +3,6 @@
 package com.project.mynoize.activities.main.presentation.main_screen
 
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.content.Context
-import android.content.Intent
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
@@ -99,7 +96,6 @@ import com.project.mynoize.activities.main.ui.theme.DarkGray
 import com.project.mynoize.activities.main.ui.theme.LatoFontFamily
 import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
 import com.project.mynoize.activities.main.ui.theme.Red
-import com.project.mynoize.activities.signin.SignInActivity
 import com.project.mynoize.core.data.SearchItem
 import org.koin.androidx.compose.koinViewModel
 
@@ -107,7 +103,6 @@ import org.koin.androidx.compose.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    vmMusicScreen: MusicScreenViewModel,
     vmMainScreen: MainScreenViewModel,
     mainState: MainScreenState,
 ){
@@ -165,8 +160,14 @@ fun MainScreen(
                         MusicScreen(
                             state= state,
                             onEvent = { event ->
-                                vmMusicScreen.onEvent(event)
-                            }
+                                when(event){
+                                    is MusicScreenEvent.OnPlaylistClicked -> {
+                                        navController.navigate(PlaylistView(playlistId = event.id, playList = event.isPlaylist))
+                                    }
+                                }
+                                vm.onEvent(event)
+                            },
+                            onSignOutClicked = { vmMainScreen.onEvent(MainScreenEvent.OnLogoutClick) }
                         )
                     }
 

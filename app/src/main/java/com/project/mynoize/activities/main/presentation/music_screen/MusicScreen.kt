@@ -1,10 +1,12 @@
 package com.project.mynoize.activities.main.presentation.music_screen
 
+
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -29,11 +32,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.project.mynoize.R
+import com.project.mynoize.activities.main.presentation.playlist_screen.components.ImageWithLoading
+import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
+import com.project.mynoize.core.data.Playlist
 
 @Composable
 fun MusicScreen(
     state: MusicScreenState,
-    onEvent: (MusicScreenEvent) -> Unit
+    onEvent: (MusicScreenEvent) -> Unit,
+    onSignOutClicked : () -> Unit
 ){
 
     Column(
@@ -55,7 +62,7 @@ fun MusicScreen(
             Icon(
                 imageVector = Icons.Default.Logout,
                 contentDescription = "Logout",
-                modifier = Modifier.clickable{ onEvent(MusicScreenEvent.OnLogoutClick) }.padding(end = 10.dp)
+                modifier = Modifier.clickable{ onSignOutClicked() }.padding(end = 10.dp)
             )
 
         }
@@ -75,7 +82,7 @@ fun MusicScreen(
             item{
                 AddPlaylistScrollElement(
                     text = "Songs for you",
-                    createNew = {}
+                    createNew = { onEvent(MusicScreenEvent.OnPlaySongsForUser) }
                 )
             }
         }
@@ -98,6 +105,14 @@ fun MusicScreen(
                     onEvent = {}
                 )
             }*/
+
+            itemsIndexed(state.playlistsForUser){ _,playlist ->
+                PlaylistScrollElement(
+                    playlist = playlist,
+                    onClick = { onEvent(MusicScreenEvent.OnPlaylistClicked(playlist.id, true)) }
+                )
+
+            }
         }
 
         /* Row with playlists that you might like*/
@@ -113,14 +128,15 @@ fun MusicScreen(
 fun ShowMusicScreen(){
     MusicScreen(
         state = MusicScreenState(),
-        onEvent = {}
+        onEvent = {},
+        {}
     )
 }
 
 @Composable
 fun AddPlaylistScrollElement(
     text:String = "",
-    createNew: () -> Unit
+    createNew: () -> Unit,
 ){
     Column (
         modifier = Modifier.padding(10.dp),
@@ -147,4 +163,36 @@ fun AddPlaylistScrollElement(
             text = text
         )
     }
+}
+
+@Composable
+private fun PlaylistScrollElement(
+    modifier: Modifier = Modifier,
+    playlist: Playlist,
+    onClick: (Playlist) -> Unit
+){
+    Box(
+        modifier = Modifier.clickable{onClick(playlist)}.padding(10.dp)
+    ){
+        Column{
+
+            Box(
+                modifier = Modifier.size(100.dp).border(1.dp, Color.Black),
+                contentAlignment = Alignment.Center){
+                ImageWithLoading(playlist.imageLink)
+            }
+
+
+            Text(
+                fontSize = 12.sp,
+                text = playlist.name,
+                fontFamily = NovaSquareFontFamily,
+                maxLines = 1,
+                modifier = modifier.then(Modifier.height(IntrinsicSize.Min))
+
+            )
+        }
+    }
+
+
 }

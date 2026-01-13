@@ -1,6 +1,6 @@
 package com.project.mynoize.core.data.repositories
 
-import android.R
+
 import android.util.Log
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
@@ -31,16 +31,6 @@ class PlaylistRepository(
 
     var lastLoadedPlaylists = listOf<Playlist>()
 
-    /*
-    var playlistList : Flow<List<Playlist>> = db.collection(Constants.PLAYLIST_COLLECTION)
-        .snapshots()
-        .map { snapshots ->
-            snapshots.documents.map { doc ->
-                doc.toObject(Playlist::class.java)!!.copy(
-                    id = doc.id
-                )
-            }
-        }*/
 
     val userPlaylists: Flow<List<Playlist>> = db.collection(Constants.PLAYLIST_COLLECTION).whereEqualTo("creator", auth.getCurrentUserId())
         .snapshots()
@@ -95,6 +85,36 @@ class PlaylistRepository(
                 snapshot.toObject(Playlist::class.java) as Playlist
             }
     }
+
+    suspend fun getPlaylistsWithSongs(ids: List<String>): Result<List<Playlist>, FbError.Firestore>{
+        return try {
+            val snapshot = db.collection(Constants.PLAYLIST_COLLECTION)
+                .whereArrayContainsAny("songs", ids)
+                .limit(5)
+                .get()
+                .await()
+
+            return Success(snapshot.documents.map{ document ->
+                document.toObject(Playlist::class.java)!!.apply {
+                    id = document.id
+                }
+            })
+        }catch (e: FirebaseFirestoreException){
+            when(e.code){
+                FirebaseFirestoreException.Code.PERMISSION_DENIED -> Error(FbError.Firestore.PERMISSION_DENIED)
+                FirebaseFirestoreException.Code.UNAVAILABLE -> Error(FbError.Firestore.UNAVAILABLE)
+                FirebaseFirestoreException.Code.ABORTED -> Error(FbError.Firestore.ABORTED)
+                FirebaseFirestoreException.Code.NOT_FOUND -> Error(FbError.Firestore.NOT_FOUND)
+                FirebaseFirestoreException.Code.ALREADY_EXISTS -> Error(FbError.Firestore.ALREADY_EXISTS)
+                FirebaseFirestoreException.Code.DEADLINE_EXCEEDED -> Error(FbError.Firestore.DEADLINE_EXCEEDED)
+                FirebaseFirestoreException.Code.CANCELLED -> Error(FbError.Firestore.CANCELLED)
+                else -> Error(FbError.Firestore.UNKNOWN)
+            }
+        }catch (_: Exception){
+            Error(FbError.Firestore.UNKNOWN)
+        }
+    }
+
 
 
     suspend fun getPlaylistsContaining(q: String): Result<List<Playlist>, FbError.Firestore> {

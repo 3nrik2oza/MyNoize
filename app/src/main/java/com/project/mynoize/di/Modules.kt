@@ -66,11 +66,11 @@ val appModule = module{
 
     single { ExoPlayerManager(context = get<Application>(), get()) }
 
-    viewModel { MusicScreenViewModel() }
+    viewModel { MusicScreenViewModel(get(), get(), get(), get()) }
 
     viewModel { ArtistScreenViewModel(get(), get(), get(), get()) }
 
-    viewModel { MainScreenViewModel(get(), get(), get(), get(), get()) }
+    viewModel { MainScreenViewModel(get(), get(), get(), get(), get(), get()) }
 
     viewModel { FavoriteScreenViewModel(get(), get(), get(), get()) }
 

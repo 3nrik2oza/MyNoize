@@ -7,7 +7,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -52,7 +51,6 @@ import com.project.mynoize.activities.main.presentation.main_screen.MainScreenSt
 import com.project.mynoize.activities.main.ui.PlayButton
 import com.project.mynoize.activities.main.ui.theme.MyNoizeTheme
 import com.project.mynoize.activities.main.presentation.main_screen.MainScreenViewModel
-import com.project.mynoize.activities.main.presentation.music_screen.MusicScreenViewModel
 import com.project.mynoize.activities.signin.SignInActivity
 import com.project.mynoize.core.data.Song
 import com.project.mynoize.notification.MusicService
@@ -61,7 +59,7 @@ import org.koin.androidx.compose.koinViewModel
 
 class MainActivity : ComponentActivity() {
 
-    val vmMusicScreen: MusicScreenViewModel by viewModels()
+    //val vmMusicScreen: MusicScreenViewModel by viewModels()
 
     lateinit var vmMainScreen: MainScreenViewModel
 
@@ -90,7 +88,7 @@ class MainActivity : ComponentActivity() {
             var musicServiceStarted by remember { mutableStateOf(false) }
 
             LaunchedEffect(Unit) {
-                vmMusicScreen.uiEvent.collect { event ->
+                vmMainScreen.uiEvent.collect { event ->
                     when(event){
                         is MainActivityUiEvent.NavigateToSignIn -> {
                             val intent = Intent(applicationContext.applicationContext, SignInActivity::class.java)
@@ -124,7 +122,6 @@ class MainActivity : ComponentActivity() {
 
 
                 MainScreen(
-                    vmMusicScreen,
                     vmMainScreen,
                     state,
                 )
