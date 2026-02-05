@@ -28,6 +28,7 @@ import com.project.mynoize.core.data.repositories.UserRepository
 import com.project.mynoize.managers.ExoPlayerManager
 import com.project.mynoize.util.UserInformation
 import org.koin.core.module.dsl.viewModel
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 val appModule = module{
@@ -52,41 +53,57 @@ val appModule = module{
     single { PlaylistRepository(get(), get()) }
 
     single { AlbumRepository(get()) }
-    single { CreateSongValidation() }
 
-    single { CreatePlaylistValidation() }
+    single { UserInformation(context = get<Application>()) }
 
     single { SignInValidation() }
 
     single { SignUpValidation() }
 
-    single { CreateArtistValidation() }
-
-    single { UserInformation(context = get<Application>()) }
-
-    single { ExoPlayerManager(context = get<Application>(), get()) }
-
-    viewModel { MusicScreenViewModel(get(), get(), get(), get()) }
-
-    viewModel { ArtistScreenViewModel(get(), get(), get(), get()) }
-
-    viewModel { MainScreenViewModel(get(), get(), get(), get(), get(), get()) }
-
-    viewModel { FavoriteScreenViewModel(get(), get(), get(), get()) }
-
-    viewModel { PlaylistScreenViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
-
-    viewModel { SelectSongsViewModel(get(), get()) }
-
-    viewModel{ CreatePlaylistViewModel(get(), get(), get(), get()) }
-
-    viewModel { CreateSongViewModel(get(), get(), get(), get(), get(), get()) }
-
-    viewModel { CreateArtistViewModel(get(), get(), get(), get()) }
-
-    viewModel { SearchScreenViewModel(get(), get(), get(), get(), get(), get()) }
-
     viewModel { SignInViewModel(get(), get()) }
 
     viewModel { SignUpViewModel(get(), get()) }
+}
+
+val userScopeModule = module {
+    scope(named("USER_SCOPE")) {
+
+        scoped { AuthRepository() }
+        scoped { UserRepository(get()) }
+        scoped { ArtistRepository(get()) }
+        scoped { SongRepository() }
+        scoped { PlaylistRepository(get(), get()) }
+        scoped { AlbumRepository(get()) }
+
+        scoped { CreateArtistValidation() }
+
+        scoped { CreateSongValidation() }
+
+        scoped { CreatePlaylistValidation() }
+
+
+
+
+        scoped { ExoPlayerManager(context = get<Application>(), get()) }
+
+        viewModel { MusicScreenViewModel(get(), get(), get(), get()) }
+
+        viewModel { ArtistScreenViewModel(get(), get(), get(), get()) }
+
+        viewModel { MainScreenViewModel(get(), get(), get(), get(), get(), get()) }
+
+        viewModel { FavoriteScreenViewModel(get(), get(), get(), get()) }
+
+        viewModel { PlaylistScreenViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
+
+        viewModel { SelectSongsViewModel(get(), get()) }
+
+        viewModel{ CreatePlaylistViewModel(get(), get(), get(), get()) }
+
+        viewModel { CreateSongViewModel(get(), get(), get(), get(), get(), get()) }
+
+        viewModel { CreateArtistViewModel(get(), get(), get(), get()) }
+
+        viewModel { SearchScreenViewModel(get(), get(), get(), get(), get(), get()) }
+    }
 }

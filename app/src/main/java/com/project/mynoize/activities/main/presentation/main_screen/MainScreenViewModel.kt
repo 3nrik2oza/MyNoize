@@ -119,7 +119,9 @@ class MainScreenViewModel (
             is MainScreenEvent.SeekTo -> playerManager.seekTo(event.position)
             is MainScreenEvent.OnLogoutClick -> {
                 auth.signOut()
-
+                viewModelScope.launch {
+                    dataStore.clearAll()
+                }
                 viewModelScope.launch {
                     delay(1000)
                     _uiEvent.emit(MainActivityUiEvent.NavigateToSignIn)
@@ -135,13 +137,8 @@ class MainScreenViewModel (
 
     }
 
-
-
-
     fun onSongClick(position: Int){
         playerManager.playSong(position)
-
-
         onEventUi(MainActivityUiEvent.ShowNotification)
 
 

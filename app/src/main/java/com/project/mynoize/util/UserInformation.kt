@@ -38,6 +38,12 @@ class UserInformation(
             settings[playlistKey] = playlistId
         }
 
+    suspend fun clearAll(){
+        context.dataStore.edit { preferences ->
+            preferences.clear()
+        }
+    }
+
     companion object {
         val mediaKey = stringPreferencesKey("media_id_key")
         val positionKey = stringPreferencesKey("position_key")

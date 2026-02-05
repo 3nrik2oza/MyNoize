@@ -54,6 +54,7 @@ import com.project.mynoize.activities.main.presentation.main_screen.MainScreenVi
 import com.project.mynoize.activities.signin.SignInActivity
 import com.project.mynoize.core.data.Song
 import com.project.mynoize.notification.MusicService
+import org.koin.android.ext.android.getKoin
 import org.koin.androidx.compose.koinViewModel
 
 
@@ -81,16 +82,18 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
-            vmMainScreen = koinViewModel<MainScreenViewModel>()
+            vmMainScreen = koinViewModel<MainScreenViewModel>(scope = getKoin().getScope("USER_SESSION"))
 
             val state by vmMainScreen.state.collectAsStateWithLifecycle()
 
             var musicServiceStarted by remember { mutableStateOf(false) }
 
+
             LaunchedEffect(Unit) {
                 vmMainScreen.uiEvent.collect { event ->
                     when(event){
                         is MainActivityUiEvent.NavigateToSignIn -> {
+                            getKoin().getScope("USER_SESSION").close()
                             val intent = Intent(applicationContext.applicationContext, SignInActivity::class.java)
                             startActivity(intent)
                             finish()
@@ -135,7 +138,7 @@ class MainActivity : ComponentActivity() {
         try {
             startService(intent1)
         }
-        catch (e: Exception){
+        catch (_: Exception){
 
         }
     }

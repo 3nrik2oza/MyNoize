@@ -25,12 +25,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
+import org.koin.android.ext.android.getKoin
 
 class MusicService(
 ): MediaLibraryService() {
 
-    private val exoPlayerManager: ExoPlayerManager by inject()
+    private lateinit var exoPlayerManager: ExoPlayerManager
 
     private lateinit var mediaLibrarySession: MediaLibrarySession
 
@@ -43,6 +43,12 @@ class MusicService(
 
     override fun onCreate() {
         super.onCreate()
+
+        val userScope = getKoin()
+            .getScopeOrNull("USER_SESSION")
+            ?: return  // user logged out, service should not run
+
+        exoPlayerManager = userScope.get()
 
         val callback =object : MediaLibrarySession.Callback {}
         exoPlayerManager.getPlayer()?.let { player ->

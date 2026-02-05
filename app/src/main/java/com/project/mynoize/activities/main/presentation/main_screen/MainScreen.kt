@@ -98,6 +98,7 @@ import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
 import com.project.mynoize.activities.main.ui.theme.Red
 import com.project.mynoize.core.data.SearchItem
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.getKoin
 
 @SuppressLint("UnusedSharedTransitionModifierParameter")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -152,7 +153,7 @@ fun MainScreen(
                     modifier = Modifier.padding(innerPadding)
                 ){
                     composable<MusicScreen>{
-                        val vm: MusicScreenViewModel = koinViewModel<MusicScreenViewModel>()
+                        val vm: MusicScreenViewModel = koinViewModel<MusicScreenViewModel>(scope = getKoin().getScope("USER_SESSION"))
 
                         val state by vm.state.collectAsStateWithLifecycle()
 
@@ -176,7 +177,7 @@ fun MainScreen(
                     ){
 
                         composable<FavoriteScreen>{
-                            val vm: FavoriteScreenViewModel = koinViewModel<FavoriteScreenViewModel>()
+                            val vm: FavoriteScreenViewModel = koinViewModel<FavoriteScreenViewModel>(scope = getKoin().getScope("USER_SESSION"))
 
                             val state by vm.state.collectAsStateWithLifecycle()
                             FavoriteScreen(
@@ -203,7 +204,7 @@ fun MainScreen(
                         composable<ArtistView> {
                             val arg = it.toRoute<ArtistView>()
 
-                            val vm: ArtistScreenViewModel = koinViewModel<ArtistScreenViewModel>()
+                            val vm: ArtistScreenViewModel = koinViewModel<ArtistScreenViewModel>(scope = getKoin().getScope("USER_SESSION"))
 
                             LaunchedEffect(true) {
                                 vm.onEvent(ArtistScreenEvent.SetArtistId(arg.artistId))
@@ -230,7 +231,7 @@ fun MainScreen(
                         composable<PlaylistView> {
                             val arg = it.toRoute<PlaylistView>()
 
-                            val vm: PlaylistScreenViewModel = koinViewModel<PlaylistScreenViewModel>()
+                            val vm: PlaylistScreenViewModel = koinViewModel<PlaylistScreenViewModel>(scope = getKoin().getScope("USER_SESSION"))
 
                             LaunchedEffect(true) {
                                 vm.onEvent(PlaylistScreenEvent.SetPlaylistId(arg.playlistId, arg.playList))
@@ -268,7 +269,7 @@ fun MainScreen(
                         composable<SelectSongsScreen>{
                             val args = it.toRoute<SelectSongsScreen>()
 
-                            val vm: SelectSongsViewModel = koinViewModel<SelectSongsViewModel>()
+                            val vm: SelectSongsViewModel = koinViewModel<SelectSongsViewModel>(scope = getKoin().getScope("USER_SESSION"))
                             vm.onEvent(SelectSongsEvent.SetPlaylist(playlistId = args.playlistId))
 
                             val state by vm.state.collectAsStateWithLifecycle()
@@ -291,7 +292,7 @@ fun MainScreen(
                     }
 
                     composable<SearchScreen> {
-                        val vm: SearchScreenViewModel = koinViewModel<SearchScreenViewModel>()
+                        val vm: SearchScreenViewModel = koinViewModel<SearchScreenViewModel>(scope = getKoin().getScope("USER_SESSION"))
 
                         val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -343,7 +344,7 @@ fun MainScreen(
 
                     composable<CreateArtistScreen> {
                         val arg = it.toRoute<CreateArtistScreen>()
-                        val vm: CreateArtistViewModel = koinViewModel<CreateArtistViewModel>()
+                        val vm: CreateArtistViewModel = koinViewModel<CreateArtistViewModel>(scope = getKoin().getScope("USER_SESSION"))
 
                         LaunchedEffect(true) {
                             if(arg.artistId != "") {
@@ -369,7 +370,7 @@ fun MainScreen(
                     }
 
                     composable<CreateSongScreen> {
-                        val vm = koinViewModel<CreateSongViewModel>()
+                        val vm = koinViewModel<CreateSongViewModel>(scope = getKoin().getScope("USER_SESSION"))
 
                         val createSongState by vm.createSongState.collectAsStateWithLifecycle()
                         val artistListState by vm.artistListState.collectAsStateWithLifecycle()
@@ -400,7 +401,7 @@ fun MainScreen(
 
                     composable<CreatePlaylistScreen> {
                         val arg = it.toRoute<CreatePlaylistScreen>()
-                        val vm: CreatePlaylistViewModel = koinViewModel<CreatePlaylistViewModel>()
+                        val vm: CreatePlaylistViewModel = koinViewModel<CreatePlaylistViewModel>(scope = getKoin().getScope("USER_SESSION"))
 
                         LaunchedEffect(true) {
                             if(arg.playlistId != ""){

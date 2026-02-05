@@ -36,6 +36,8 @@ import com.project.mynoize.activities.signin.event.SignUpEvent
 import com.project.mynoize.managers.GoogleAuthUiClient
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.qualifier.named
+import org.koin.mp.KoinPlatform.getKoin
 
 class SignInActivity : ComponentActivity() {
 
@@ -54,6 +56,18 @@ class SignInActivity : ComponentActivity() {
         setContent {
             MyNoizeTheme {
                 val navController = rememberNavController()
+
+                /*
+                LaunchedEffect(true) {
+                    val koin = getKoin()
+                    if (koin.getScopeOrNull("USER_SESSION") == null) {
+                        koin.createScope(
+                            "USER_SESSION",
+                            named("USER_SCOPE")
+                        )
+                    }
+                }*/
+
                 NavHost(
                     navController = navController,
                     startDestination = SplashScreen
@@ -62,6 +76,7 @@ class SignInActivity : ComponentActivity() {
                         LaunchedEffect(key1 = Unit) {
 
                             if(googleAuthUiClient.getSignedInUser() != null) {
+                                createUserScopeIfNeeded()
                                 val intent = Intent(applicationContext.applicationContext, MainActivity::class.java)
                                 startActivity(intent)
                                 finish()
@@ -89,6 +104,7 @@ class SignInActivity : ComponentActivity() {
 
                         LaunchedEffect(key1 = Unit) {
                             if(googleAuthUiClient.getSignedInUser() != null){
+                                createUserScopeIfNeeded()
                                 val intent = Intent(applicationContext.applicationContext, MainActivity::class.java)
                                 startActivity(intent)
                                 finish()
@@ -116,7 +132,7 @@ class SignInActivity : ComponentActivity() {
                                     "Sign in successful",
                                     Toast.LENGTH_LONG
                                 ).show()
-
+                                createUserScopeIfNeeded()
                                 val intent = Intent(applicationContext.applicationContext, MainActivity::class.java)
                                 startActivity(intent)
                                 finish()
@@ -126,6 +142,7 @@ class SignInActivity : ComponentActivity() {
                         LaunchedEffect(key1 = LocalContext.current) {
                             viewModel.validSignInEvent.collect {
                                 if(it){
+                                    createUserScopeIfNeeded()
                                     val intent = Intent(applicationContext.applicationContext, MainActivity::class.java)
                                     startActivity(intent)
                                     finish()
@@ -155,6 +172,7 @@ class SignInActivity : ComponentActivity() {
                                         }
                                     }
                                     is SignInEvent.OnSuccessFulSignInWithEmail ->{
+                                        createUserScopeIfNeeded()
                                         val intent = Intent(applicationContext.applicationContext, MainActivity::class.java)
                                         startActivity(intent)
                                         finish()
@@ -194,6 +212,15 @@ class SignInActivity : ComponentActivity() {
     }
 }
 
+fun createUserScopeIfNeeded() {
+    val koin = getKoin()
+    if (koin.getScopeOrNull("USER_SESSION") == null) {
+        koin.createScope(
+            "USER_SESSION",
+            named("USER_SCOPE")
+        )
+    }
+}
 
 @Serializable
 object SplashScreen
