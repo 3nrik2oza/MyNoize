@@ -4,8 +4,10 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.snapshots
 import com.google.firebase.firestore.toObject
 import com.project.mynoize.core.data.Album
+import com.project.mynoize.core.data.database.AlbumDao
+import com.project.mynoize.core.data.mappers.toAlbum
+import com.project.mynoize.core.data.mappers.toLocalAlbumEntity
 import com.project.mynoize.core.domain.DataError
-import com.project.mynoize.core.domain.EmptyResult
 import com.project.mynoize.core.domain.Result
 import com.project.mynoize.util.Constants
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,7 +18,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 
 class AlbumRepository(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val albumDao: AlbumDao
 ) {
     val db = FirebaseFirestore.getInstance()
 
@@ -35,6 +38,12 @@ class AlbumRepository(
                 }
 
         }
+    }
+
+    suspend fun doesAlbumExist(id: String): List<Album> = albumDao.getAlbumFromId(id).map { it.toAlbum() };
+
+    suspend fun saveAlbumLocally(album: Album){
+        albumDao.upsertAlbum(album.toLocalAlbumEntity())
     }
 
 
@@ -58,7 +67,7 @@ class AlbumRepository(
         }
     }
 
-    suspend fun getAlbum(albumPath: String) : Flow<Album>{
+    fun getAlbum(albumPath: String) : Flow<Album>{
         val path = albumPath.split("/")
         return db.collection(Constants.ARTIST_COLLECTION)
                 .document(path[0])

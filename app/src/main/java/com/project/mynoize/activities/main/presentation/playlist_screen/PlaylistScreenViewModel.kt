@@ -3,6 +3,7 @@ package com.project.mynoize.activities.main.presentation.playlist_screen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.mynoize.core.data.AuthRepository
+import com.project.mynoize.core.data.Song
 import com.project.mynoize.core.data.repositories.AlbumRepository
 import com.project.mynoize.core.data.repositories.ArtistRepository
 import com.project.mynoize.core.data.repositories.PlaylistRepository
@@ -16,7 +17,6 @@ import com.project.mynoize.util.BottomSheetType
 import com.project.mynoize.util.toPlaylist
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -60,7 +60,7 @@ class PlaylistScreenViewModel(
     fun onEvent(event: PlaylistScreenEvent){
         when(event){
             is PlaylistScreenEvent.SetPlaylistId -> setPlaylistData(event.playlistId, event.isPlaylist)
-            is PlaylistScreenEvent.OnMoreSongClick -> onMoreSongClicked(event.index)
+            is PlaylistScreenEvent.OnMoreSongClick -> onMoreSongClicked(event.song)
             is PlaylistScreenEvent.OnMorePlaylistClick -> onMorePlaylistClicked()
             is PlaylistScreenEvent.OnRemoveSongClick -> removeSongFromPlaylist()
             is PlaylistScreenEvent.OnDismissAlertDialog -> _state.update { it.copy(isSheetOpen = false) }
@@ -87,9 +87,8 @@ class PlaylistScreenViewModel(
             is PlaylistScreenEvent.OnPlaylistSelected ->{
                 _state.update { it.copy(selectPlaylistSheet = false) }
                 viewModelScope.launch {
-                    playlistRepository.updateSongsInPlaylist(songs = event.playlist.songs + state.value.selectedSong().id, id = event.playlist.id)
+                    playlistRepository.updateSongsInPlaylist(songs = event.playlist.songs + state.value.selectedSong.id, id = event.playlist.id)
                 }
-
             }
             else ->{
 
@@ -104,10 +103,10 @@ class PlaylistScreenViewModel(
 
     private fun removeSongFromPlaylist(){
         val currentState = state.value
-        val songs = currentState.playlist.songs - currentState.selectedSong().id
+        val songs = currentState.playlist.songs - currentState.selectedSong.id
         if(currentState.playlist.name == "Favorites"){
             viewModelScope.launch {
-                userRepository.updateFavoriteSongs(currentState.selectedSong().id, currentState.selectedSong().favorite).onSuccess {
+                userRepository.updateFavoriteSongs(currentState.selectedSong.id, currentState.selectedSong.favorite).onSuccess {
                     _state.update { it.copy(isSheetOpen = false) }
                 }
             }
@@ -126,13 +125,10 @@ class PlaylistScreenViewModel(
         _state.update { it.copy(isSheetOpen = true, sheetType = BottomSheetType.PLAYLIST) }
     }
 
-    private fun onMoreSongClicked(index: Int){
+    private fun onMoreSongClicked(song: Song){
         viewModelScope.launch {
-
-            val artist = artistRepository.artists.first().find { it.id == state.value.songs[index].artistId }
-
-            if(artist != null){
-                _state.update { it.copy(artist = artist, isSheetOpen = true, selectedSongIndex = index) }
+            artistRepository.getArtist(song.artistId).onSuccess { artist ->
+                _state.update { it.copy(artist = artist, isSheetOpen = true, selectedSong = song) }
             }
         }
     }
@@ -145,7 +141,7 @@ class PlaylistScreenViewModel(
                         _state.update { state ->
                             state.copy(playlist = playlist, isUserCreator = false)
                         }
-                        songRepository.getSongByIds(state.value.playlist.songs).onSuccess { songs ->
+                        songRepository.getSongsByIdsFirebase(state.value.playlist.songs).onSuccess { songs ->
                             _state.update { state -> state.copy(songs = songs.map { it.copy(favorite = state.favoriteList.songs.contains(it.id)) }) }
                         }
                     }
@@ -155,7 +151,8 @@ class PlaylistScreenViewModel(
                         _state.update { state ->
                             state.copy(playlist = playlist, isUserCreator = playlist.creator == authRepository.getCurrentUserId())
                         }
-                        songRepository.getSongByIds(state.value.playlist.songs).onSuccess { songs ->
+
+                        songRepository.getSongsByIds(state.value.playlist.songs, playlist.songsDownloaded).onSuccess { songs ->
                             _state.update { state -> state.copy(songs = songs.map { it.copy(favorite = state.favoriteList.songs.contains(it.id)) }) }
                         }
                     }

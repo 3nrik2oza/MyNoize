@@ -1,6 +1,7 @@
 package com.project.mynoize.di
 
 import android.app.Application
+import androidx.room.Room
 import com.project.mynoize.activities.main.presentation.artist_screen.ArtistScreenViewModel
 import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistViewModel
 import com.project.mynoize.activities.main.presentation.create_artist.domain.CreateArtistValidation
@@ -23,6 +24,7 @@ import com.project.mynoize.activities.signin.SignUpViewModel
 import com.project.mynoize.activities.signin.domain.SignInValidation
 import com.project.mynoize.activities.signin.domain.SignUpValidation
 import com.project.mynoize.core.data.AuthRepository
+import com.project.mynoize.core.data.database.MusicDatabase
 import com.project.mynoize.core.data.repositories.PlaylistRepository
 import com.project.mynoize.core.data.repositories.UserRepository
 import com.project.mynoize.managers.ExoPlayerManager
@@ -33,26 +35,14 @@ import org.koin.dsl.module
 
 val appModule = module{
 
-    single{
-        AuthRepository()
-    }
-    single{
-        ArtistRepository(get())
-    }
-    single{
-        StorageRepository()
-    }
-    single {
-        SongRepository()
-    }
+    single{ AuthRepository() }
 
-    single {
-        UserRepository(get())
-    }
 
-    single { PlaylistRepository(get(), get()) }
-
-    single { AlbumRepository(get()) }
+   // single{ ArtistRepository(get()) }
+    //single{ StorageRepository() }
+   // single { UserRepository(get()) }
+   // single { PlaylistRepository(get(), get()) }
+    //single { AlbumRepository(get()) }
 
     single { UserInformation(context = get<Application>()) }
 
@@ -71,9 +61,10 @@ val userScopeModule = module {
         scoped { AuthRepository() }
         scoped { UserRepository(get()) }
         scoped { ArtistRepository(get()) }
-        scoped { SongRepository() }
-        scoped { PlaylistRepository(get(), get()) }
-        scoped { AlbumRepository(get()) }
+        scoped { SongRepository(get()) }
+        scoped { PlaylistRepository(get(), get(), get(), get()) }
+        scoped { AlbumRepository(get(),get()) }
+        scoped { StorageRepository(get()) }
 
         scoped { CreateArtistValidation() }
 
@@ -82,6 +73,20 @@ val userScopeModule = module {
         scoped { CreatePlaylistValidation() }
 
 
+        scoped {
+            Room.databaseBuilder(
+                get<Application>(),
+                MusicDatabase::class.java,
+                "music_database"
+            )
+                .fallbackToDestructiveMigration()
+                .build()
+        }
+
+        scoped { get<MusicDatabase>().songDao }
+        scoped { get<MusicDatabase>().albumDao }
+        scoped { get<MusicDatabase>().artistDao }
+        scoped { get<MusicDatabase>().playlistDao }
 
 
         scoped { ExoPlayerManager(context = get<Application>(), get()) }
@@ -90,7 +95,7 @@ val userScopeModule = module {
 
         viewModel { ArtistScreenViewModel(get(), get(), get(), get()) }
 
-        viewModel { MainScreenViewModel(get(), get(), get(), get(), get(), get()) }
+        viewModel { MainScreenViewModel(get(), get(), get(), get(), get(), get(),get(),get()) }
 
         viewModel { FavoriteScreenViewModel(get(), get(), get(), get()) }
 

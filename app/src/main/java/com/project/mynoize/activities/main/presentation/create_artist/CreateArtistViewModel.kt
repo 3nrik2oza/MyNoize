@@ -1,6 +1,7 @@
 package com.project.mynoize.activities.main.presentation.create_artist
 
 
+
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,7 +19,6 @@ import com.project.mynoize.core.presentation.UiText
 import com.project.mynoize.core.presentation.toErrorMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -56,8 +56,13 @@ class CreateArtistViewModel(
 
             is CreateArtistEvent.OnModifyArtist -> {
                 viewModelScope.launch {
-                    val artist = artistRepository.artists.first().find { it.id == event.artistId }!!
-                    _state.update { it.copy(artistName = artist.name, artistImage = artist.imageLink.toUri(), artistToModify = artist)}
+                    artistRepository.getArtist(event.artistId).onSuccess { artist ->
+                        _state.update { it.copy(
+                            artistName = artist.name,
+                            artistImage = artist.imageLink.toUri(),
+                            artistToModify = artist)}
+                    }
+
                 }
             }
             else -> Unit
@@ -109,7 +114,7 @@ class CreateArtistViewModel(
 
                         }
 
-                        artist = artist.copy(imageLink = it, imagePath = fileName)
+                        artist = artist.copy(imageLink = it.downloadLink, imagePath = it.path)
 
                         viewModelScope.launch {
                             artistRepository.updateArtist(artist).onError { error ->
@@ -160,7 +165,7 @@ class CreateArtistViewModel(
                 _state.update { it.copy(loading = false) }
                 return@launch
             }.onSuccess {
-                artist = createArtist(imageUri = it, imagePath = fileName)
+                artist = createArtist(imageUri = it.downloadLink, imagePath = it.path)
 
             }
             artistRepository.createArtist(artist).onError { error ->

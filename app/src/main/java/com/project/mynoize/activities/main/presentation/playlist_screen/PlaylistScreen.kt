@@ -94,7 +94,7 @@ fun SharedTransitionScope.PlaylistScreen(
 
     if(state.selectPlaylistSheet){
         SelectPlaylistDialog(
-            playlists = state.userPlaylists.filter { !it.songs.contains(state.selectedSong().id) },
+            playlists = state.userPlaylists.filter { !it.songs.contains(state.selectedSong.id) },
             onPlaylistClick = {onEvent(PlaylistScreenEvent.OnPlaylistSelected(it))},
             onDismiss = {onEvent(PlaylistScreenEvent.OnToggleSelectPlaylistSheet)}
         )
@@ -151,7 +151,7 @@ fun SharedTransitionScope.PlaylistScreen(
                     ),
                 contentAlignment = Alignment.Center
             ){
-                ImageWithLoading(image = state.playlist.imageLink, isFavorite = state.playlist.name == "Favorites")
+                ImageWithLoading(image = state.playlist.localImagePath.ifEmpty { state.playlist.imageLink }, isFavorite = state.playlist.name == "Favorites")
             }
 
 
@@ -240,7 +240,7 @@ fun SharedTransitionScope.PlaylistScreen(
             dragHandle = {}
         ) {
             when(state.sheetType){
-                BottomSheetType.SONG -> SongOptionsBottomSheet(state.selectedSong(), artist = state.artist, event = onEvent, isCreator = state.isUserCreator)
+                BottomSheetType.SONG -> SongOptionsBottomSheet(state.selectedSong, artist = state.artist, event = onEvent, isCreator = state.isUserCreator)
                 BottomSheetType.PLAYLIST -> PlaylistOptionsBottomSheet(playlist = state.playlist, event = onEvent)
             }
         }

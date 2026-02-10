@@ -50,7 +50,7 @@ fun SharedTransitionScope.PlaylistScrollElement(
     ){
         Column{
 
-            val painter = rememberAsyncImagePainter(model = playlist.imageLink)
+            val painter = rememberAsyncImagePainter(model = playlist.localImagePath.ifEmpty { playlist.imageLink })
 
             val painterState = painter.state
 

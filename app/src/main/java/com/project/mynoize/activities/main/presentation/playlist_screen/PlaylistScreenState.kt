@@ -14,14 +14,14 @@ data class PlaylistScreenState(
     val selectPlaylistSheet: Boolean = false,
     val sheetType: BottomSheetType = BottomSheetType.SONG,
     val deletePlaylistSheetOpen : Boolean = false,
-    val selectedSongIndex: Int = 0,
+    val selectedSong: Song = Song(),
     val artist: Artist = Artist(),
     val userPlaylists: List<Playlist> = listOf(),
     val isUserCreator: Boolean = false,
 ){
-
+/*
     fun selectedSong():Song{
-        return songs[selectedSongIndex]
-    }
+        return songs[0]
+    }*/
 
 }

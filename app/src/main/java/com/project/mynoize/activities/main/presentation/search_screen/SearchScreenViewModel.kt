@@ -2,6 +2,7 @@ package com.project.mynoize.activities.main.presentation.search_screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.Timestamp
 import com.project.mynoize.core.data.SearchItem
 import com.project.mynoize.core.data.repositories.AlbumRepository
 import com.project.mynoize.core.data.repositories.ArtistRepository
@@ -24,7 +25,7 @@ class SearchScreenViewModel(
     private val artistsRepository: ArtistRepository,
     private val playlistsRepository: PlaylistRepository,
     private val albumsRepository: AlbumRepository,
-    private val exoPlayerManager: ExoPlayerManager
+    private val exoPlayerManager: ExoPlayerManager,
 ): ViewModel() {
 
     private val _state = MutableStateFlow(SearchScreenState())
@@ -98,7 +99,8 @@ class SearchScreenViewModel(
             }
             is SearchItem.PlaylistItem ->{
                 viewModelScope.launch {
-                    userRepo.updateFavoritePlaylist(selectedItem.playlist.id, selectedItem.playlist.favorite)
+                    val time = Timestamp.now()
+                    userRepo.updateFavoritePlaylist(selectedItem.playlist.id, selectedItem.playlist.favorite, time = time)
                     _state.update { it.copy(searchItems = it.searchItems.map { item -> if(item.id == selectedItem.id) SearchItem.PlaylistItem(selectedItem.playlist.copy(favorite = !selectedItem.playlist.favorite)) else item }) }
                 }
             }

@@ -2,34 +2,52 @@ package com.project.mynoize.core.data.repositories
 
 
 import android.util.Log
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.snapshots
 import com.project.mynoize.core.data.AuthRepository
 import com.project.mynoize.core.data.Playlist
+import com.project.mynoize.core.data.database.PlaylistDao
+import com.project.mynoize.core.data.mappers.toLocalPlaylistEntity
+import com.project.mynoize.core.data.mappers.toPlaylist
 import com.project.mynoize.core.domain.FbError
 import com.project.mynoize.core.domain.Result
 import com.project.mynoize.core.domain.Result.Error
 import com.project.mynoize.core.domain.Result.Success
+import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.util.Constants
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
+import java.io.File
 import kotlin.collections.map
 
 class PlaylistRepository(
     private val auth: AuthRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val playlistDao: PlaylistDao,
+    private val storageRepository: StorageRepository
 ){
 
     private val db = FirebaseFirestore.getInstance()
 
     var lastLoadedPlaylists = listOf<Playlist>()
+
+
+    val localFavoritePlaylists: Flow<List<Playlist>> = playlistDao.getPlaylists().map { entities ->
+        entities.map { it.toPlaylist() }
+    }
+
+    suspend fun setPlaylistAsDownloaded(id: String, songsDownloaded: Boolean) {
+        playlistDao.updateDownloadField(id, songsDownloaded)
+    }
 
 
     val userPlaylists: Flow<List<Playlist>> = db.collection(Constants.PLAYLIST_COLLECTION).whereEqualTo("creator", auth.getCurrentUserId())
@@ -41,6 +59,74 @@ class PlaylistRepository(
                 )
             }
         }
+
+    suspend fun updateFavoritePlaylists(lastUpdateLocally: Long?): List<suspend () -> Unit> {
+        val lastUpdatedRemote = userRepository.user.first().lastModifiedFavoritePlaylists.seconds
+        val local = localFavoritePlaylists.first()
+        val remote = userPlaylists.first() + favoritePlaylists.first()
+
+        if(lastUpdateLocally == null || lastUpdateLocally < lastUpdatedRemote){
+            return updateLocalPlaylists(local, remote)
+        }
+
+        return emptyList()
+    }
+
+    private fun updateLocalPlaylists(local: List<Playlist>, remote: List<Playlist>): List<suspend () -> Unit> {
+        val ops = mutableListOf<suspend () -> Unit >()
+        val localMap = local.associateBy { it.id }
+        val remoteMap = remote.associateBy { it.id }
+
+        remoteMap.forEach { (id, remotePlaylist) ->
+            val localItem = localMap[id]
+
+            when{
+                localItem == null -> {
+                    ops.add {
+                        var path = ""
+                        storageRepository.downloadToLocalMemory(remotePlaylist.imageLink, "playlist_image").onSuccess {
+                            path = it
+                        }
+                        if(path != ""){
+                            playlistDao.upsertPlaylist(remotePlaylist.toLocalPlaylistEntity(path))
+                        }
+                    }
+                }
+                localItem.lastModified.seconds < remotePlaylist.lastModified.seconds -> {
+                    ops.add {
+                        try {
+                            var path = ""
+                            File(localItem.localImagePath).delete()
+                            storageRepository.downloadToLocalMemory(remotePlaylist.imageLink, "playlist_image").onSuccess {
+                                path = it
+                            }
+                            if(path != ""){
+                                playlistDao.upsertPlaylist(remotePlaylist.toLocalPlaylistEntity(path))
+                            }
+                        }catch (_: Exception){
+
+                        }
+
+                    }
+                }
+
+            }
+        }
+
+        localMap.forEach { (id, localPlaylist) ->
+            val remoteItem = remoteMap[id]
+
+            when{
+                remoteItem == null -> {
+                    ops.add {
+                        playlistDao.deletePlaylist(localPlaylist.toLocalPlaylistEntity())
+                    }
+
+                }
+            }
+        }
+        return ops
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val favoritePlaylists: Flow<List<Playlist>> = userRepository.user.flatMapLatest { user ->
@@ -69,15 +155,20 @@ class PlaylistRepository(
 
     val playlistsWithFavorites: Flow<List<Playlist>> =
         combine(
-            userPlaylists,
+            localFavoritePlaylists,
             favoriteSongsPlaylist,
-            favoritePlaylists
-        ){ createdPlaylists, favoriteSongs, favoritePlaylists ->
-            listOf(favoriteSongs) + createdPlaylists + favoritePlaylists
+        ){ favoritePlaylists, favoriteSongs ->
+            listOf(favoriteSongs) + favoritePlaylists
         }
 
 
-    fun getPlaylist(id: String): Flow<Playlist> {
+    suspend fun getPlaylist(id: String): Flow<Playlist> {
+        val localPlaylist = playlistDao.getPlaylist(id)
+        if(localPlaylist.first() != null) {
+            return localPlaylist.map { it!!.toPlaylist() }
+        }
+
+
         return db.collection(Constants.PLAYLIST_COLLECTION)
             .document(id)
             .snapshots()
@@ -151,12 +242,12 @@ class PlaylistRepository(
         }
     }
 
-    suspend fun updateSongsInPlaylist(songs: List<String>, id: String): Result<Unit, FbError.Firestore> {
+    fun updateSongsInPlaylist(songs: List<String>, id: String): Result<Unit, FbError.Firestore> {
         return try {
             val docRef = db.collection(Constants.PLAYLIST_COLLECTION)
                 .document(id)
-                .update( mapOf( "songs" to songs) )
-            Result.Success(Unit)
+                .update( mapOf( "songs" to songs, "lastModified" to Timestamp.now()) )
+            Success(Unit)
         }catch (e: FirebaseFirestoreException){
             when(e.code){
                 FirebaseFirestoreException.Code.PERMISSION_DENIED -> Error(FbError.Firestore.PERMISSION_DENIED)
@@ -181,7 +272,7 @@ class PlaylistRepository(
                 .add(playlist.copy(nameLower = playlist.name.lowercase()))
                 .await()
 
-            Result.Success(Unit)
+            Success(Unit)
         }catch (e: FirebaseFirestoreException){
             when(e.code){
                 FirebaseFirestoreException.Code.PERMISSION_DENIED -> Error(FbError.Firestore.PERMISSION_DENIED)
@@ -205,7 +296,7 @@ class PlaylistRepository(
                 .set(playlist.copy(nameLower = playlist.name.lowercase()))
                 .await()
 
-            Result.Success(Unit)
+            Success(Unit)
         }catch (e: FirebaseFirestoreException){
             when(e.code){
                 FirebaseFirestoreException.Code.PERMISSION_DENIED -> Error(FbError.Firestore.PERMISSION_DENIED)

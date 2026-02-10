@@ -4,9 +4,14 @@ import android.annotation.SuppressLint
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.project.mynoize.core.data.Album
 import com.project.mynoize.core.data.AuthRepository
+import com.project.mynoize.core.data.Song
+import com.project.mynoize.core.data.repositories.AlbumRepository
 import com.project.mynoize.core.data.repositories.PlaylistRepository
 import com.project.mynoize.core.data.repositories.SongRepository
+import com.project.mynoize.core.data.repositories.StorageRepository
+import com.project.mynoize.core.domain.onError
 import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.managers.ExoPlayerManager
 import com.project.mynoize.util.UserInformation
@@ -24,6 +29,8 @@ class MainScreenViewModel (
     val playerManager: ExoPlayerManager,
     private val playlistRepository: PlaylistRepository,
     private val songRepository: SongRepository,
+    private val albumRepository: AlbumRepository,
+    private val storageRepository: StorageRepository,
     private val auth: AuthRepository,
     private val dataStore: UserInformation,
     application: Application) : AndroidViewModel(application) {
@@ -62,19 +69,83 @@ class MainScreenViewModel (
 
         }
 
-        viewModelScope.launch {
-            val playlist = playlistRepository.playlistsWithFavorites.first().find{ it.id == dataStore.playlistId.first().toString()} ?: return@launch
 
-            songRepository.getSongByIds(playlist.songs).onSuccess { songs ->
-                _state.update {
-                    it.copy(
-                        songList = songs
-                    )
+        viewModelScope.launch {
+            try {
+                val lastPlayedPlaylistId = dataStore.playlistId.first() ?: return@launch
+                val playlist = playlistRepository.getPlaylist(lastPlayedPlaylistId).first()
+
+                songRepository.getSongsByIds(playlist.songs, playlist.songsDownloaded).onSuccess { songs ->
+                    _state.update {
+                        it.copy(
+                            songList = songs
+                        )
+                    }
+                    playerManager.initializePlayer(songs = songs, play = false, scope = viewModelScope, playlistId = playlist.id)
                 }
-                playerManager.initializePlayer(songs = songs, play = false, scope = viewModelScope, playlistId = playlist.id)
+            }catch (e: Exception){
+                print(e)
             }
 
+
         }
+
+        viewModelScope.launch {
+            playlistRepository.userPlaylists.collect { playlists ->
+                if(playlists.isEmpty()){
+                    return@collect
+                }
+                val localUpdate = dataStore.lastModifiedFavPlaylists.first()?.toLong()
+                val ops = playlistRepository.updateFavoritePlaylists(localUpdate)
+                ops.forEach {
+                    it()
+                }
+                delay(1000)
+                val localPlaylists = playlistRepository.localFavoritePlaylists.first()
+
+                try {
+                    localPlaylists
+                        .filter { !it.songsDownloaded }
+                        .forEach { playlist ->
+                            val songList = playlist.songs
+                            val missingSongsIds = songList.toSet() - songRepository.getExistingSongs(songList).toSet()
+                            var songs = emptyList<Song>()
+                            songRepository.getSongsByIdsFirebase(missingSongsIds.toList()).onSuccess { listOfSong ->
+                                songs = listOfSong
+                            }.onError {
+                                return@forEach
+                            }
+
+                            songs.forEach { song ->
+                                val localAlbum: MutableList<Album> = albumRepository.doesAlbumExist(song.albumId).toMutableList()
+                                if(localAlbum.isEmpty()){
+                                    var album = albumRepository.getAlbum(song.artistId+"/"+song.albumId).first()
+                                    storageRepository.downloadToLocalMemory(album.image, "album_images").onSuccess {
+                                        album = album.copy(localImageUrl = it)
+                                    }
+                                    albumRepository.saveAlbumLocally(album)
+                                    localAlbum.add(album)
+                                }
+                                var localSongUrl = ""
+                                storageRepository.downloadToLocalMemory(song.songUrl, "songs").onSuccess {
+                                    localSongUrl = it
+                                }
+                                songRepository.saveSongLocally(
+                                    song.copy(localSongUrl = localSongUrl, localImageUrl = localAlbum.first().localImageUrl)
+                                )
+
+                            }
+                            playlistRepository.setPlaylistAsDownloaded(playlist.id, true)
+                        }
+                }catch (e: Exception){
+                    print(e)
+                }
+
+            }
+
+
+        }
+
 
         /*
         var list = mutableListOf<Song>()

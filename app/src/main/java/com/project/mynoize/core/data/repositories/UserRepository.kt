@@ -1,5 +1,6 @@
 package com.project.mynoize.core.data.repositories
 
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.snapshots
@@ -16,7 +17,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 
 class UserRepository(
-    private val auth: AuthRepository
+    private val auth: AuthRepository,
 ) {
 
     private val db = FirebaseFirestore.getInstance()
@@ -38,9 +39,12 @@ class UserRepository(
         return updateUser(updatedUser)
     }
 
-    suspend fun updateFavoritePlaylist(playlistId: String, favorite: Boolean): EmptyResult<FbError.Firestore>{
+    suspend fun updateFavoritePlaylist(playlistId: String, favorite: Boolean, time: Timestamp): EmptyResult<FbError.Firestore>{
         val user = user.first()
-        val updatedUser = user.copy(favoritePlaylists = if(!favorite) user.favoritePlaylists + playlistId else user.favoritePlaylists - playlistId)
+        val updatedUser = user.copy(
+            favoritePlaylists = if(!favorite) user.favoritePlaylists + playlistId else user.favoritePlaylists - playlistId,
+            lastModifiedFavoritePlaylists = time
+        )
         return updateUser(updatedUser)
     }
 

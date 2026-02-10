@@ -23,6 +23,7 @@ class ArtistRepository(
     private val db = FirebaseFirestore.getInstance()
 
 
+    /*
     var artists: Flow<List<Artist>> = db.collection(Constants.ARTIST_COLLECTION)
         .snapshots()
         .map { snapshots ->
@@ -31,7 +32,9 @@ class ArtistRepository(
                     id = doc.id
                 )
             }
-        }
+        }*/ // remove this and use loaded artists
+
+    var loadedArtists: MutableSet<Artist> = mutableSetOf()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     var favoriteArtists: Flow<List<Artist>> = userRepository.user.flatMapLatest { user ->
@@ -48,6 +51,7 @@ class ArtistRepository(
                 }
         }
     }
+
 
     suspend fun getArtists(): Result<List<Artist>, FbError.Firestore> {
         return try {
@@ -79,12 +83,18 @@ class ArtistRepository(
     }
 
     suspend fun getArtist(artistId: String): Result<Artist, FbError.Firestore> {
+        val loadedArtist = loadedArtists.find { it.id == artistId }
+
+        if(loadedArtist != null) return Success(loadedArtist)
+
         return try {
             val snapshot = db.collection(Constants.ARTIST_COLLECTION).document(artistId)
                 .get()
                 .await()
 
             val artist = snapshot.toObject(Artist::class.java)!!.copy(id = snapshot.id)
+
+            loadedArtists.add(artist)
 
             return Success(artist)
         }catch (e: FirebaseFirestoreException){
@@ -166,6 +176,8 @@ class ArtistRepository(
                 .set(artist.copy(nameLower = artist.name.lowercase()))
                 .await()
 
+            loadedArtists.removeIf { it.id == artist.id }
+            loadedArtists.add(artist)
             Success(Unit)
         }catch (e: FirebaseFirestoreException){
             when(e.code){

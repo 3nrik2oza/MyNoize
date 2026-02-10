@@ -4,6 +4,9 @@ import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.project.mynoize.core.data.Song
+import com.project.mynoize.core.data.database.SongDao
+import com.project.mynoize.core.data.mappers.toLocalSongEntity
+import com.project.mynoize.core.data.mappers.toSong
 import com.project.mynoize.core.domain.DataError
 import com.project.mynoize.core.domain.EmptyResult
 import com.project.mynoize.core.domain.FbError
@@ -11,10 +14,24 @@ import com.project.mynoize.core.domain.Result
 import com.project.mynoize.core.domain.Result.Error
 import com.project.mynoize.core.domain.Result.Success
 import com.project.mynoize.util.Constants
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 
-class SongRepository{
+class SongRepository(
+    private val localSongsDao: SongDao
+){
     private val db = FirebaseFirestore.getInstance()
+
+
+    suspend fun addSongToLocalMemory(song: Song){
+        localSongsDao.upsertSong(song.toLocalSongEntity())
+    }
+
+    suspend fun getExistingSongs(songs: List<String>): List<String> = localSongsDao.getExistingSongIds(songs)
+
+    suspend fun saveSongLocally(song: Song){
+        localSongsDao.upsertSong(song.toLocalSongEntity())
+    }
 
     suspend fun getSongByArtist(artistId: String): Result<List<Song>, FbError.Firestore>{
         return try {
@@ -44,7 +61,17 @@ class SongRepository{
         }
     }
 
-    suspend fun getSongByIds(ids: List<String>): Result<List<Song>, FbError.Firestore>{
+    suspend fun getSongsByIds(ids: List<String>, downloaded: Boolean): Result<List<Song>, FbError.Firestore>{
+        if(downloaded){
+            val localSongs = getSongsByIdsLocal(ids)
+            return Result.Success(localSongs)
+        }
+        return getSongsByIdsFirebase(ids)
+    }
+
+    suspend fun getSongsByIdsLocal(ids: List<String>): List<Song> = localSongsDao.getSongsByIds(ids).first().map { it.toSong() }
+
+    suspend fun getSongsByIdsFirebase(ids: List<String>): Result<List<Song>, FbError.Firestore>{
         return try {
             val snapshot = db.collection(Constants.SONG_COLLECTION)
                 .whereIn(FieldPath.documentId(), ids)

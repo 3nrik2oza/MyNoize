@@ -7,7 +7,7 @@ import androidx.core.net.toUri
 
 fun Song.toMediaItem(): MediaItem {
     return MediaItem.Builder()
-        .setUri(songUrl)
+        .setUri(localSongUrl.ifEmpty { "songUrl" })
         .setMediaMetadata(
             MediaMetadata.Builder()
                 .setTitle(title)

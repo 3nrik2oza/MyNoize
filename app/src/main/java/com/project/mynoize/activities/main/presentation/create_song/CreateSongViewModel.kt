@@ -205,6 +205,7 @@ class CreateSongViewModel(
         }
         var song = Song()
         val fileName = "songs/${createSongState.value.songName}"
+        var path = ""
         viewModelScope.launch {
             storageRepository.addToStorage(
                 createSongState.value.songUri.toUri(),
@@ -214,10 +215,10 @@ class CreateSongViewModel(
                     it.copy(show = true, loading = false, message = error.toErrorMessage())
                 }
             }.onSuccess {
-                song = createSong(it)
-
+                song = createSong(it.downloadLink)
+                path = it.path
             }
-            addSong(song, fileName)
+            addSong(song, path)
 
         }
     }
@@ -257,7 +258,7 @@ class CreateSongViewModel(
                     it.copy(show = true, loading = false, message = error.toErrorMessage())
                 }
             }.onSuccess {
-                album = createAlbumType(albumName = albumName, imageUrl =  it)
+                album = createAlbumType(albumName = albumName, imageUrl =  it.downloadLink)
             }
             albumRepository.createAlbum(album)
                 .onSuccess { id ->

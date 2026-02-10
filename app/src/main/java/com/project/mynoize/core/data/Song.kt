@@ -7,10 +7,12 @@ data class Song (
     val artistId: String = "",
     val artistName: String = "",
     val songUrl: String = "",
+    val localSongUrl: String = "",
     val albumName: String = "",
     val albumId: String = "",
     val creatorId: String = "",
     val imageUrl: String = "",
+    val localImageUrl: String = "",
     var position: Int = 0,
     val favorite: Boolean = false,
 )

@@ -15,7 +15,7 @@ sealed interface PlaylistScreenEvent {
 
     data class OnArtistClick(val artistId: String) : PlaylistScreenEvent
 
-    data class OnMoreSongClick(val index: Int): PlaylistScreenEvent
+    data class OnMoreSongClick(val song: Song): PlaylistScreenEvent
     object OnMorePlaylistClick: PlaylistScreenEvent
 
     data class OnPlaylistSelected(val playlist: Playlist): PlaylistScreenEvent

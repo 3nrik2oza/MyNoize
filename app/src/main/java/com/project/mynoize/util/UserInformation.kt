@@ -23,6 +23,22 @@ class UserInformation(
         preferences[playlistKey]
     }
 
+    val lastModifiedArtist = context.dataStore.data.map { preferences ->
+        preferences[lastModifiedArtistKey]
+    }
+
+    val lastModifiedSong = context.dataStore.data.map { preferences ->
+        preferences[lastModifiedSongKey]
+    }
+
+    val lastModifiedFavPlaylists = context.dataStore.data.map { preferences ->
+        preferences[lastModifiedPlaylistKey]
+    }
+
+    val lastModifiedAlbum = context.dataStore.data.map { preferences ->
+        preferences[lastModifiedAlbumKey]
+    }
+
     suspend fun updateMediaId(id: String) =
         context.dataStore.edit { settings ->
             settings[mediaKey] = id
@@ -38,6 +54,26 @@ class UserInformation(
             settings[playlistKey] = playlistId
         }
 
+    suspend fun updateLastModifiedArtist(lastModified: Long) =
+        context.dataStore.edit { settings ->
+            settings[lastModifiedArtistKey] = lastModified.toString()
+        }
+
+    suspend fun updateLastModifiedSong(lastModified: Long) =
+        context.dataStore.edit { settings ->
+            settings[lastModifiedSongKey] = lastModified.toString()
+        }
+
+    suspend fun updateLastModifiedPlaylist(lastModified: Long) =
+        context.dataStore.edit { settings ->
+            settings[lastModifiedPlaylistKey] = lastModified.toString()
+        }
+
+    suspend fun updateLastModifiedAlbum(lastModified: Long) =
+        context.dataStore.edit { settings ->
+            settings[lastModifiedAlbumKey] = lastModified.toString()
+        }
+
     suspend fun clearAll(){
         context.dataStore.edit { preferences ->
             preferences.clear()
@@ -48,6 +84,11 @@ class UserInformation(
         val mediaKey = stringPreferencesKey("media_id_key")
         val positionKey = stringPreferencesKey("position_key")
         val playlistKey = stringPreferencesKey("playlist_id_key")
+
+        val lastModifiedArtistKey = stringPreferencesKey("last_modified_artist_key")
+        val lastModifiedSongKey = stringPreferencesKey("last_modified_song_key")
+        val lastModifiedPlaylistKey = stringPreferencesKey("last_modified_playlist_key")
+        val lastModifiedAlbumKey = stringPreferencesKey("last_modified_album_key")
     }
 
 }

@@ -24,6 +24,11 @@ class FavoriteScreenViewModel(
 
     init {
         viewModelScope.launch {
+            /*playlistRepository.userPlaylists.collect { playlists ->
+                _state.update { it.copy(playlists = playlists) }
+            }*/
+
+
             playlistRepository.playlistsWithFavorites.collect { playlists ->
                 _state.update { it.copy(playlists = playlists) }
             }

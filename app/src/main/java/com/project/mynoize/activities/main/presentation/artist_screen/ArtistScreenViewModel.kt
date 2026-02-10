@@ -50,8 +50,8 @@ class ArtistScreenViewModel(
 
     private fun setArtistData(artistId: String){
         viewModelScope.launch {
-            artistRepository.artists.collect { artists ->
-                _state.update { state -> state.copy(artist = artists.find { it.id == artistId }!!) }
+            artistRepository.getArtist(artistId).onSuccess {
+                _state.update { state -> state.copy(artist = it) }
             }
         }
         viewModelScope.launch {

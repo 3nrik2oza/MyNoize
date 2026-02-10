@@ -198,7 +198,7 @@ fun SongCardView(
    ) {
         AsyncImage(
             model = song.imageUrl,
-            contentDescription = "translated description of what the image contains",
+            contentDescription = "Image of song currently playing",
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .size(100.dp)

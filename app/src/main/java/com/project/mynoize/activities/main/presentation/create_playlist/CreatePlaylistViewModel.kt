@@ -110,7 +110,7 @@ class CreatePlaylistViewModel(
                         _state.update { it.copy(loading = false) }
                     }.onSuccess {
                         storageRepository.removeFromStorage(oldPlayList.imagePath)
-                        playlist = playlist.copy(imagePath = fileName, imageLink = it)
+                        playlist = playlist.copy(imagePath = it.path, imageLink = it.downloadLink)
 
                         viewModelScope.launch {
                             playlistRepository.updatePlaylist(playlist).onError { error ->
@@ -166,7 +166,7 @@ class CreatePlaylistViewModel(
                 }
                 _state.update { it.copy(loading = false) }
             }.onSuccess {
-                playlist = createPlaylist(it, imagePath = fileName)
+                playlist = createPlaylist(imageLink = it.downloadLink, imagePath = it.path)
             }
 
             playlistRepository.createPlaylist(playlist).onError { error ->
