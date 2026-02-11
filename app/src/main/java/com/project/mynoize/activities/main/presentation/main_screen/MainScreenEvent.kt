@@ -9,4 +9,6 @@ sealed interface MainScreenEvent {
     object OnNextSongClick: MainScreenEvent
     object OnPlayPauseToggleClick: MainScreenEvent
     object OnLogoutClick: MainScreenEvent
+
+    object OnStartListening: MainScreenEvent
 }

@@ -3,6 +3,7 @@ package com.project.mynoize.core.data.repositories
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
+import com.google.firebase.firestore.snapshots
 import com.project.mynoize.core.data.Song
 import com.project.mynoize.core.data.database.SongDao
 import com.project.mynoize.core.data.mappers.toLocalSongEntity
@@ -13,18 +14,41 @@ import com.project.mynoize.core.domain.FbError
 import com.project.mynoize.core.domain.Result
 import com.project.mynoize.core.domain.Result.Error
 import com.project.mynoize.core.domain.Result.Success
+import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.util.Constants
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 
 class SongRepository(
+    private val userRepository: UserRepository,
     private val localSongsDao: SongDao
 ){
     private val db = FirebaseFirestore.getInstance()
 
 
-    suspend fun addSongToLocalMemory(song: Song){
-        localSongsDao.upsertSong(song.toLocalSongEntity())
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val favoriteSongsList: Flow<List<Song>> = userRepository.user.flatMapLatest { user ->
+        val favoritesIds = user.favoriteSongs
+
+        if(favoritesIds.isEmpty()){
+            flowOf(emptyList())
+        }else{
+            db.collection(Constants.SONG_COLLECTION)
+                .whereIn(FieldPath.documentId(), favoritesIds)
+                .snapshots()
+                .map { snapshot ->
+                    snapshot.documents.map { doc ->
+                        doc.toObject(Song::class.java)!!.copy(
+                            id = doc.id
+                        )
+                    }
+                }
+        }
     }
 
     suspend fun getExistingSongs(songs: List<String>): List<String> = localSongsDao.getExistingSongIds(songs)
@@ -64,9 +88,29 @@ class SongRepository(
     suspend fun getSongsByIds(ids: List<String>, downloaded: Boolean): Result<List<Song>, FbError.Firestore>{
         if(downloaded){
             val localSongs = getSongsByIdsLocal(ids)
-            return Result.Success(localSongs)
+            return Success(localSongs)
         }
         return getSongsByIdsFirebase(ids)
+    }
+
+    suspend fun getLocalSongsAsPrimary(ids: List<String>): Result<List<Song>, FbError.Firestore> {
+        val localSongs = getSongsByIdsLocal(ids)
+        val missing = ids.toSet() - localSongs.map { it.id }.toSet()
+        if(missing.isEmpty()){
+            return Success(localSongs)
+        }
+
+        var remoteSongs = emptyList<Song>()
+        getSongsByIdsFirebase(missing.toList()).onSuccess {
+            remoteSongs = it
+        }
+        if(remoteSongs.isNotEmpty()){
+            return Success((localSongs + remoteSongs).sortedBy { ids.indexOf(it.id) })
+        }
+
+        return Error(FbError.Firestore.UNKNOWN)
+
+
     }
 
     suspend fun getSongsByIdsLocal(ids: List<String>): List<Song> = localSongsDao.getSongsByIds(ids).first().map { it.toSong() }
@@ -128,18 +172,31 @@ class SongRepository(
         }
     }
 
-    suspend fun getSongByAlbumId(albumId: String): Result<List<Song>, FbError.Firestore>{
+    suspend fun getSongByAlbumId(albumId: String, downloaded: Boolean): Result<List<Song>, FbError.Firestore>{
+        val localSongs = localSongsDao.getSongsByAlbumId(albumId).first().map { it.toSong() }
+
+        if(downloaded){
+            return Success(localSongs)
+        }
+
         return try {
             val snapshot = db.collection(Constants.SONG_COLLECTION)
                 .whereEqualTo("albumId", albumId)
                 .get()
                 .await()
 
-            return Success(snapshot.documents.map{ document ->
+            val albumSongsRemote = snapshot.documents.map{ document ->
                 document.toObject(Song::class.java)!!.apply {
                     id = document.id
                 }
-            })
+            }
+
+            val merged = albumSongsRemote.map { remote ->
+                localSongs.find { it.id == remote.id } ?: remote
+            }
+
+
+            return Success(merged)
         }catch (e: FirebaseFirestoreException){
             when(e.code){
                 FirebaseFirestoreException.Code.PERMISSION_DENIED -> Error(FbError.Firestore.PERMISSION_DENIED)

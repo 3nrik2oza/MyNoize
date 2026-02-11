@@ -14,6 +14,7 @@ import com.project.mynoize.core.data.repositories.StorageRepository
 import com.project.mynoize.core.domain.onError
 import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.managers.ExoPlayerManager
+import com.project.mynoize.network.NetworkMonitor
 import com.project.mynoize.util.UserInformation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -33,6 +34,7 @@ class MainScreenViewModel (
     private val storageRepository: StorageRepository,
     private val auth: AuthRepository,
     private val dataStore: UserInformation,
+    private val networkMonitor: NetworkMonitor,
     application: Application) : AndroidViewModel(application) {
 
 
@@ -75,7 +77,7 @@ class MainScreenViewModel (
                 val lastPlayedPlaylistId = dataStore.playlistId.first() ?: return@launch
                 val playlist = playlistRepository.getPlaylist(lastPlayedPlaylistId).first()
 
-                songRepository.getSongsByIds(playlist.songs, playlist.songsDownloaded).onSuccess { songs ->
+                songRepository.getLocalSongsAsPrimary(ids = playlist.songs).onSuccess { songs ->
                     _state.update {
                         it.copy(
                             songList = songs
@@ -116,25 +118,7 @@ class MainScreenViewModel (
                                 return@forEach
                             }
 
-                            songs.forEach { song ->
-                                val localAlbum: MutableList<Album> = albumRepository.doesAlbumExist(song.albumId).toMutableList()
-                                if(localAlbum.isEmpty()){
-                                    var album = albumRepository.getAlbum(song.artistId+"/"+song.albumId).first()
-                                    storageRepository.downloadToLocalMemory(album.image, "album_images").onSuccess {
-                                        album = album.copy(localImageUrl = it)
-                                    }
-                                    albumRepository.saveAlbumLocally(album)
-                                    localAlbum.add(album)
-                                }
-                                var localSongUrl = ""
-                                storageRepository.downloadToLocalMemory(song.songUrl, "songs").onSuccess {
-                                    localSongUrl = it
-                                }
-                                songRepository.saveSongLocally(
-                                    song.copy(localSongUrl = localSongUrl, localImageUrl = localAlbum.first().localImageUrl)
-                                )
-
-                            }
+                            songs.forEach { song -> downloadMissingSong(song) }
                             playlistRepository.setPlaylistAsDownloaded(playlist.id, true)
                         }
                 }catch (e: Exception){
@@ -145,25 +129,54 @@ class MainScreenViewModel (
 
 
         }
+        viewModelScope.launch {
+            try {
+                songRepository.favoriteSongsList.collect { songs ->
+                    val songsIds = songs.map { it.id }
+                    val localSongs = songRepository.getExistingSongs(songsIds)
+                    val missingSongsIds = songsIds.toSet() - localSongs.toSet()
+
+                    songs.filter { it.id in missingSongsIds }.forEach { downloadMissingSong(it)}
+                }
+            }catch (e: Exception){
+                print(e)
+            }
+        }
+
+        viewModelScope.launch {
 
 
-        /*
-        var list = mutableListOf<Song>()
-            Firebase.firestore.collection(Constants.SONG_COLLECTION).get()
-                .addOnSuccessListener { result ->
-                    for(document in result){
-                        val song = document.toObject(Song::class.java)
-                        song.position = list.size
-                        song.id = document.id
-
-
-                        list += song
+            try {
+                albumRepository.remoteFavoriteAlbums.collect { albums ->
+                    if(albums.isEmpty()){
+                        return@collect
                     }
-                    _state.update { it.copy(songList = list) }
+                    val localUpdate = dataStore.lastModifiedFavAlbums.first()?.toLong()
+                    val ops = albumRepository.updateFavoriteAlbums(localUpdate)
+                    ops.forEach {
+                        it()
+                    }
 
-                    playerManager.initializePlayer(songs = list, play = false, scope = viewModelScope)
-                }*/
+                    delay(2000)
+                    val localAlbums = albumRepository.localFavoriteAlbums.first()
 
+                    localAlbums.filter { !it.songsDownloaded }.forEach { album ->
+                        var albumSongs = emptyList<Song>()
+                        songRepository.getSongByAlbumId(album.id, album.songsDownloaded).onSuccess {
+                            albumSongs = it
+                        }
+                        val songsInAlbumIds = albumSongs.map { it.id }
+
+                        val missingSongsIds = songsInAlbumIds.toSet() - songRepository.getExistingSongs(songsInAlbumIds).toSet()
+
+                        albumSongs.filter { it.id in missingSongsIds }.forEach { downloadMissingSong(it, album.localImageUrl) }
+                        albumRepository.updateAlbumDownloadedField(album.id, true)
+                    }
+                }
+            }catch (e: Exception){
+                print(e)
+            }
+        }
         viewModelScope.launch {
             savePosition()
         }
@@ -196,6 +209,15 @@ class MainScreenViewModel (
                 viewModelScope.launch {
                     delay(1000)
                     _uiEvent.emit(MainActivityUiEvent.NavigateToSignIn)
+                }
+            }
+            is MainScreenEvent.OnStartListening -> {
+                viewModelScope.launch {
+                    delay(1000)
+                    _state.update { it.copy(loading = false) }
+                    networkMonitor.isConnected.collect { isConnected ->
+                        _state.update { it.copy(isConnected = isConnected) }
+                    }
                 }
             }
         }
@@ -240,6 +262,28 @@ class MainScreenViewModel (
         onEventUi(MainActivityUiEvent.ShowNotification)
     }
 
+    private suspend fun downloadMissingSong(song: Song){
+        val localAlbum: MutableList<Album> = albumRepository.doesAlbumExist(song.albumId).toMutableList()
+        if(localAlbum.isEmpty()){
+            var album = albumRepository.getAlbum(song.artistId+"/"+song.albumId).first()
+            storageRepository.downloadToLocalMemory(album.image, "album_images").onSuccess {
+                album = album.copy(localImageUrl = it)
+            }
+            albumRepository.saveAlbumLocally(album)
+            localAlbum.add(album)
+        }
+        downloadMissingSong(song, localAlbum.first().localImageUrl)
+    }
+
+    private suspend fun downloadMissingSong(song: Song, imageUrl: String){
+        var localSongUrl = ""
+        storageRepository.downloadToLocalMemory(song.songUrl, "songs").onSuccess {
+            localSongUrl = it
+        }
+        songRepository.saveSongLocally(
+            song.copy(localSongUrl = localSongUrl, localImageUrl = imageUrl)
+        )
+    }
 
 
 }

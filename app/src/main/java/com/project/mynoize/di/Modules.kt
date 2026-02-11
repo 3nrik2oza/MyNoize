@@ -28,6 +28,7 @@ import com.project.mynoize.core.data.database.MusicDatabase
 import com.project.mynoize.core.data.repositories.PlaylistRepository
 import com.project.mynoize.core.data.repositories.UserRepository
 import com.project.mynoize.managers.ExoPlayerManager
+import com.project.mynoize.network.NetworkMonitor
 import com.project.mynoize.util.UserInformation
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
@@ -61,9 +62,9 @@ val userScopeModule = module {
         scoped { AuthRepository() }
         scoped { UserRepository(get()) }
         scoped { ArtistRepository(get()) }
-        scoped { SongRepository(get()) }
+        scoped { SongRepository(get(), get()) }
         scoped { PlaylistRepository(get(), get(), get(), get()) }
-        scoped { AlbumRepository(get(),get()) }
+        scoped { AlbumRepository(get(),get(), get()) }
         scoped { StorageRepository(get()) }
 
         scoped { CreateArtistValidation() }
@@ -71,6 +72,8 @@ val userScopeModule = module {
         scoped { CreateSongValidation() }
 
         scoped { CreatePlaylistValidation() }
+
+        scoped { NetworkMonitor(context = get<Application>()) }
 
 
         scoped {
@@ -95,11 +98,11 @@ val userScopeModule = module {
 
         viewModel { ArtistScreenViewModel(get(), get(), get(), get()) }
 
-        viewModel { MainScreenViewModel(get(), get(), get(), get(), get(), get(),get(),get()) }
+        viewModel { MainScreenViewModel(get(), get(), get(), get(), get(), get(),get(),get(), get()) }
 
         viewModel { FavoriteScreenViewModel(get(), get(), get(), get()) }
 
-        viewModel { PlaylistScreenViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
+        viewModel { PlaylistScreenViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
 
         viewModel { SelectSongsViewModel(get(), get()) }
 

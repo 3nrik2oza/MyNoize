@@ -12,5 +12,6 @@ data class Album (
     val artist: String = "",
     val favorite: Boolean = false,
     val songs: List<String> = listOf(),
-    val lastModified: Timestamp = Timestamp.now()
+    val lastModified: Timestamp = Timestamp.now(),
+    val songsDownloaded: Boolean = false
 )

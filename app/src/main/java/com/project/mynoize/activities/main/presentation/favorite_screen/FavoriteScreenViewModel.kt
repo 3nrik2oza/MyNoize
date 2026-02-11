@@ -39,12 +39,11 @@ class FavoriteScreenViewModel(
             }
         }
         viewModelScope.launch {
-            albumRepository.favoriteAlbums.collect { albums ->
+            albumRepository.localFavoriteAlbums.collect { albums ->
                 _state.update { state -> state.copy(albums = albums.map { it.toPlaylist() }) }
             }
 
         }
-
     }
 
     fun onEvent(event: FavoriteScreenEvent){

@@ -35,7 +35,7 @@ class UserInformation(
         preferences[lastModifiedPlaylistKey]
     }
 
-    val lastModifiedAlbum = context.dataStore.data.map { preferences ->
+    val lastModifiedFavAlbums = context.dataStore.data.map { preferences ->
         preferences[lastModifiedAlbumKey]
     }
 

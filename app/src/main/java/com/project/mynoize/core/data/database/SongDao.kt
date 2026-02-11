@@ -24,4 +24,7 @@ interface SongDao {
     @Query("SELECT * FROM LocalSongsEntity WHERE id IN (:songIds)")
     fun getSongsByIds(songIds: List<String>): Flow<List<LocalSongsEntity>>
 
+    @Query("SELECT * FROM LocalSongsEntity WHERE albumId = :albumId")
+    fun getSongsByAlbumId(albumId: String): Flow<List<LocalSongsEntity>>
+
 }

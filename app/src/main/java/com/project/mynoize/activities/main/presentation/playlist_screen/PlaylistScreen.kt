@@ -123,7 +123,7 @@ fun SharedTransitionScope.PlaylistScreen(
                         }
                 )
 
-                if(state.playlist.name != "Favorites" &&  state.isPlaylist && state.isUserCreator){
+                if(state.playlist.name != "Favorites" &&  state.isPlaylist && state.isUserCreator && state.isConnected){
                     Icon(
                         imageVector = Icons.Default.MoreVert,
                         contentDescription = "Options",
@@ -165,7 +165,7 @@ fun SharedTransitionScope.PlaylistScreen(
                 modifier = Modifier.padding(top = 15.dp)
             )
 
-            if(state.playlist.name != "Favorites" &&  state.isPlaylist && state.isUserCreator){
+            if(state.playlist.name != "Favorites" &&  state.isPlaylist && state.isUserCreator && state.isConnected){
                 Text(
                     text = "ADD SONGS",
                     fontSize = 25.sp,
@@ -195,7 +195,7 @@ fun SharedTransitionScope.PlaylistScreen(
                         }
                 )
 
-                if(state.playlist.name != "Favorites" &&  state.isPlaylist && state.isUserCreator){
+                if(state.playlist.name != "Favorites" &&  state.isPlaylist && state.isUserCreator && state.isConnected){
                     Icon(
                         imageVector = Icons.Default.Mode,
                         contentDescription = "Modify",
@@ -220,7 +220,8 @@ fun SharedTransitionScope.PlaylistScreen(
                     onEvent(event)
                 },
                 index = index,
-                inPlaylistView = true
+                inPlaylistView = true,
+                isConnected = state.isConnected
             )
 
         }
@@ -231,7 +232,7 @@ fun SharedTransitionScope.PlaylistScreen(
 
     }
 
-    if(state.isSheetOpen){
+    if(state.isSheetOpen && state.isConnected){
         ModalBottomSheet(
             sheetState = sheetState,
             onDismissRequest = { onEvent(PlaylistScreenEvent.OnDismissAlertDialog) },

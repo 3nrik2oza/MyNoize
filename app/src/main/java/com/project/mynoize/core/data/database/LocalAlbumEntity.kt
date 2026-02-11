@@ -14,5 +14,6 @@ data class LocalAlbumEntity(
     val favorite: Boolean,
     val songs: List<String>,
     val localImageUrl: String,
-    val lastModified: Long
+    val lastModified: Long,
+    val songsDownloaded: Boolean = false
 )

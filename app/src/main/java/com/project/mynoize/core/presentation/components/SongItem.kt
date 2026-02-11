@@ -46,6 +46,7 @@ fun SongItem(
     playlistScreenEvent: (PlaylistScreenEvent) -> Unit = {},
     inPlaylistView: Boolean,
     showMore: Boolean = true,
+    isConnected : Boolean = true,
 ) {
 
     Column {
@@ -117,45 +118,48 @@ fun SongItem(
                 }
             }
 
-            if(inPlaylistView){
+            if(isConnected){
+                if(inPlaylistView){
 
-                Row {
+                    Row {
 
-                    Icon(
-                        painter = painterResource(id = if(song.favorite) R.drawable.ic_heart else R.drawable.ic_heart_empty),
-                        contentDescription = if(song.favorite) "Remove song from favorite" else "Add song to favorite",
-                        modifier = Modifier.clickable{ playlistScreenEvent(PlaylistScreenEvent.OnSongFavoriteToggle(song)) }
-                    )
-
-                    if(showMore){
                         Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Add song to the playlist",
-                            modifier = Modifier.clickable(onClick = {
-                                playlistScreenEvent(
-                                    PlaylistScreenEvent.OnMoreSongClick(
-                                        song = song
-                                    )
-                                )
-                            })
+                            painter = painterResource(id = if(song.favorite) R.drawable.ic_heart else R.drawable.ic_heart_empty),
+                            contentDescription = if(song.favorite) "Remove song from favorite" else "Add song to favorite",
+                            modifier = Modifier.clickable{ playlistScreenEvent(PlaylistScreenEvent.OnSongFavoriteToggle(song)) }
                         )
-                    }
 
-                }
-            }else{
-                Icon(
-                    imageVector = if(song.favorite) Icons.Default.Check else Icons.Default.LibraryMusic,
-                    contentDescription = "Add song to the playlist",
-                    modifier = Modifier.clickable(onClick = {
-                        selectSongsEvent(
-                            SelectSongsEvent.OnSongClicked(
-                                index = index,
-                                add = !song.favorite
+                        if(showMore){
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "Add song to the playlist",
+                                modifier = Modifier.clickable(onClick = {
+                                    playlistScreenEvent(
+                                        PlaylistScreenEvent.OnMoreSongClick(
+                                            song = song
+                                        )
+                                    )
+                                })
                             )
-                        )
-                    })
-                )
+                        }
+
+                    }
+                }else{
+                    Icon(
+                        imageVector = if(song.favorite) Icons.Default.Check else Icons.Default.LibraryMusic,
+                        contentDescription = "Add song to the playlist",
+                        modifier = Modifier.clickable(onClick = {
+                            selectSongsEvent(
+                                SelectSongsEvent.OnSongClicked(
+                                    index = index,
+                                    add = !song.favorite
+                                )
+                            )
+                        })
+                    )
+                }
             }
+
 
 
 

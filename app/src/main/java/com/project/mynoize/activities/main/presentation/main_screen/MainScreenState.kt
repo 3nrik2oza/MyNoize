@@ -9,5 +9,7 @@ data class MainScreenState(
     val isPlaying: Boolean = false,
     val currentSong: MediaMetadata? = null,
     val currentPosition: Long = 0L,
-    val duration: Long = 0L
+    val duration: Long = 0L,
+    val isConnected: Boolean? = null,
+    val loading: Boolean = true,
 )

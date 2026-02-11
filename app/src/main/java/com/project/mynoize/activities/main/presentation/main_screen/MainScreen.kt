@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -119,19 +120,38 @@ fun MainScreen(
     val selectedNavigationIndexBefore = rememberSaveable { mutableIntStateOf(0) }
     val createActive = rememberSaveable { mutableStateOf(false) }
 
+    var showBottomBar = when (navController.currentBackStackEntryAsState().value?.destination?.route) {
+        CreateArtistScreen::class.qualifiedName -> false
+        CreateSongScreen::class.qualifiedName -> false
+        else -> true
+    }
+
     fun closeBottomSheet(){
         selectedNavigationIndex.intValue = selectedNavigationIndexBefore.intValue
         createActive.value = false
         isSheetOpen = false
     }
 
+    LaunchedEffect(Unit) {
+        vmMainScreen.onEvent(MainScreenEvent.OnStartListening)
+    }
+
+    LaunchedEffect(mainState.isConnected) {
+        if (!(mainState.isConnected ?: true)) {
+            selectedNavigationIndex.intValue = 1
+            navController.navigate(FavoriteScreenRoot) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
 
     Scaffold (
         modifier = Modifier
             .fillMaxSize(),
         bottomBar = {
-            val currentDestination = navController.currentBackStackEntryAsState().value?.destination?.route
-            if (!(currentDestination == CreateArtistScreen::class.qualifiedName || currentDestination == CreateSongScreen::class.qualifiedName)){
+            if (
+                showBottomBar && mainState.isConnected == true
+            ){
                 BottomNavigationBar(
                     navController,
                     selectedNavigationIndex,
@@ -433,7 +453,7 @@ fun MainScreen(
                 mainState.currentSong?.let {
                     BottomSheetScaffold(
                         scaffoldState = scaffoldState,
-                        sheetPeekHeight = 140.dp,
+                        sheetPeekHeight = if(mainState.isConnected == true) 140.dp else 70.dp,
                         sheetDragHandle = {},
                         modifier = Modifier.align(Alignment.BottomCenter),
                         sheetShape = RectangleShape,
@@ -477,8 +497,14 @@ fun MainScreen(
 
             }
 
+            if(mainState.loading){
+                Box(modifier = Modifier.fillMaxSize().background(Color.White)){
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center)
+                    )
 
-
+                }
+            }
 
         }
 

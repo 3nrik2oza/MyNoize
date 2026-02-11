@@ -18,10 +18,8 @@ data class PlaylistScreenState(
     val artist: Artist = Artist(),
     val userPlaylists: List<Playlist> = listOf(),
     val isUserCreator: Boolean = false,
+    val isConnected: Boolean = false,
 ){
-/*
-    fun selectedSong():Song{
-        return songs[0]
-    }*/
+
 
 }

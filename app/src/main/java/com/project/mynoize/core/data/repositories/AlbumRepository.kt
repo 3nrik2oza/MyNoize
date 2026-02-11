@@ -9,22 +9,26 @@ import com.project.mynoize.core.data.mappers.toAlbum
 import com.project.mynoize.core.data.mappers.toLocalAlbumEntity
 import com.project.mynoize.core.domain.DataError
 import com.project.mynoize.core.domain.Result
+import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.util.Constants
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
+import java.io.File
 
 class AlbumRepository(
     private val userRepository: UserRepository,
-    private val albumDao: AlbumDao
+    private val albumDao: AlbumDao,
+    private val storageRepository: StorageRepository
 ) {
     val db = FirebaseFirestore.getInstance()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    var favoriteAlbums: Flow<List<Album>> = userRepository.user.flatMapLatest { user ->
+    var remoteFavoriteAlbums: Flow<List<Album>> = userRepository.user.flatMapLatest { user ->
         val favoritesIds = user.favoriteAlbums
 
         if(favoritesIds.isEmpty()){
@@ -40,12 +44,88 @@ class AlbumRepository(
         }
     }
 
-    suspend fun doesAlbumExist(id: String): List<Album> = albumDao.getAlbumFromId(id).map { it.toAlbum() };
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val localFavoriteAlbums: Flow<List<Album>> = userRepository.user.flatMapLatest { user ->
+        val favoritesIds = user.favoriteAlbums
+
+
+
+        if(favoritesIds.isEmpty()){
+            flowOf(emptyList())
+        }else{
+            albumDao.getAlbumsFlowFromIds(favoritesIds).map { entities ->
+                entities.map { it.toAlbum() }
+            }
+        }
+    }
+
+    fun getLocalAlbums(ids: List<String>): List<Album> = albumDao.getAlbumsFromIds(ids).map { it.toAlbum() }
+
+    suspend fun doesAlbumExist(id: String): List<Album> = albumDao.getAlbumFromId(id).map { it.toAlbum() }
 
     suspend fun saveAlbumLocally(album: Album){
         albumDao.upsertAlbum(album.toLocalAlbumEntity())
     }
 
+    suspend fun updateFavoriteAlbums(lastUpdateLocally: Long?): List<suspend () -> Unit> {
+        val lastUpdatedRemote = userRepository.user.first().lastModifiedFavoriteAlbums.seconds
+        val local = localFavoriteAlbums.first()
+        val remote = remoteFavoriteAlbums.first()
+
+        if(lastUpdateLocally == null || lastUpdateLocally < lastUpdatedRemote){
+            return updateLocalAlbums(local, remote)
+        }
+
+        return emptyList()
+    }
+
+    fun updateLocalAlbums(local: List<Album>, remote: List<Album>): List<suspend () -> Unit> {
+        val ops = mutableListOf<suspend () -> Unit>()
+        val localMap =local.associateBy { it.id }
+        val remoteMap = remote.associateBy { it.id }
+
+        remoteMap.forEach { (id, remoteAlbum) ->
+            val localItem = localMap[id]
+
+            when{
+                localItem == null -> {
+                    ops.add {
+                        var path = ""
+                        storageRepository.downloadToLocalMemory(remoteAlbum.image, "album_image").onSuccess {
+                            path = it
+                        }
+                        if(path != ""){
+                            albumDao.upsertAlbum(remoteAlbum.copy(localImageUrl = path).toLocalAlbumEntity())
+                        }// finish this function
+                    }
+                }
+                localItem.lastModified < remoteAlbum.lastModified -> {
+                    ops.add{
+                        try {
+                            var path = ""
+                            File(localItem.localImageUrl).delete()
+                            storageRepository.downloadToLocalMemory(remoteAlbum.image, "album_image").onSuccess {
+                                path = it
+                            }
+                            if(path != ""){
+                                albumDao.upsertAlbum(remoteAlbum.copy(localImageUrl = path).toLocalAlbumEntity())
+                            }
+                        }catch (e: Exception){
+                            e.printStackTrace()
+                        }
+                    }
+                }
+            }
+        }
+
+
+        return ops
+    }
+
+
+    suspend fun updateAlbumDownloadedField(id: String, songsDownloaded: Boolean){
+        albumDao.updateDownloadField(id, songsDownloaded)
+    }
 
     suspend fun getAlbums(artistId: String) : Result<List<Album>, DataError.Remote>{
         return try {

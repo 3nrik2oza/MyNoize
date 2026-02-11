@@ -13,6 +13,7 @@ import com.project.mynoize.core.data.repositories.UserRepository
 import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.core.presentation.AlertDialogState
 import com.project.mynoize.managers.ExoPlayerManager
+import com.project.mynoize.network.NetworkMonitor
 import com.project.mynoize.util.BottomSheetType
 import com.project.mynoize.util.toPlaylist
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +29,8 @@ class PlaylistScreenViewModel(
     private val exoPlayerManager: ExoPlayerManager,
     private val userRepository: UserRepository,
     private val albumRepository: AlbumRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val networkMonitor: NetworkMonitor
 ): ViewModel() {
 
     private val _alertDialogState = MutableStateFlow(AlertDialogState())
@@ -52,6 +54,12 @@ class PlaylistScreenViewModel(
         viewModelScope.launch {
             playlistRepository.userPlaylists.collect { playlists ->
                 _state.update { it.copy(userPlaylists = playlists) }
+            }
+        }
+
+        viewModelScope.launch {
+            networkMonitor.isConnected.collect { isOnline ->
+                _state.update { it.copy(isConnected = isOnline) }
             }
         }
     }
@@ -136,25 +144,14 @@ class PlaylistScreenViewModel(
     private fun setPlaylistData(playlistId: String, isPlaylist: Boolean){
         if(isPlaylist){
             viewModelScope.launch {
-                if(playlistId == authRepository.getCurrentUserId()){
-                    playlistRepository.favoriteSongsPlaylist.collect { playlist ->
-                        _state.update { state ->
-                            state.copy(playlist = playlist, isUserCreator = false)
-                        }
-                        songRepository.getSongsByIdsFirebase(state.value.playlist.songs).onSuccess { songs ->
-                            _state.update { state -> state.copy(songs = songs.map { it.copy(favorite = state.favoriteList.songs.contains(it.id)) }) }
-                        }
-                    }
-                    return@launch
-                }else{
-                    playlistRepository.getPlaylist(playlistId).collect { playlist ->
-                        _state.update { state ->
-                            state.copy(playlist = playlist, isUserCreator = playlist.creator == authRepository.getCurrentUserId())
-                        }
 
-                        songRepository.getSongsByIds(state.value.playlist.songs, playlist.songsDownloaded).onSuccess { songs ->
-                            _state.update { state -> state.copy(songs = songs.map { it.copy(favorite = state.favoriteList.songs.contains(it.id)) }) }
-                        }
+                playlistRepository.getPlaylist(playlistId).collect { playlist ->
+                    _state.update { state ->
+                        state.copy(playlist = playlist, isUserCreator = playlist.creator == authRepository.getCurrentUserId())
+                    }
+
+                    songRepository.getLocalSongsAsPrimary(ids = playlist.songs).onSuccess { songs ->
+                        _state.update { state -> state.copy(songs = songs.map { it.copy(favorite = state.favoriteList.songs.contains(it.id)) }) }
                     }
                 }
 
@@ -167,7 +164,7 @@ class PlaylistScreenViewModel(
                     state.copy(playlist = album.toPlaylist(), isPlaylist = false)
                 }
 
-                songRepository.getSongByAlbumId(album.id).onSuccess { songs ->
+                songRepository.getSongByAlbumId(album.id, album.songsDownloaded).onSuccess { songs ->
                     _state.update { state -> state.copy(songs = songs.map { it.copy(favorite = state.favoriteList.songs.contains(it.id)) }) }
                 }
             }

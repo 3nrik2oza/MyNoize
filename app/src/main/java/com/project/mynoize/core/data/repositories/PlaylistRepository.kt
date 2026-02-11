@@ -167,6 +167,10 @@ class PlaylistRepository(
         if(localPlaylist.first() != null) {
             return localPlaylist.map { it!!.toPlaylist() }
         }
+        val favorites = favoriteSongsPlaylist.first()
+        if(id == favorites.id){
+            return favoriteSongsPlaylist
+        }
 
 
         return db.collection(Constants.PLAYLIST_COLLECTION)
