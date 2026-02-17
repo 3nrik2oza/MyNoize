@@ -12,7 +12,7 @@ sealed interface ArtistScreenEvent {
 
     data class OnSongFavoriteToggle(val song: Song): ArtistScreenEvent
 
-    data class SetArtistId(val artistId: String): ArtistScreenEvent
+    data class SetArtistId(val artistId: String, val isConnected: Boolean): ArtistScreenEvent
 
     object OnBackClick: ArtistScreenEvent
 }

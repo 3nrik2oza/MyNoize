@@ -19,9 +19,11 @@ import com.project.mynoize.util.UserInformation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -47,8 +49,9 @@ class MainScreenViewModel (
     private val _uiEvent = MutableSharedFlow<MainActivityUiEvent>()
     val uiEvent = _uiEvent
 
-    init{
+    val isConnected = networkMonitor.isConnected.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), true)
 
+    init{
 
         viewModelScope.launch {
 
@@ -212,13 +215,8 @@ class MainScreenViewModel (
                 }
             }
             is MainScreenEvent.OnStartListening -> {
-                viewModelScope.launch {
-                    delay(1000)
-                    _state.update { it.copy(loading = false) }
-                    networkMonitor.isConnected.collect { isConnected ->
-                        _state.update { it.copy(isConnected = isConnected) }
-                    }
-                }
+                /*
+                */
             }
         }
     }
@@ -268,8 +266,11 @@ class MainScreenViewModel (
             var album = albumRepository.getAlbum(song.artistId+"/"+song.albumId).first()
             storageRepository.downloadToLocalMemory(album.image, "album_images").onSuccess {
                 album = album.copy(localImageUrl = it)
+            }.onError {
+                return@downloadMissingSong
             }
             albumRepository.saveAlbumLocally(album)
+
             localAlbum.add(album)
         }
         downloadMissingSong(song, localAlbum.first().localImageUrl)

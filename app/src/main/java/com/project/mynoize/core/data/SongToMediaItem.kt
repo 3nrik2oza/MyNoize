@@ -7,13 +7,13 @@ import androidx.core.net.toUri
 
 fun Song.toMediaItem(): MediaItem {
     return MediaItem.Builder()
-        .setUri(localSongUrl.ifEmpty { "songUrl" })
+        .setUri(localSongUrl.ifEmpty { songUrl })
         .setMediaMetadata(
             MediaMetadata.Builder()
                 .setTitle(title)
                 .setArtist(artistName)
                 .setAlbumTitle(albumName)
-                .setArtworkUri(imageUrl.toUri())
+                .setArtworkUri(localImageUrl.ifEmpty { imageUrl }.toUri() )
                 .setDescription(id)
                 .build()
         )

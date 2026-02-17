@@ -4,51 +4,62 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
-import android.net.NetworkRequest
+import androidx.core.content.getSystemService
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
-class NetworkMonitor(private val context: Context) {
+class NetworkMonitor(private val context: Context): ConnectivityObserver {
 
-    private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    private val connectivityManager = context.getSystemService<ConnectivityManager>()!!
 
-    val isConnected: Flow<Boolean> = callbackFlow {
-        val callBack = object : ConnectivityManager.NetworkCallback(){
-            override fun onAvailable(network: Network) {
-                trySend(true)
+    override val isConnected: Flow<Boolean>
+        get() = callbackFlow {
+
+            val currentNetwork = connectivityManager.activeNetwork
+            val currentCapabilities = connectivityManager.getNetworkCapabilities(currentNetwork)
+
+            val isCurrentlyConnected = currentCapabilities
+                ?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true
+
+            trySend(isCurrentlyConnected)
+
+            val callback = object : ConnectivityManager.NetworkCallback(){
+                override fun onAvailable(network: Network) {
+                    super.onAvailable(network)
+                    trySend(true)
+                }
+
+                override fun onLosing(network: Network, maxMsToLive: Int) {
+                    super.onLosing(network, maxMsToLive)
+                }
+
+                override fun onLost(network: Network) {
+                    super.onLost(network)
+                    trySend(false)
+                }
+
+                override fun onUnavailable() {
+                    super.onUnavailable()
+                    trySend(false)
+                }
+
+                override fun onCapabilitiesChanged(
+                    network: Network,
+                    networkCapabilities: NetworkCapabilities,
+                ) {
+                    super.onCapabilitiesChanged(network, networkCapabilities)
+                    val connected = networkCapabilities.hasCapability(
+                        NetworkCapabilities.NET_CAPABILITY_VALIDATED
+                    )
+                    trySend(connected)
+                }
             }
 
-            override fun onLost(network: Network) {
-                trySend(false)
-            }
+            connectivityManager.registerDefaultNetworkCallback(callback)
 
-            override fun onCapabilitiesChanged(
-                network: Network,
-                networkCapabilities: NetworkCapabilities
-            ) {
-                trySend(hasInternet())
+            awaitClose {
+                connectivityManager.unregisterNetworkCallback(callback)
             }
         }
-        val request = NetworkRequest.Builder()
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-            .build()
-
-        connectivityManager.registerNetworkCallback(request, callBack)
-
-        trySend(hasInternet())
-
-        awaitClose {
-            connectivityManager.unregisterNetworkCallback(callBack)
-        }
-
-    }
-
-    private fun hasInternet(): Boolean {
-        val network = connectivityManager.activeNetwork ?: return false
-        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-
-        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-    }
-
 }

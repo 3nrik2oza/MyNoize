@@ -14,6 +14,7 @@ fun LocalAlbumEntity.toAlbum(): Album {
         artist = artist,
         favorite = favorite,
         songs = songs,
+        localImageUrl = localImageUrl,
         lastModified = Timestamp(seconds = lastModified, 0),
         songsDownloaded = songsDownloaded
     )

@@ -7,4 +7,5 @@ data class ArtistScreenState(
     val artist: Artist = Artist(),
     val favorite: Boolean = false,
     val songs: List<Song> = listOf(),
+    val isConnected: Boolean = true,
 )

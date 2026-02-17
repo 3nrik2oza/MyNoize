@@ -17,7 +17,7 @@ class ArtistScreenViewModel(
     private val artistRepository: ArtistRepository,
     private val songRepository: SongRepository,
     private val userRepository: UserRepository,
-    private val exoPlayerManager: ExoPlayerManager
+    private val exoPlayerManager: ExoPlayerManager,
 ): ViewModel() {
 
     private val _state = MutableStateFlow(ArtistScreenState())
@@ -27,7 +27,7 @@ class ArtistScreenViewModel(
     fun onEvent(event: ArtistScreenEvent){
         when(event){
             is ArtistScreenEvent.SetArtistId -> {
-                setArtistData(artistId = event.artistId)
+                setArtistData(artistId = event.artistId, isConnected = event.isConnected)
             }
             is ArtistScreenEvent.ArtistFavoriteToggle -> {
                 viewModelScope.launch {
@@ -48,7 +48,7 @@ class ArtistScreenViewModel(
         }
     }
 
-    private fun setArtistData(artistId: String){
+    private fun setArtistData(artistId: String, isConnected: Boolean){
         viewModelScope.launch {
             artistRepository.getArtist(artistId).onSuccess {
                 _state.update { state -> state.copy(artist = it) }
@@ -56,16 +56,18 @@ class ArtistScreenViewModel(
         }
         viewModelScope.launch {
             val fav = userRepository.user.first().favoriteSongs
-            songRepository.getSongByArtist(artistId = artistId).onSuccess { songs->
-                _state.update { state -> state.copy(songs = songs.map { it.copy(favorite = fav.contains(it.id)) }) }
+            songRepository.getSongByArtist(artistId = artistId, isConnected).onSuccess { songs->
+                _state.update { state -> state.copy(songs = songs.map { it.copy(favorite = fav.contains(it.id)) }, isConnected = isConnected) }
             }
+
         }
         viewModelScope.launch {
             userRepository.user.collect { user ->
                 _state.update { state ->
                     state.copy(favorite = user.favoriteArtists.contains(artistId),
                         songs = state.songs.map { song -> song.copy(favorite = user.favoriteSongs.contains(song.id)) }
-                    ) }
+                    )
+                }
             }
         }
 

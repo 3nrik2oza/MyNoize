@@ -37,6 +37,7 @@ import com.project.mynoize.core.presentation.components.SongItem
 fun ArtistScreen(
     state: ArtistScreenState,
     onEvent: (ArtistScreenEvent) -> Unit,
+    isConnected: Boolean
 ){
     LazyColumn(
         modifier = Modifier
@@ -78,24 +79,26 @@ fun ArtistScreen(
                 modifier = Modifier.padding(top = 15.dp)
             )
 
-            Row {
-                Icon(
-                    imageVector = Icons.Default.Mode,
-                    contentDescription = "Modify",
-                    Modifier.size(35.dp)
-                        .clickable(onClick = {
-                            onEvent(ArtistScreenEvent.OnModifyArtist)
-                        })
-                )
+            if(isConnected){
+                Row {
+                    Icon(
+                        imageVector = Icons.Default.Mode,
+                        contentDescription = "Modify",
+                        Modifier.size(35.dp)
+                            .clickable(onClick = {
+                                onEvent(ArtistScreenEvent.OnModifyArtist)
+                            })
+                    )
 
-                Icon(
-                    painter = if(state.favorite) painterResource(R.drawable.ic_heart) else painterResource(R.drawable.ic_heart_empty),
-                    contentDescription = if(state.favorite) "Remove from favorite" else "Add to favorite",
-                    Modifier.size(35.dp)
-                        .clickable(onClick = {
-                            onEvent(ArtistScreenEvent.ArtistFavoriteToggle)
-                        })
-                )
+                    Icon(
+                        painter = if(state.favorite) painterResource(R.drawable.ic_heart) else painterResource(R.drawable.ic_heart_empty),
+                        contentDescription = if(state.favorite) "Remove from favorite" else "Add to favorite",
+                        Modifier.size(35.dp)
+                            .clickable(onClick = {
+                                onEvent(ArtistScreenEvent.ArtistFavoriteToggle)
+                            })
+                    )
+                }
             }
         }
 
@@ -116,7 +119,8 @@ fun ArtistScreen(
                 },
                 index = index,
                 inPlaylistView = true,
-                showMore = false
+                showMore = false,
+                isConnected = isConnected
             )
 
         }

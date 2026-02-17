@@ -22,7 +22,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.project.mynoize.R
 
 @Composable
-fun ImageWithLoading(image: String, isFavorite: Boolean = false, boxSize: Dp = 150.dp){
+fun ImageWithLoading(image: String, isFavorite: Boolean = false, boxSize: Dp = 150.dp, imageMod: Modifier = Modifier){
 
     val painter = rememberAsyncImagePainter(model = image)
 
@@ -62,7 +62,7 @@ fun ImageWithLoading(image: String, isFavorite: Boolean = false, boxSize: Dp = 1
             Image(
                 painter = painter,
                 contentDescription = "Image",
-                modifier = Modifier.fillMaxSize(),
+                modifier = imageMod.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
         }

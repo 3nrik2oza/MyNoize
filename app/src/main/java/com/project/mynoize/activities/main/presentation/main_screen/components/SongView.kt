@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Slider
@@ -44,7 +43,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
@@ -54,6 +52,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.project.mynoize.R
 import com.project.mynoize.activities.main.presentation.main_screen.MainScreenEvent
 import com.project.mynoize.activities.main.presentation.main_screen.MainScreenState
+import com.project.mynoize.activities.main.presentation.playlist_screen.components.ImageWithLoading
 import com.project.mynoize.activities.main.ui.PlayButton
 import com.project.mynoize.activities.main.ui.theme.DarkGray
 import com.project.mynoize.activities.main.ui.theme.LatoFontFamily
@@ -120,14 +119,20 @@ fun SharedTransitionScope.SongView(
         )
 
 
-        Box(Modifier.sharedElement(
-            sharedContentState = rememberSharedContentState(key = "image1/${state.currentSong!!.artworkUri}"),
-            animatedVisibilityScope = animatedVisibilityScope,
-            boundsTransform = {_,_ ->
-                tween(durationMillis = 500)
-            }
-        )
-        ){
+
+        Row(
+            modifier= Modifier.width(310.dp)
+        ) {
+            Box(
+                Modifier
+                    .size(220.dp).sharedElement(
+                        animatedVisibilityScope = animatedVisibilityScope,
+                        boundsTransform = {_,_ ->
+                            tween(durationMillis = 500)
+                        },
+                        sharedContentState = rememberSharedContentState(key = "image1/${state.currentSong!!.title}"),
+                    )
+            ){/*
             when(val result = imageLoadResult){
                 null-> Row(
                     modifier= Modifier.fillMaxWidth(),
@@ -175,6 +180,25 @@ fun SharedTransitionScope.SongView(
                         }
                     }
                 }
+            }*/
+
+                Image(
+                    painter = painterResource(R.drawable.music_disk),
+                    contentDescription = "Music Disk",
+                    modifier = Modifier
+                        .size(200.dp)
+                        .offset(x = 100.dp)
+                        .graphicsLayer{
+                            rotationZ = rotation
+                        }
+                        .zIndex(0f)
+                )
+
+                ImageWithLoading(image = state.currentSong.artworkUri.toString(), boxSize = 210.dp,
+                    imageMod = Modifier
+                        .size(210.dp)
+                        .zIndex(1f)
+                )
             }
         }
 
@@ -186,7 +210,7 @@ fun SharedTransitionScope.SongView(
             horizontalAlignment = Alignment.Start
         ) {
             Text(
-                state.currentSong.title.toString(),
+                state.currentSong!!.title.toString(),
                 fontWeight = Bold, fontSize = 18.sp,
                 fontFamily = NovaSquareFontFamily,
                 color = Color.Black,

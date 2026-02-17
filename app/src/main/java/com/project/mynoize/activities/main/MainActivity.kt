@@ -8,7 +8,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.tween
@@ -18,14 +17,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -51,6 +46,7 @@ import com.project.mynoize.activities.main.presentation.main_screen.MainScreenSt
 import com.project.mynoize.activities.main.ui.PlayButton
 import com.project.mynoize.activities.main.ui.theme.MyNoizeTheme
 import com.project.mynoize.activities.main.presentation.main_screen.MainScreenViewModel
+import com.project.mynoize.activities.main.presentation.playlist_screen.components.ImageWithLoading
 import com.project.mynoize.activities.signin.SignInActivity
 import com.project.mynoize.core.data.Song
 import com.project.mynoize.notification.MusicService
@@ -144,6 +140,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/*
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun MainView(
@@ -183,7 +180,7 @@ fun MainView(
 
     }
 }
-
+*/
 
 @Composable
 fun SongCardView(
@@ -223,7 +220,7 @@ fun SharedTransitionScope.MusicPlayer(
     modifier: Modifier = Modifier,
     onEvent: (MainScreenEvent) -> Unit,
     state: MainScreenState,
-    animatedVisibilityScope: AnimatedVisibilityScope
+    animatedVisibilityScope: AnimatedVisibilityScope,
 ) {
 
 
@@ -239,23 +236,37 @@ fun SharedTransitionScope.MusicPlayer(
             modifier = Modifier.weight(1f)
         ) {
 
+            Box(
+                modifier = Modifier
+                    .size(45.dp)
+                    .sharedElement(
+                        sharedContentState = rememberSharedContentState(key = "image1/${state.currentSong!!.title}"),
+                        animatedVisibilityScope = animatedVisibilityScope,
+                        boundsTransform = {_,_ ->
+                            tween(durationMillis = 500)
+                        }
+                    )
+            ){
+                ImageWithLoading(state.currentSong.artworkUri.toString() ?: "")
+            }
+            /*
             AsyncImage(
                 model = state.currentSong?.artworkUri ?: "",
                 contentDescription = "Image",
                 Modifier
                     .size(45.dp)
                     .sharedElement(
-                        sharedContentState = rememberSharedContentState(key = "image1/${state.currentSong!!.artworkUri}"),
+                        sharedContentState = rememberSharedContentState(key = "image1/${state.currentSong!!.title}"),
                         animatedVisibilityScope = animatedVisibilityScope,
                         boundsTransform = {_,_ ->
                             tween(durationMillis = 500)
                         }
                     )
-            )
+            )*/
 
             Column {
                 Text(
-                    state.currentSong.title.toString() ,
+                    state.currentSong.title.toString(),
                     modifier
                         .padding(start = 12.dp, top = 1.dp, bottom = 1.dp)
                         .sharedElement(

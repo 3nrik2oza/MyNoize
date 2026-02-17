@@ -13,7 +13,7 @@ sealed class SearchItem(
         id = album.id,
         title = album.name,
         subtitle = "",
-        imageUrl = album.image,
+        imageUrl = album.localImageUrl.ifEmpty { album.image },
         favorite = album.favorite
     )
 
@@ -33,7 +33,7 @@ sealed class SearchItem(
         id = song.id,
         title = song.title,
         subtitle = song.artistName,
-        imageUrl = song.imageUrl,
+        imageUrl = song.localImageUrl.ifEmpty { song.imageUrl},
         favorite = song.favorite
     )
 
@@ -43,7 +43,7 @@ sealed class SearchItem(
         id = playlist.id,
         title = playlist.name,
         subtitle = "",
-        imageUrl = playlist.imageLink,
+        imageUrl = playlist.localImagePath.ifEmpty { playlist.imagePath },
         favorite = playlist.favorite
     )
 }

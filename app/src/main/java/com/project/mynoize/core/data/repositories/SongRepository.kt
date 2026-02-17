@@ -57,7 +57,14 @@ class SongRepository(
         localSongsDao.upsertSong(song.toLocalSongEntity())
     }
 
-    suspend fun getSongByArtist(artistId: String): Result<List<Song>, FbError.Firestore>{
+    suspend fun getSongByArtist(artistId: String, connected: Boolean): Result<List<Song>, FbError.Firestore>{
+        if(!connected){
+            return Success(getLocalSongsFromArtist(artistId))
+        }
+        return getSongByArtistFirebase(artistId)
+    }
+
+    suspend fun getSongByArtistFirebase(artistId: String): Result<List<Song>, FbError.Firestore>{
         return try {
             val snapshot = db.collection(Constants.SONG_COLLECTION)
                 .whereEqualTo("artistId", artistId)
@@ -85,13 +92,7 @@ class SongRepository(
         }
     }
 
-    suspend fun getSongsByIds(ids: List<String>, downloaded: Boolean): Result<List<Song>, FbError.Firestore>{
-        if(downloaded){
-            val localSongs = getSongsByIdsLocal(ids)
-            return Success(localSongs)
-        }
-        return getSongsByIdsFirebase(ids)
-    }
+    suspend fun getLocalSongsFromArtist(artistId: String): List<Song> = localSongsDao.getSongsByArtistId(artistId).first().map { it.toSong() }
 
     suspend fun getLocalSongsAsPrimary(ids: List<String>): Result<List<Song>, FbError.Firestore> {
         val localSongs = getSongsByIdsLocal(ids)
@@ -197,34 +198,6 @@ class SongRepository(
 
 
             return Success(merged)
-        }catch (e: FirebaseFirestoreException){
-            when(e.code){
-                FirebaseFirestoreException.Code.PERMISSION_DENIED -> Error(FbError.Firestore.PERMISSION_DENIED)
-                FirebaseFirestoreException.Code.UNAVAILABLE -> Error(FbError.Firestore.UNAVAILABLE)
-                FirebaseFirestoreException.Code.ABORTED -> Error(FbError.Firestore.ABORTED)
-                FirebaseFirestoreException.Code.NOT_FOUND -> Error(FbError.Firestore.NOT_FOUND)
-                FirebaseFirestoreException.Code.ALREADY_EXISTS -> Error(FbError.Firestore.ALREADY_EXISTS)
-                FirebaseFirestoreException.Code.DEADLINE_EXCEEDED -> Error(FbError.Firestore.DEADLINE_EXCEEDED)
-                FirebaseFirestoreException.Code.CANCELLED -> Error(FbError.Firestore.CANCELLED)
-                else -> Error(FbError.Firestore.UNKNOWN)
-            }
-        }catch (_: Exception){
-            Error(FbError.Firestore.UNKNOWN)
-        }
-    }
-
-    suspend fun getAllSongs(): Result<List<Song>, FbError.Firestore>{
-        return try {
-            val snapshot = db.collection(Constants.SONG_COLLECTION)
-                .limit(25)
-                .get()
-                .await()
-
-            return Success(snapshot.documents.map{ document ->
-                document.toObject(Song::class.java)!!.apply {
-                    id = document.id
-                }
-            })
         }catch (e: FirebaseFirestoreException){
             when(e.code){
                 FirebaseFirestoreException.Code.PERMISSION_DENIED -> Error(FbError.Firestore.PERMISSION_DENIED)

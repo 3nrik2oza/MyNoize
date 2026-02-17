@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -23,7 +24,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.BottomSheetScaffold
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -120,11 +120,13 @@ fun MainScreen(
     val selectedNavigationIndexBefore = rememberSaveable { mutableIntStateOf(0) }
     val createActive = rememberSaveable { mutableStateOf(false) }
 
-    var showBottomBar = when (navController.currentBackStackEntryAsState().value?.destination?.route) {
+    val showBottomBar = when (navController.currentBackStackEntryAsState().value?.destination?.route) {
         CreateArtistScreen::class.qualifiedName -> false
         CreateSongScreen::class.qualifiedName -> false
         else -> true
     }
+
+    val isConnected = vmMainScreen.isConnected.collectAsStateWithLifecycle()
 
     fun closeBottomSheet(){
         selectedNavigationIndex.intValue = selectedNavigationIndexBefore.intValue
@@ -132,12 +134,8 @@ fun MainScreen(
         isSheetOpen = false
     }
 
-    LaunchedEffect(Unit) {
-        vmMainScreen.onEvent(MainScreenEvent.OnStartListening)
-    }
-
-    LaunchedEffect(mainState.isConnected) {
-        if (!(mainState.isConnected ?: true)) {
+    LaunchedEffect(isConnected.value) {
+        if (!isConnected.value) {
             selectedNavigationIndex.intValue = 1
             navController.navigate(FavoriteScreenRoot) {
                 popUpTo(0) { inclusive = true }
@@ -150,7 +148,7 @@ fun MainScreen(
             .fillMaxSize(),
         bottomBar = {
             if (
-                showBottomBar && mainState.isConnected == true
+                showBottomBar && isConnected.value
             ){
                 BottomNavigationBar(
                     navController,
@@ -227,7 +225,7 @@ fun MainScreen(
                             val vm: ArtistScreenViewModel = koinViewModel<ArtistScreenViewModel>(scope = getKoin().getScope("USER_SESSION"))
 
                             LaunchedEffect(true) {
-                                vm.onEvent(ArtistScreenEvent.SetArtistId(arg.artistId))
+                                vm.onEvent(ArtistScreenEvent.SetArtistId(arg.artistId, isConnected.value))
                             }
                             val state by vm.state.collectAsStateWithLifecycle()
 
@@ -244,7 +242,8 @@ fun MainScreen(
                                         else -> Unit
                                     }
                                     vm.onEvent(event)
-                                }
+                                },
+                                isConnected = isConnected.value
                             )
                         }
 
@@ -450,10 +449,14 @@ fun MainScreen(
                 }
 
                 val scaffoldState = rememberBottomSheetScaffoldState()
+                val padding by animateDpAsState(
+                    targetValue = if(isConnected.value) 0.dp else 60.dp
+                )
+
                 mainState.currentSong?.let {
                     BottomSheetScaffold(
                         scaffoldState = scaffoldState,
-                        sheetPeekHeight = if(mainState.isConnected == true) 140.dp else 70.dp,
+                        sheetPeekHeight = 140.dp,
                         sheetDragHandle = {},
                         modifier = Modifier.align(Alignment.BottomCenter),
                         sheetShape = RectangleShape,
@@ -463,7 +466,8 @@ fun MainScreen(
                                 .background(
                                     shape = RectangleShape,
                                     color = Color.White
-                                )) {
+                                )
+                                .padding(top = padding)) {
                                 val showMusicPlayer = scaffoldState.bottomSheetState.currentValue.name == "PartiallyExpanded"
                                 AnimatedContent(
                                     targetState = showMusicPlayer,
@@ -485,7 +489,7 @@ fun MainScreen(
                                             onEvent = { event ->
                                                 vmMainScreen.onEvent(event)},
                                             state = mainState,
-                                            animatedVisibilityScope = this
+                                            animatedVisibilityScope = this,
                                         )
                                     }
                                 }
@@ -497,14 +501,6 @@ fun MainScreen(
 
             }
 
-            if(mainState.loading){
-                Box(modifier = Modifier.fillMaxSize().background(Color.White)){
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-
-                }
-            }
 
         }
 
