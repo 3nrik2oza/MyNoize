@@ -6,6 +6,8 @@ data class Song (
     val titleLower: String = "",
     val artistId: String = "",
     val artistName: String = "",
+    val genre: String = "",
+    val subgenre: String = "",
     val songUrl: String = "",
     val localSongUrl: String = "",
     val albumName: String = "",

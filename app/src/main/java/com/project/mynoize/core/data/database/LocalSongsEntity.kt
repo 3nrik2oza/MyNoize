@@ -10,6 +10,8 @@ data class LocalSongsEntity(
     val title: String,
     val artistId: String,
     val artistName: String,
+    val genre: String,
+    val subGenre: String,
     val songUrl: String,
     val albumName: String,
     val albumId: String,

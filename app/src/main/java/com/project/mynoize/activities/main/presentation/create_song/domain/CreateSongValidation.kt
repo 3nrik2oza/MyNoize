@@ -7,7 +7,7 @@ import com.project.mynoize.core.domain.onError
 
 class CreateSongValidation {
 
-    fun execute(songName: String, artistIndex: Int, albumIndex: Int, uri: String): EmptyResult<InputError.CreateSong>{
+    fun execute(songName: String, artistIndex: Int, albumIndex: Int, uri: String, genreIndex: Int, subgenreIndex: Int): EmptyResult<InputError.CreateSong>{
         validateSongName(songName = songName).onError {
             return Result.Error(it)
         }
@@ -17,6 +17,10 @@ class CreateSongValidation {
         }
 
         validateAlbumSelected(index = albumIndex).onError {
+            return Result.Error(it)
+        }
+
+        validateGenreSelected(genreIndex = genreIndex, subgenreIndex = subgenreIndex).onError {
             return Result.Error(it)
         }
 
@@ -40,6 +44,16 @@ class CreateSongValidation {
     private fun validateArtistSelected(index: Int): EmptyResult<InputError.CreateSong>{
         return if(index == -1){
             Result.Error(InputError.CreateSong.SELECT_ARTIST)
+        }else{
+            Result.Success(Unit)
+        }
+    }
+
+    private fun validateGenreSelected(genreIndex: Int, subgenreIndex: Int): EmptyResult<InputError.CreateSong>{
+        return if(genreIndex == -1){
+            Result.Error(InputError.CreateSong.SELECT_GENRE)
+        }else if(subgenreIndex == -1){
+            Result.Error(InputError.CreateSong.SELECT_SUBGENRE)
         }else{
             Result.Success(Unit)
         }

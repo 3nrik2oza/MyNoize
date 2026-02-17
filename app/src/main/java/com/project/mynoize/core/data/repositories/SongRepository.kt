@@ -51,6 +51,12 @@ class SongRepository(
         }
     }
 
+    suspend fun deleteLocalSong(id: String) = localSongsDao.deleteSong(id)
+
+    suspend fun getAllLocalSongs(): List<Song> = localSongsDao.getAllSong().map { it.toSong() }
+
+    suspend fun getSongsIdsInLocalAlbums(albumIds: List<String>): List<String> = localSongsDao.getSongsFromAlbumLists(albumIds)
+
     suspend fun getExistingSongs(songs: List<String>): List<String> = localSongsDao.getExistingSongIds(songs)
 
     suspend fun saveSongLocally(song: Song){

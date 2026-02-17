@@ -38,8 +38,6 @@ class PlaylistRepository(
 
     private val db = FirebaseFirestore.getInstance()
 
-    var lastLoadedPlaylists = listOf<Playlist>()
-
 
     val localFavoritePlaylists: Flow<List<Playlist>> = playlistDao.getPlaylists().map { entities ->
         entities.map { it.toPlaylist() }

@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
 
 @SuppressLint("SuspiciousIndentation")
 class MainScreenViewModel (
@@ -40,10 +41,8 @@ class MainScreenViewModel (
     application: Application) : AndroidViewModel(application) {
 
 
-
     private val _state = MutableStateFlow(MainScreenState())
     val state = _state.asStateFlow()
-
 
 
     private val _uiEvent = MutableSharedFlow<MainActivityUiEvent>()
@@ -127,10 +126,7 @@ class MainScreenViewModel (
                 }catch (e: Exception){
                     print(e)
                 }
-
             }
-
-
         }
         viewModelScope.launch {
             try {
@@ -180,6 +176,40 @@ class MainScreenViewModel (
                 print(e)
             }
         }
+
+        viewModelScope.launch {
+            delay(5_000)
+            //get all local songs set
+            val localSongs = songRepository.getAllLocalSongs()
+            val localSongsMap = localSongs.associateBy { it.id }
+
+            // favorite songs
+            val favoriteSongs = songRepository.favoriteSongsList.first().map { it.id }.toSet()
+
+            // favorite playlists songs
+            val favoritePlaylists = playlistRepository.localFavoritePlaylists.first().filter { it.songsDownloaded }
+            val songsFromPlaylist = favoritePlaylists.flatMap { it.songs }.toSet()
+
+            // remove all that are in favorite albums
+            val favoriteAlbums = albumRepository.localFavoriteAlbums.first().filter { it.songsDownloaded }.map { it.id }
+            val songsFromAlbums = songRepository.getSongsIdsInLocalAlbums(favoriteAlbums).toSet()
+
+            // remaining songs remove from local storage
+            val songsToRemove = (localSongs.map { it.id } - favoriteSongs - songsFromPlaylist - songsFromAlbums).toList()
+            songsToRemove.forEach { songId ->
+                val song = localSongsMap[songId] ?: return@forEach
+                try {
+                    val songFile = File(song.localSongUrl)
+                    songFile.delete()
+                    songRepository.deleteLocalSong(songId)
+                }catch (e: Exception){
+                    print(e)
+                }
+            }
+
+
+        }
+
         viewModelScope.launch {
             savePosition()
         }
@@ -215,8 +245,6 @@ class MainScreenViewModel (
                 }
             }
             is MainScreenEvent.OnStartListening -> {
-                /*
-                */
             }
         }
     }

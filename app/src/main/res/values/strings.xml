@@ -54,6 +54,8 @@
     <string name="error_select_artist">Please select artist</string>
     <string name="error_select_album">Please select album</string>
     <string name="error_select_song">Please select song file</string>
+    <string name="error_select_genre">Please select genre</string>
+    <string name="error_select_subgenre">Please select subgenre</string>
 
     <string name="error_loading_artist_failed">Loading artists failed. Try to restart the app</string>
     <string name="error_loading_album_failed">Loading albums failed. Try to reselect artist or to restart the app</string>

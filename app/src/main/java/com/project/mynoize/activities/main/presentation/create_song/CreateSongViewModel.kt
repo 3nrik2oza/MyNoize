@@ -22,6 +22,8 @@ import com.project.mynoize.core.domain.onError
 import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.core.presentation.UiText
 import com.project.mynoize.core.presentation.toErrorMessage
+import com.project.mynoize.util.genres
+import com.project.mynoize.util.subGenreMap
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -93,6 +95,12 @@ class CreateSongViewModel(
                     it.copy(show = false)
                 }
             }
+            is CreateSongEvent.OnGenreClick -> {
+                createSongState.update { it.copy(songGenre = event.index, songSubgenre = -1) }
+            }
+            is CreateSongEvent.OnSubgenreClick -> {
+                createSongState.update { it.copy(songSubgenre = event.index) }
+            }
             else -> Unit
         }
     }
@@ -132,7 +140,9 @@ class CreateSongViewModel(
             imageUrl = albumListState.value.selectedElement().image,
             albumId = albumListState.value.selectedElement().id,
             albumName = albumListState.value.selectedElement().name,
-            creatorId = auth.getCurrentUserId()
+            creatorId = auth.getCurrentUserId(),
+            genre = genres[createSongState.value.songGenre],
+            subgenre = subGenreMap[genres[createSongState.value.songGenre]]?.get(createSongState.value.songSubgenre) ?: ""
         )
     }
 
@@ -179,7 +189,9 @@ class CreateSongViewModel(
             songName = createSongState.value.songName,
             artistIndex = artistListState.value.index,
             albumIndex = albumListState.value.index,
-            uri = createSongState.value.songUri
+            uri = createSongState.value.songUri,
+            genreIndex = createSongState.value.songGenre,
+            subgenreIndex = createSongState.value.songSubgenre
         ).onError { error->
 
             createSongState.update { it.copy(songNameError = null, songUriError = null) }
@@ -198,7 +210,12 @@ class CreateSongViewModel(
             if(error == InputError.CreateSong.SELECT_SONG_FILE){
                 createSongState.update { it.copy(songUriError = error.toErrorMessage()) }
             }
-
+            if(error == InputError.CreateSong.SELECT_GENRE){
+                createSongState.update { it.copy(songGenreError = error.toErrorMessage()) }
+            }
+            if(error == InputError.CreateSong.SELECT_SUBGENRE){
+                createSongState.update { it.copy(songSubgenreError = error.toErrorMessage()) }
+            }
 
             alertDialogState.update { it.copy(loading = false) }
             return

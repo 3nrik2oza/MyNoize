@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
@@ -47,6 +49,8 @@ import com.project.mynoize.core.presentation.components.CustomTextField
 import com.project.mynoize.core.presentation.components.MessageAlertDialog
 import com.project.mynoize.core.presentation.UiText
 import com.project.mynoize.core.presentation.asString
+import com.project.mynoize.util.genres
+import com.project.mynoize.util.subGenreMap
 
 
 @Composable
@@ -100,6 +104,7 @@ fun CreateSongScreen(
     Column(
         Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .background(Color.White)
             .padding(top=15.dp, start = 15.dp, end = 15.dp)
             .pointerInput(Unit) {
@@ -190,6 +195,40 @@ fun CreateSongScreen(
         }
 
         Spacer(modifier = Modifier.height(10.dp))
+
+        CustomDropdown(
+            itemList = genres,
+            hint = "Select Genre",
+            title = "Genre",
+            selectedIndex = createSongState.songGenre,
+            onItemClick = {
+                if(!alertDialogState.loading){
+                    onEvent(CreateSongEvent.OnGenreClick(it))
+                }
+            },
+            isError = createSongState.songGenreError != null,
+            errorMessage = createSongState.songGenreError?.asString() ?: ""
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        if(createSongState.songGenre != -1){
+            CustomDropdown(
+                itemList = subGenreMap[genres[createSongState.songGenre]]!!,
+                hint = "Select Subgenre",
+                title = "Subgenre",
+                selectedIndex = createSongState.songSubgenre,
+                onItemClick = {
+                    if(!alertDialogState.loading){
+                        onEvent(CreateSongEvent.OnSubgenreClick(it))
+                    }
+                },
+                isError = createSongState.songSubgenreError != null,
+                errorMessage = createSongState.songSubgenreError?.asString() ?: ""
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+        }
 
         if(!alertDialogState.loading){
             CustomSelectFileButton(

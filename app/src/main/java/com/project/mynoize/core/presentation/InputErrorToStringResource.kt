@@ -19,6 +19,8 @@ fun InputError.CreateSong.toErrorMessage() : UiText{
         InputError.CreateSong.ENTER_SONG_NAME -> R.string.error_song_name
         InputError.CreateSong.SELECT_ARTIST -> R.string.error_select_artist
         InputError.CreateSong.SELECT_ALBUM -> R.string.error_select_album
+        InputError.CreateSong.SELECT_GENRE -> R.string.error_select_genre
+        InputError.CreateSong.SELECT_SUBGENRE -> R.string.error_select_subgenre
         InputError.CreateSong.SELECT_SONG_FILE -> R.string.error_select_song
     }
     return UiText.StringResource(stringRes)

@@ -5,6 +5,8 @@ sealed interface InputError: Error {
         ENTER_SONG_NAME,
         SELECT_ARTIST,
         SELECT_ALBUM,
+        SELECT_GENRE,
+        SELECT_SUBGENRE,
         SELECT_SONG_FILE
     }
 
