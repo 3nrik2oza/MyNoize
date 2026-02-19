@@ -10,6 +10,7 @@ import com.project.mynoize.core.domain.FbError
 import com.project.mynoize.core.domain.Result
 import com.project.mynoize.core.domain.Result.*
 import com.project.mynoize.util.Constants
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -76,7 +77,10 @@ class ArtistRepository(
                 FirebaseFirestoreException.Code.CANCELLED -> Error(FbError.Firestore.CANCELLED)
                 else -> Error(FbError.Firestore.UNKNOWN)
             }
-        }catch (_: Exception){
+        }catch (e: Exception){
+            if(e is CancellationException){
+                throw e
+            }
             Error(FbError.Firestore.UNKNOWN)
         }
 
@@ -108,7 +112,10 @@ class ArtistRepository(
                 FirebaseFirestoreException.Code.CANCELLED -> Error(FbError.Firestore.CANCELLED)
                 else -> Error(FbError.Firestore.UNKNOWN)
             }
-        }catch (_: Exception){
+        }catch (e: Exception){
+            if(e is CancellationException){
+                throw e
+            }
             Error(FbError.Firestore.UNKNOWN)
         }
 
@@ -139,7 +146,10 @@ class ArtistRepository(
                 FirebaseFirestoreException.Code.CANCELLED -> Error(FbError.Firestore.CANCELLED)
                 else -> Error(FbError.Firestore.UNKNOWN)
             }
-        }catch (_: Exception){
+        }catch (e: Exception){
+            if(e is CancellationException){
+                throw e
+            }
             Error(FbError.Firestore.UNKNOWN)
         }
 
@@ -163,7 +173,10 @@ class ArtistRepository(
                 FirebaseFirestoreException.Code.CANCELLED -> Error(FbError.Firestore.CANCELLED)
                 else -> Error(FbError.Firestore.UNKNOWN)
             }
-        }catch (_: Exception){
+        }catch (e: Exception){
+            if(e is CancellationException){
+                throw e
+            }
             Error(FbError.Firestore.UNKNOWN)
         }
 
@@ -190,7 +203,10 @@ class ArtistRepository(
                 FirebaseFirestoreException.Code.CANCELLED -> Error(FbError.Firestore.CANCELLED)
                 else -> Error(FbError.Firestore.UNKNOWN)
             }
-        }catch (_: Exception){
+        }catch (e: Exception){
+            if(e is CancellationException){
+                throw e
+            }
             Error(FbError.Firestore.UNKNOWN)
         }
 

@@ -2,6 +2,13 @@ package com.project.mynoize.di
 
 import android.app.Application
 import androidx.room.Room
+import com.project.mynoize.activities.main.domain.use_case.DownloadMissingSongUseCase
+import com.project.mynoize.activities.main.domain.use_case.MainUseCases
+import com.project.mynoize.activities.main.domain.use_case.RemoveLocalNonFavoriteSongsUseCase
+import com.project.mynoize.activities.main.domain.use_case.RestoreLastSessionUseCase
+import com.project.mynoize.activities.main.domain.use_case.SyncFavoriteAlbumsUseCase
+import com.project.mynoize.activities.main.domain.use_case.SyncFavoritePlaylistUseCase
+import com.project.mynoize.activities.main.domain.use_case.SyncFavoriteSongsUseCase
 import com.project.mynoize.activities.main.presentation.artist_screen.ArtistScreenViewModel
 import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistViewModel
 import com.project.mynoize.activities.main.presentation.create_artist.domain.CreateArtistValidation
@@ -91,6 +98,15 @@ val userScopeModule = module {
         scoped { get<MusicDatabase>().artistDao }
         scoped { get<MusicDatabase>().playlistDao }
 
+        //use cases
+        scoped { RestoreLastSessionUseCase(get(), get()) }
+        scoped { DownloadMissingSongUseCase(get(), get(), get()) }
+        scoped { SyncFavoritePlaylistUseCase(get(),get(), get()) }
+        scoped { SyncFavoriteSongsUseCase(get(), get()) }
+        scoped { SyncFavoriteAlbumsUseCase(get(), get(), get()) }
+        scoped { RemoveLocalNonFavoriteSongsUseCase(get(),get(),get()) }
+        scoped { MainUseCases(get(), get(), get(), get(), get()) }
+
 
         scoped { ExoPlayerManager(context = get<Application>(), get()) }
 
@@ -98,7 +114,7 @@ val userScopeModule = module {
 
         viewModel { ArtistScreenViewModel(get(), get(), get(), get()) }
 
-        viewModel { MainScreenViewModel(get(), get(), get(), get(), get(), get(),get(),get(), get()) }
+        viewModel { MainScreenViewModel(get(), get(), get(), get(), get(), get()) }
 
         viewModel { FavoriteScreenViewModel(get(), get(), get(), get()) }
 

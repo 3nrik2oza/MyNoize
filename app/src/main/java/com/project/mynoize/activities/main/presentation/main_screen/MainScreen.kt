@@ -456,7 +456,7 @@ fun MainScreen(
                 mainState.currentSong?.let {
                     BottomSheetScaffold(
                         scaffoldState = scaffoldState,
-                        sheetPeekHeight = 140.dp,
+                        sheetPeekHeight = if(showBottomBar) 140.dp else 80.dp,
                         sheetDragHandle = {},
                         modifier = Modifier.align(Alignment.BottomCenter),
                         sheetShape = RectangleShape,

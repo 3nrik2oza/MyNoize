@@ -11,6 +11,7 @@ import com.project.mynoize.core.domain.DataError
 import com.project.mynoize.core.domain.Result
 import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.util.Constants
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -111,6 +112,9 @@ class AlbumRepository(
                                 albumDao.upsertAlbum(remoteAlbum.copy(localImageUrl = path).toLocalAlbumEntity())
                             }
                         }catch (e: Exception){
+                            if(e is CancellationException){
+                                throw e
+                            }
                             e.printStackTrace()
                         }
                     }
@@ -142,7 +146,10 @@ class AlbumRepository(
 
             Result.Success(list)
 
-        }catch (_: Exception){
+        }catch (e: Exception){
+            if(e is CancellationException){
+                throw e
+            }
             Result.Error(DataError.Remote.SERVER)
         }
     }
@@ -177,7 +184,10 @@ class AlbumRepository(
 
             Result.Success(list)
 
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            if(e is CancellationException){
+                throw e
+            }
             Result.Error(DataError.Remote.SERVER)
         }
     }
@@ -197,7 +207,10 @@ class AlbumRepository(
             albumRef.set(albumWithId).await()
 
             Result.Success(albumRef.id)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            if(e is CancellationException){
+                throw e
+            }
             Result.Error(DataError.Remote.SERVER)
         }
     }

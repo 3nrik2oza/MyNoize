@@ -250,6 +250,8 @@ fun CreateSongScreen(
             CircularProgressIndicator()
         }
 
+
+        Spacer(Modifier.height(100.dp))
     }
 }
 

@@ -4,14 +4,8 @@ import android.annotation.SuppressLint
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.project.mynoize.core.data.Album
+import com.project.mynoize.activities.main.domain.use_case.MainUseCases
 import com.project.mynoize.core.data.AuthRepository
-import com.project.mynoize.core.data.Song
-import com.project.mynoize.core.data.repositories.AlbumRepository
-import com.project.mynoize.core.data.repositories.PlaylistRepository
-import com.project.mynoize.core.data.repositories.SongRepository
-import com.project.mynoize.core.data.repositories.StorageRepository
-import com.project.mynoize.core.domain.onError
 import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.managers.ExoPlayerManager
 import com.project.mynoize.network.NetworkMonitor
@@ -23,22 +17,21 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.io.File
 
 @SuppressLint("SuspiciousIndentation")
 class MainScreenViewModel (
     val playerManager: ExoPlayerManager,
-    private val playlistRepository: PlaylistRepository,
-    private val songRepository: SongRepository,
-    private val albumRepository: AlbumRepository,
-    private val storageRepository: StorageRepository,
     private val auth: AuthRepository,
     private val dataStore: UserInformation,
     private val networkMonitor: NetworkMonitor,
-    application: Application) : AndroidViewModel(application) {
+    private val mainUseCases: MainUseCases,
+    application: Application
+) : AndroidViewModel(application) {
 
 
     private val _state = MutableStateFlow(MainScreenState())
@@ -51,168 +44,17 @@ class MainScreenViewModel (
     val isConnected = networkMonitor.isConnected.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), true)
 
     init{
+        observePlayer()
 
-        viewModelScope.launch {
+        restoreLastSession()
 
-            combine(
-                playerManager.currentSong,
-                playerManager.isPlaying,
-                playerManager.currentPosition,
-                playerManager.duration
-            ){song, isPlaying, currentPosition, duration ->
-                MainScreenState(
-                    currentSong = song,
-                    isPlaying = isPlaying,
-                    currentPosition = currentPosition,
-                    duration = duration,
-                    songList = _state.value.songList
-                )
-            }.collect { newState ->
-                _state.update { newState }
-            }
+        syncFavoritePlaylists()
 
-        }
+        syncFavoriteSongs()
 
+        syncFavoriteAlbums()
 
-        viewModelScope.launch {
-            try {
-                val lastPlayedPlaylistId = dataStore.playlistId.first() ?: return@launch
-                val playlist = playlistRepository.getPlaylist(lastPlayedPlaylistId).first()
-
-                songRepository.getLocalSongsAsPrimary(ids = playlist.songs).onSuccess { songs ->
-                    _state.update {
-                        it.copy(
-                            songList = songs
-                        )
-                    }
-                    playerManager.initializePlayer(songs = songs, play = false, scope = viewModelScope, playlistId = playlist.id)
-                }
-            }catch (e: Exception){
-                print(e)
-            }
-
-
-        }
-
-        viewModelScope.launch {
-            playlistRepository.userPlaylists.collect { playlists ->
-                if(playlists.isEmpty()){
-                    return@collect
-                }
-                val localUpdate = dataStore.lastModifiedFavPlaylists.first()?.toLong()
-                val ops = playlistRepository.updateFavoritePlaylists(localUpdate)
-                ops.forEach {
-                    it()
-                }
-                delay(1000)
-                val localPlaylists = playlistRepository.localFavoritePlaylists.first()
-
-                try {
-                    localPlaylists
-                        .filter { !it.songsDownloaded }
-                        .forEach { playlist ->
-                            val songList = playlist.songs
-                            val missingSongsIds = songList.toSet() - songRepository.getExistingSongs(songList).toSet()
-                            var songs = emptyList<Song>()
-                            songRepository.getSongsByIdsFirebase(missingSongsIds.toList()).onSuccess { listOfSong ->
-                                songs = listOfSong
-                            }.onError {
-                                return@forEach
-                            }
-
-                            songs.forEach { song -> downloadMissingSong(song) }
-                            playlistRepository.setPlaylistAsDownloaded(playlist.id, true)
-                        }
-                }catch (e: Exception){
-                    print(e)
-                }
-            }
-        }
-        viewModelScope.launch {
-            try {
-                songRepository.favoriteSongsList.collect { songs ->
-                    val songsIds = songs.map { it.id }
-                    val localSongs = songRepository.getExistingSongs(songsIds)
-                    val missingSongsIds = songsIds.toSet() - localSongs.toSet()
-
-                    songs.filter { it.id in missingSongsIds }.forEach { downloadMissingSong(it)}
-                }
-            }catch (e: Exception){
-                print(e)
-            }
-        }
-
-        viewModelScope.launch {
-
-
-            try {
-                albumRepository.remoteFavoriteAlbums.collect { albums ->
-                    if(albums.isEmpty()){
-                        return@collect
-                    }
-                    val localUpdate = dataStore.lastModifiedFavAlbums.first()?.toLong()
-                    val ops = albumRepository.updateFavoriteAlbums(localUpdate)
-                    ops.forEach {
-                        it()
-                    }
-
-                    delay(2000)
-                    val localAlbums = albumRepository.localFavoriteAlbums.first()
-
-                    localAlbums.filter { !it.songsDownloaded }.forEach { album ->
-                        var albumSongs = emptyList<Song>()
-                        songRepository.getSongByAlbumId(album.id, album.songsDownloaded).onSuccess {
-                            albumSongs = it
-                        }
-                        val songsInAlbumIds = albumSongs.map { it.id }
-
-                        val missingSongsIds = songsInAlbumIds.toSet() - songRepository.getExistingSongs(songsInAlbumIds).toSet()
-
-                        albumSongs.filter { it.id in missingSongsIds }.forEach { downloadMissingSong(it, album.localImageUrl) }
-                        albumRepository.updateAlbumDownloadedField(album.id, true)
-                    }
-                }
-            }catch (e: Exception){
-                print(e)
-            }
-        }
-
-        viewModelScope.launch {
-            delay(5_000)
-            //get all local songs set
-            val localSongs = songRepository.getAllLocalSongs()
-            val localSongsMap = localSongs.associateBy { it.id }
-
-            // favorite songs
-            val favoriteSongs = songRepository.favoriteSongsList.first().map { it.id }.toSet()
-
-            // favorite playlists songs
-            val favoritePlaylists = playlistRepository.localFavoritePlaylists.first().filter { it.songsDownloaded }
-            val songsFromPlaylist = favoritePlaylists.flatMap { it.songs }.toSet()
-
-            // remove all that are in favorite albums
-            val favoriteAlbums = albumRepository.localFavoriteAlbums.first().filter { it.songsDownloaded }.map { it.id }
-            val songsFromAlbums = songRepository.getSongsIdsInLocalAlbums(favoriteAlbums).toSet()
-
-            // remaining songs remove from local storage
-            val songsToRemove = (localSongs.map { it.id } - favoriteSongs - songsFromPlaylist - songsFromAlbums).toList()
-            songsToRemove.forEach { songId ->
-                val song = localSongsMap[songId] ?: return@forEach
-                try {
-                    val songFile = File(song.localSongUrl)
-                    songFile.delete()
-                    songRepository.deleteLocalSong(songId)
-                }catch (e: Exception){
-                    print(e)
-                }
-            }
-
-
-        }
-
-        viewModelScope.launch {
-            savePosition()
-        }
+        removeLocalNonFavoriteSongs()
     }
 
     fun onEventUi(event: MainActivityUiEvent)
@@ -238,29 +80,81 @@ class MainScreenViewModel (
                 auth.signOut()
                 viewModelScope.launch {
                     dataStore.clearAll()
-                }
-                viewModelScope.launch {
+
                     delay(1000)
                     _uiEvent.emit(MainActivityUiEvent.NavigateToSignIn)
                 }
             }
-            is MainScreenEvent.OnStartListening -> {
+        }
+    }
+
+
+    private fun observePlayer() {
+        combine(
+            playerManager.currentSong,
+            playerManager.isPlaying,
+            playerManager.currentPosition,
+            playerManager.duration
+        ) { song, playing, position, duration ->
+            PlayerState(song, playing, position, duration)
+        }
+            .onEach { playerState ->
+                _state.update {
+                    it.copy(
+                        currentSong = playerState.song,
+                        isPlaying = playerState.isPlaying,
+                        currentPosition = playerState.position,
+                        duration = playerState.duration
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun restoreLastSession(){
+        viewModelScope.launch {
+            val playlistId = dataStore.playlistId.first() ?: return@launch
+            mainUseCases.restoreLastSessionUseCase.invoke(playlistId).onSuccess { songs ->
+                _state.update {
+                    it.copy(songList = songs)
+                }
+
+                playerManager.initializePlayer(songs = songs, play = false,
+                    scope = viewModelScope, playlistId = playlistId)
             }
         }
     }
 
-    suspend fun savePosition(){
-        while (true){
-            delay(1000)
+    private fun syncFavoritePlaylists(){
+        viewModelScope.launch {
+            mainUseCases.syncFavoritePlaylistUseCase(null)
         }
-
     }
+
+    private fun syncFavoriteSongs(){
+        viewModelScope.launch {
+            mainUseCases.syncFavoriteSongsUseCase()
+        }
+    }
+
+    private fun syncFavoriteAlbums(){
+        viewModelScope.launch {
+            mainUseCases.syncFavoriteAlbumsUseCase(null)
+        }
+    }
+
+    private fun removeLocalNonFavoriteSongs(){
+        viewModelScope.launch {
+            mainUseCases.removeLocalNonFavoriteSongsUseCase()
+        }
+    }
+
+
+
 
     fun onSongClick(position: Int){
         playerManager.playSong(position)
         onEventUi(MainActivityUiEvent.ShowNotification)
-
-
     }
 
     fun playPauseToggle(){
@@ -269,50 +163,13 @@ class MainScreenViewModel (
     }
 
     fun nextSong(){
-
         playerManager.nextSong()
-
-        viewModelScope.launch {
-         //   dataStore.updateMediaId(currentSong.value!!.mediaId)
-        }
-
         onEventUi(MainActivityUiEvent.ShowNotification)
     }
 
     fun prevSong(){
         playerManager.prevSong()
-
-        viewModelScope.launch {
-         //   dataStore.updateMediaId(currentSong.value!!.mediaId)
-        }
         onEventUi(MainActivityUiEvent.ShowNotification)
     }
-
-    private suspend fun downloadMissingSong(song: Song){
-        val localAlbum: MutableList<Album> = albumRepository.doesAlbumExist(song.albumId).toMutableList()
-        if(localAlbum.isEmpty()){
-            var album = albumRepository.getAlbum(song.artistId+"/"+song.albumId).first()
-            storageRepository.downloadToLocalMemory(album.image, "album_images").onSuccess {
-                album = album.copy(localImageUrl = it)
-            }.onError {
-                return@downloadMissingSong
-            }
-            albumRepository.saveAlbumLocally(album)
-
-            localAlbum.add(album)
-        }
-        downloadMissingSong(song, localAlbum.first().localImageUrl)
-    }
-
-    private suspend fun downloadMissingSong(song: Song, imageUrl: String){
-        var localSongUrl = ""
-        storageRepository.downloadToLocalMemory(song.songUrl, "songs").onSuccess {
-            localSongUrl = it
-        }
-        songRepository.saveSongLocally(
-            song.copy(localSongUrl = localSongUrl, localImageUrl = imageUrl)
-        )
-    }
-
 
 }

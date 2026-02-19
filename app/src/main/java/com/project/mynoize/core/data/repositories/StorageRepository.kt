@@ -11,6 +11,7 @@ import kotlinx.coroutines.tasks.await
 import java.io.File
 import androidx.core.net.toUri
 import com.project.mynoize.core.domain.UploadToStorageResult
+import kotlinx.coroutines.CancellationException
 
 class StorageRepository(
     private val context: Context,
@@ -63,7 +64,10 @@ class StorageRepository(
             fileRef.getFile(localFile).await()
 
             Result.Success(localFile.absolutePath)
-        }catch (_:Exception){
+        }catch (e:Exception){
+            if(e is CancellationException){
+                throw e
+            }
             Result.Error(FbError.Storage.UNKNOWN)
         }
     }

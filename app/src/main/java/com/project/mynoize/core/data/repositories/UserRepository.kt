@@ -11,6 +11,7 @@ import com.project.mynoize.core.domain.FbError
 import com.project.mynoize.core.domain.Result
 import com.project.mynoize.core.domain.Result.Error
 import com.project.mynoize.util.Constants
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -73,7 +74,10 @@ class UserRepository(
                 FirebaseFirestoreException.Code.CANCELLED -> Error(FbError.Firestore.CANCELLED)
                 else -> Error(FbError.Firestore.UNKNOWN)
             }
-        }catch (_ : Exception){
+        }catch (e : Exception){
+            if(e is CancellationException){
+                throw e
+            }
             Error(FbError.Firestore.UNKNOWN)
         }
 
