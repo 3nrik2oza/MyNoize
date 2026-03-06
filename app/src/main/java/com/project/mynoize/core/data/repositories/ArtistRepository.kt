@@ -5,10 +5,13 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.snapshots
 import com.project.mynoize.core.data.Artist
+import com.project.mynoize.core.data.remote_data_source.AlbumRemoteDataSource
+import com.project.mynoize.core.data.remote_data_source.ArtistRemoteDataSource
 import com.project.mynoize.core.domain.EmptyResult
 import com.project.mynoize.core.domain.FbError
 import com.project.mynoize.core.domain.Result
 import com.project.mynoize.core.domain.Result.*
+import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.util.Constants
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -19,21 +22,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 
 class ArtistRepository(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val remoteSource: ArtistRemoteDataSource
 ) {
     private val db = FirebaseFirestore.getInstance()
-
-
-    /*
-    var artists: Flow<List<Artist>> = db.collection(Constants.ARTIST_COLLECTION)
-        .snapshots()
-        .map { snapshots ->
-            snapshots.documents.map { doc ->
-                doc.toObject(Artist::class.java)!!.copy(
-                    id = doc.id
-                )
-            }
-        }*/ // remove this and use loaded artists
 
     var loadedArtists: MutableSet<Artist> = mutableSetOf()
 
@@ -43,19 +35,23 @@ class ArtistRepository(
 
         if(favoritesIds.isEmpty()){
             flowOf(emptyList())
-        }else{
+        }else{/*
             db.collection(Constants.ARTIST_COLLECTION)
                 .whereIn(FieldPath.documentId(), favoritesIds)
                 .snapshots()
                 .map { snapshot ->
                 snapshot.toObjects(Artist::class.java)
-                }
+                }*/
+
+            remoteSource.favoriteArtists(favoritesIds)
         }
     }
 
 
     suspend fun getArtists(): Result<List<Artist>, FbError.Firestore> {
-        return try {
+        return remoteSource.getArtists()
+
+        /*return try {
             val snapshot = db.collection(Constants.ARTIST_COLLECTION)
                 .limit(25)
                 .get()
@@ -82,8 +78,7 @@ class ArtistRepository(
                 throw e
             }
             Error(FbError.Firestore.UNKNOWN)
-        }
-
+        }*/
     }
 
     suspend fun getArtist(artistId: String): Result<Artist, FbError.Firestore> {
@@ -91,7 +86,13 @@ class ArtistRepository(
 
         if(loadedArtist != null) return Success(loadedArtist)
 
-        return try {
+        val getArtistResult = remoteSource.getArtist(artistId)
+        getArtistResult.onSuccess {
+            loadedArtists.add(it)
+        }
+        return getArtistResult
+
+        /*return try {
             val snapshot = db.collection(Constants.ARTIST_COLLECTION).document(artistId)
                 .get()
                 .await()
@@ -117,7 +118,7 @@ class ArtistRepository(
                 throw e
             }
             Error(FbError.Firestore.UNKNOWN)
-        }
+        }*/
 
     }
 

@@ -2,6 +2,7 @@ package com.project.mynoize.di
 
 import android.app.Application
 import androidx.room.Room
+import com.google.firebase.firestore.FirebaseFirestore
 import com.project.mynoize.activities.main.domain.use_case.DownloadMissingSongUseCase
 import com.project.mynoize.activities.main.domain.use_case.MainUseCases
 import com.project.mynoize.activities.main.domain.use_case.RemoveLocalNonFavoriteSongsUseCase
@@ -32,6 +33,10 @@ import com.project.mynoize.activities.signin.domain.SignInValidation
 import com.project.mynoize.activities.signin.domain.SignUpValidation
 import com.project.mynoize.core.data.AuthRepository
 import com.project.mynoize.core.data.database.MusicDatabase
+import com.project.mynoize.core.data.remote_data_source.AlbumRemoteDataSource
+import com.project.mynoize.core.data.remote_data_source.ArtistRemoteDataSource
+import com.project.mynoize.core.data.remote_data_source.PlaylistRemoteDataSource
+import com.project.mynoize.core.data.remote_data_source.SongRemoteDataSource
 import com.project.mynoize.core.data.repositories.PlaylistRepository
 import com.project.mynoize.core.data.repositories.UserRepository
 import com.project.mynoize.managers.ExoPlayerManager
@@ -46,11 +51,6 @@ val appModule = module{
     single{ AuthRepository() }
 
 
-   // single{ ArtistRepository(get()) }
-    //single{ StorageRepository() }
-   // single { UserRepository(get()) }
-   // single { PlaylistRepository(get(), get()) }
-    //single { AlbumRepository(get()) }
 
     single { UserInformation(context = get<Application>()) }
 
@@ -68,10 +68,10 @@ val userScopeModule = module {
 
         scoped { AuthRepository() }
         scoped { UserRepository(get()) }
-        scoped { ArtistRepository(get()) }
-        scoped { SongRepository(get(), get()) }
-        scoped { PlaylistRepository(get(), get(), get(), get()) }
-        scoped { AlbumRepository(get(),get(), get()) }
+        scoped { ArtistRepository(get(), get()) }
+        scoped { SongRepository(get(), get(), get()) }
+        scoped { PlaylistRepository(get(), get(), get(), get(), get()) }
+        scoped { AlbumRepository(get(),get(), get(), get()) }
         scoped { StorageRepository(get()) }
 
         scoped { CreateArtistValidation() }
@@ -93,10 +93,19 @@ val userScopeModule = module {
                 .build()
         }
 
+        scoped { FirebaseFirestore.getInstance() }
+
+        // DAO
         scoped { get<MusicDatabase>().songDao }
         scoped { get<MusicDatabase>().albumDao }
         scoped { get<MusicDatabase>().artistDao }
         scoped { get<MusicDatabase>().playlistDao }
+
+        // Remote sources
+        scoped { PlaylistRemoteDataSource(get()) }
+        scoped { SongRemoteDataSource(get()) }
+        scoped { AlbumRemoteDataSource(get()) }
+        scoped { ArtistRemoteDataSource(get()) }
 
         //use cases
         scoped { RestoreLastSessionUseCase(get(), get()) }

@@ -3,7 +3,6 @@ package com.project.mynoize.activities.main.domain.use_case
 import com.project.mynoize.core.data.Song
 import com.project.mynoize.core.data.repositories.PlaylistRepository
 import com.project.mynoize.core.data.repositories.SongRepository
-import com.project.mynoize.core.domain.onError
 import com.project.mynoize.core.domain.onSuccess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -32,12 +31,16 @@ class SyncFavoritePlaylistUseCase(
                 localPlaylists
                     .filter { !it.songsDownloaded }
                     .forEach { playlist ->
-                        val songList = playlist.songs
+                        /* val songList = playlist.songs
                         val missingSongsIds = songList.toSet() - songRepository.getExistingSongs(songList).toSet()
                         var songs = emptyList<Song>()
                         songRepository.getSongsByIdsFirebase(missingSongsIds.toList()).onSuccess { listOfSong ->
                             songs = listOfSong
-                        }.onError { return@onError }
+                        }.onError { return@onError }*/
+                        var songs = emptyList<Song>()
+                        songRepository.getMissingSongs(playlist.songs).onSuccess {
+                            songs = it
+                        }
 
                         songs.forEach { downloadMissingSong.invoke(it)  }
                         playlistRepository.setPlaylistAsDownloaded(playlist.id, true)

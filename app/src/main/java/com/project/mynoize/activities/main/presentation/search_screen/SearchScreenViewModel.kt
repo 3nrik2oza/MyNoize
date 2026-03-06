@@ -75,7 +75,7 @@ class SearchScreenViewModel(
             is SearchScreenEvent.OnPlaylistSelected ->{
                 _state.update { it.copy(selectPlaylistSheet = false) }
                 viewModelScope.launch {
-                    playlistsRepository.updateSongsInPlaylist(songs = event.playlist.songs + state.value.selectedSong!!.id, id = event.playlist.id)
+                    playlistsRepository.updateSongsInRemotePlaylist(songs = event.playlist.songs + state.value.selectedSong!!.id, id = event.playlist.id)
                 }
 
             }
@@ -157,7 +157,7 @@ class SearchScreenViewModel(
             delay(delay)
             val favPlaylists = userRepo.user.first().favoritePlaylists
 
-            playlistsRepository.getPlaylistsContaining(state.value.searchQuery.lowercase()).onSuccess { playlists ->
+            playlistsRepository.getRemotePlaylistsContaining(state.value.searchQuery.lowercase()).onSuccess { playlists ->
                 _state.update { it.copy(searchItems = playlists.map { playlist -> SearchItem.PlaylistItem(playlist.copy(favorite = favPlaylists.contains(playlist.id))) }, isLoading = false, isInvisibleLoading = false) }
             }
         }

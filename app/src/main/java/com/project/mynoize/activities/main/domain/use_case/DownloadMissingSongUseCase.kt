@@ -43,7 +43,7 @@ class DownloadMissingSongUseCase(
     private suspend fun getImageUrl(albumId: String, artistId: String) : Result<String, SyncError>{
         val localAlbum: MutableList<Album> = albumRepository.doesAlbumExist(albumId).toMutableList()
         if(localAlbum.isEmpty()){
-            var album = albumRepository.getAlbum(artistId+"/"+albumId).first()
+            var album = albumRepository.getAlbum(artistId,albumId).first()
             storageRepository.downloadToLocalMemory(album.image, "album_images").onSuccess {
                 album = album.copy(localImageUrl = it)
             }

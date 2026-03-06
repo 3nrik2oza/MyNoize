@@ -95,7 +95,7 @@ class PlaylistScreenViewModel(
             is PlaylistScreenEvent.OnPlaylistSelected ->{
                 _state.update { it.copy(selectPlaylistSheet = false) }
                 viewModelScope.launch {
-                    playlistRepository.updateSongsInPlaylist(songs = event.playlist.songs + state.value.selectedSong.id, id = event.playlist.id)
+                    playlistRepository.updateSongsInRemotePlaylist(songs = event.playlist.songs + state.value.selectedSong.id, id = event.playlist.id)
                 }
             }
             else ->{
@@ -105,8 +105,11 @@ class PlaylistScreenViewModel(
     }
 
     private fun deletePlaylist(){
-        storageRepository.removeFromStorage(state.value.playlist.imagePath)
-        playlistRepository.deletePlaylist(playlistId = state.value.playlist.id)
+        viewModelScope.launch {
+            storageRepository.removeFromStorage(state.value.playlist.imagePath)
+            playlistRepository.deletePlaylist(playlistId = state.value.playlist.id)
+        }
+
     }
 
     private fun removeSongFromPlaylist(){
@@ -122,7 +125,7 @@ class PlaylistScreenViewModel(
         }
 
         viewModelScope.launch {
-            playlistRepository.updateSongsInPlaylist(songs, currentState.playlist.id).onSuccess {
+            playlistRepository.updateSongsInRemotePlaylist(songs, currentState.playlist.id).onSuccess {
                 _state.update { it.copy(isSheetOpen = false) }
             }
         }
@@ -159,7 +162,8 @@ class PlaylistScreenViewModel(
             return
         }
         viewModelScope.launch {
-            albumRepository.getAlbum(playlistId).collect { album ->
+            val path = playlistId.split("/")
+            albumRepository.getAlbum(path[0], path[1]).collect { album ->
                 _state.update { state ->
                     state.copy(playlist = album.toPlaylist(), isPlaylist = false)
                 }

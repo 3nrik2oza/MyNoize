@@ -21,16 +21,16 @@ interface SongDao {
     suspend fun getExistingSongIds(songIds: List<String>): List<String>
 
     @Query("SELECT * FROM LocalSongsEntity WHERE id IN (:songIds)")
-    fun getSongsByIds(songIds: List<String>): Flow<List<LocalSongsEntity>>
+    suspend fun getSongsByIds(songIds: List<String>): List<LocalSongsEntity>
 
     @Query("SELECT * FROM LocalSongsEntity WHERE albumId = :albumId")
-    fun getSongsByAlbumId(albumId: String): Flow<List<LocalSongsEntity>>
+    suspend fun getSongsByAlbumId(albumId: String): List<LocalSongsEntity>
 
     @Query("SELECT id FROM LocalSongsEntity WHERE albumId IN (:albumIds)")
     suspend fun getSongsFromAlbumLists(albumIds: List<String>): List<String>
 
     @Query("SELECT * FROM LocalSongsEntity WHERE artistId = :artistId")
-    fun getSongsByArtistId(artistId: String): Flow<List<LocalSongsEntity>>
+    suspend fun getSongsByArtistId(artistId: String): List<LocalSongsEntity>
 
     @Query("SELECT * from LocalSongsEntity")
     suspend fun getAllSong(): List<LocalSongsEntity>

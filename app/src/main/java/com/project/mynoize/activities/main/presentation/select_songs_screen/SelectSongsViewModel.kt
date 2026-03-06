@@ -76,7 +76,7 @@ class SelectSongsViewModel(
     private fun addSongsToPlaylist(){
         viewModelScope.launch {
             val playlistSongs = _state.value.playlist.songs + _state.value.selectedSongs.map { it.id }
-            playlistRepository.updateSongsInPlaylist(songs = playlistSongs, id = _state.value.playlist.id).onError { error ->
+            playlistRepository.updateSongsInRemotePlaylist(songs = playlistSongs, id = _state.value.playlist.id).onError { error ->
                 _alertDialogState.update {
                     it.copy(
                         show = true,
