@@ -1,5 +1,7 @@
 package com.project.mynoize.core.data
 
+import com.project.mynoize.core.domain.entities.Song
+
 sealed class SearchItem(
     open val id: String = "",
     open val title: String,

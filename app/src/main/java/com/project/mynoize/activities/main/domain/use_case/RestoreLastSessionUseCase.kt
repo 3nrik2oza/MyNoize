@@ -1,10 +1,10 @@
 package com.project.mynoize.activities.main.domain.use_case
 
 import com.project.mynoize.activities.main.domain.RestoreSessionError
-import com.project.mynoize.core.data.Song
 import com.project.mynoize.core.data.repositories.PlaylistRepository
 import com.project.mynoize.core.data.repositories.SongRepository
 import com.project.mynoize.core.domain.Result
+import com.project.mynoize.core.domain.entities.Song
 import com.project.mynoize.core.domain.onSuccess
 import kotlinx.coroutines.flow.firstOrNull
 
@@ -18,14 +18,14 @@ class RestoreLastSessionUseCase(
             val playlist = playlistRepository.getPlaylist(playlistId)
                 .firstOrNull() ?: return Result.Error(RestoreSessionError.PlaylistNotFound)
 
-            var songs: List<Song>? = null
+            var remoteSongs: List<Song>? = null
             songRepository.getLocalSongsAsPrimary(ids = playlist.songs)
-                .onSuccess { songs = it }
+                .onSuccess { remoteSongs = it }
 
-            if(songs == null){
+            if(remoteSongs == null){
                 return Result.Error(RestoreSessionError.SongsNotFound)
             }
-            return Result.Success(songs)
+            return Result.Success(remoteSongs)
         }catch (_: Exception){
             return Result.Error(RestoreSessionError.Unknown)
         }

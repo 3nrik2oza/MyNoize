@@ -3,11 +3,13 @@ package com.project.mynoize.core.data.remote_data_source
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.snapshots
-import com.project.mynoize.core.data.Song
+import com.project.mynoize.core.data.firestore.entities.RemoteSong
 import com.project.mynoize.core.data.firestore.safeFirestoreCall
+import com.project.mynoize.core.data.mappers.toSong
 import com.project.mynoize.core.domain.EmptyResult
 import com.project.mynoize.core.domain.FbError
 import com.project.mynoize.core.domain.Result
+import com.project.mynoize.core.domain.entities.Song
 import com.project.mynoize.util.Constants
 import com.project.mynoize.util.toSongs
 import kotlinx.coroutines.flow.Flow
@@ -26,7 +28,9 @@ class SongRemoteDataSource(
             .snapshots()
             .map { snapshot ->
                 snapshot.toSongs()
+                    .map { it.toSong() }
             }
+
     }
 
     suspend fun getSongsByArtist(artistId: String): Result<List<Song>, FbError.Firestore>{
@@ -36,6 +40,7 @@ class SongRemoteDataSource(
                 .get()
                 .await()
                 .toSongs()
+                .map { it.toSong() }
         }
     }
 
@@ -46,6 +51,7 @@ class SongRemoteDataSource(
                 .get()
                 .await()
                 .toSongs()
+                .map { it.toSong() }
         }
     }
 
@@ -57,6 +63,7 @@ class SongRemoteDataSource(
                 .get()
                 .await()
                 .toSongs()
+                .map { it.toSong() }
         }
     }
 
@@ -67,6 +74,7 @@ class SongRemoteDataSource(
                 .get()
                 .await()
                 .toSongs()
+                .map { it.toSong() }
         }
     }
 
@@ -79,13 +87,14 @@ class SongRemoteDataSource(
                 .get()
                 .await()
                 .toSongs()
+                .map { it.toSong() }
         }
     }
 
-    suspend fun addSong(song: Song): EmptyResult<FbError.Firestore>{
+    suspend fun addSong(remoteSong: RemoteSong): EmptyResult<FbError.Firestore>{
         return safeFirestoreCall {
             firestore.collection(songCollection)
-                .add(song.copy(titleLower = song.title.lowercase()))
+                .add(remoteSong.copy(titleLower = remoteSong.title.lowercase()))
                 .await()
         }
 

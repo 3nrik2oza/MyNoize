@@ -115,7 +115,7 @@ fun SelectSongsScreen(
         Spacer(Modifier.height(40.dp))
 
         LazyColumn {
-            itemsIndexed(items = state.songs){index, song ->
+            itemsIndexed(items = state.songs){ index, song ->
                 SongItem(
                     song = song,
                     index = index,

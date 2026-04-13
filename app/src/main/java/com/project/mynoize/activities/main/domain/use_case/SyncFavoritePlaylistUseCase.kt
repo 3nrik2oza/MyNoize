@@ -1,8 +1,9 @@
 package com.project.mynoize.activities.main.domain.use_case
 
-import com.project.mynoize.core.data.Song
+
 import com.project.mynoize.core.data.repositories.PlaylistRepository
 import com.project.mynoize.core.data.repositories.SongRepository
+import com.project.mynoize.core.domain.entities.Song
 import com.project.mynoize.core.domain.onSuccess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -37,12 +38,12 @@ class SyncFavoritePlaylistUseCase(
                         songRepository.getSongsByIdsFirebase(missingSongsIds.toList()).onSuccess { listOfSong ->
                             songs = listOfSong
                         }.onError { return@onError }*/
-                        var songs = emptyList<Song>()
+                        var missingSongs = emptyList<Song>()
                         songRepository.getMissingSongs(playlist.songs).onSuccess {
-                            songs = it
+                            missingSongs = it
                         }
 
-                        songs.forEach { downloadMissingSong.invoke(it)  }
+                        missingSongs.forEach { downloadMissingSong.invoke(it)  }
                         playlistRepository.setPlaylistAsDownloaded(playlist.id, true)
                     }
             }catch (e: Exception){

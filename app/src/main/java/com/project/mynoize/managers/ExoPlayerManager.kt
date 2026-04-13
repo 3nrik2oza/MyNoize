@@ -8,8 +8,8 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
-import com.project.mynoize.core.data.Song
 import com.project.mynoize.core.data.toMediaItem
+import com.project.mynoize.core.domain.entities.Song
 import com.project.mynoize.util.UserInformation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

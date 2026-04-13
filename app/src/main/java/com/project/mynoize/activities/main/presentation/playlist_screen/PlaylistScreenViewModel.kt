@@ -3,13 +3,13 @@ package com.project.mynoize.activities.main.presentation.playlist_screen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.mynoize.core.data.AuthRepository
-import com.project.mynoize.core.data.Song
 import com.project.mynoize.core.data.repositories.AlbumRepository
 import com.project.mynoize.core.data.repositories.ArtistRepository
 import com.project.mynoize.core.data.repositories.PlaylistRepository
 import com.project.mynoize.core.data.repositories.SongRepository
 import com.project.mynoize.core.data.repositories.StorageRepository
 import com.project.mynoize.core.data.repositories.UserRepository
+import com.project.mynoize.core.domain.entities.Song
 import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.core.presentation.AlertDialogState
 import com.project.mynoize.managers.ExoPlayerManager
@@ -136,10 +136,10 @@ class PlaylistScreenViewModel(
         _state.update { it.copy(isSheetOpen = true, sheetType = BottomSheetType.PLAYLIST) }
     }
 
-    private fun onMoreSongClicked(song: Song){
+    private fun onMoreSongClicked(remoteSong: Song){
         viewModelScope.launch {
-            artistRepository.getArtist(song.artistId).onSuccess { artist ->
-                _state.update { it.copy(artist = artist, isSheetOpen = true, selectedSong = song) }
+            artistRepository.getArtist(remoteSong.artistId).onSuccess { artist ->
+                _state.update { it.copy(artist = artist, isSheetOpen = true, selectedSong = remoteSong) }
             }
         }
     }
@@ -154,7 +154,7 @@ class PlaylistScreenViewModel(
                     }
 
                     songRepository.getLocalSongsAsPrimary(ids = playlist.songs).onSuccess { songs ->
-                        _state.update { state -> state.copy(songs = songs.map { it.copy(favorite = state.favoriteList.songs.contains(it.id)) }) }
+                        _state.update { state -> state.copy(songs = songs.map { it  .copy(favorite = state.favoriteList.songs.contains(it.id)) }) }
                     }
                 }
 

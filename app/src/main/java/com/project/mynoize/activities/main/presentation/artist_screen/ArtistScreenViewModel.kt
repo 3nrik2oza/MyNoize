@@ -37,7 +37,7 @@ class ArtistScreenViewModel(
             }
             is ArtistScreenEvent.OnSongFavoriteToggle -> {
                 viewModelScope.launch {
-                    userRepository.updateFavoriteSongs(event.song.id, event.song.favorite)
+                    userRepository.updateFavoriteSongs(event.remoteSong.id, event.remoteSong.favorite)
                 }
             }
             is ArtistScreenEvent.OnSongClick -> {

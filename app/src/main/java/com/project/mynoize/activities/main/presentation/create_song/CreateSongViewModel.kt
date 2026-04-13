@@ -16,8 +16,9 @@ import com.project.mynoize.activities.main.state.ListOfState
 import com.project.mynoize.core.data.Album
 import com.project.mynoize.core.data.Artist
 import com.project.mynoize.core.data.AuthRepository
-import com.project.mynoize.core.data.Song
+
 import com.project.mynoize.core.domain.InputError
+import com.project.mynoize.core.domain.entities.Song
 import com.project.mynoize.core.domain.onError
 import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.core.presentation.UiText
@@ -220,7 +221,7 @@ class CreateSongViewModel(
             alertDialogState.update { it.copy(loading = false) }
             return
         }
-        var song = Song()
+        var remoteSong = Song()
         val fileName = "songs/${createSongState.value.songName}"
         var path = ""
         viewModelScope.launch {
@@ -232,16 +233,16 @@ class CreateSongViewModel(
                     it.copy(show = true, loading = false, message = error.toErrorMessage())
                 }
             }.onSuccess {
-                song = createSong(it.downloadLink)
+                remoteSong = createSong(it.downloadLink)
                 path = it.path
             }
-            addSong(song, path)
+            addSong(remoteSong, path)
 
         }
     }
 
-    suspend fun addSong(song: Song, fileName: String){
-        songRepository.addSongToFirebase(song)
+    suspend fun addSong(remoteSong: Song, fileName: String){
+        songRepository.addSongToFirebase(remoteSong)
             .onSuccess {
                 alertDialogState.update {
                     it.copy(

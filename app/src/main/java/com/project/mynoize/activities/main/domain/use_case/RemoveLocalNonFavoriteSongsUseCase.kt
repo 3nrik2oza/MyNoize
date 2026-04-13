@@ -1,9 +1,10 @@
 package com.project.mynoize.activities.main.domain.use_case
 
-import com.project.mynoize.core.data.Song
+
 import com.project.mynoize.core.data.repositories.AlbumRepository
 import com.project.mynoize.core.data.repositories.PlaylistRepository
 import com.project.mynoize.core.data.repositories.SongRepository
+import com.project.mynoize.core.domain.entities.Song
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import java.io.File
@@ -37,11 +38,11 @@ class RemoveLocalNonFavoriteSongsUseCase(
         }
     }
 
-    private suspend fun deleteLocalSong(song: Song){
+    private suspend fun deleteLocalSong(remoteSong: Song){
         try {
-            val songFile = File(song.localSongUrl)
+            val songFile = File(remoteSong.localSongUrl)
             songFile.delete()
-            songRepository.deleteLocalSong(song.id)
+            songRepository.deleteLocalSong(remoteSong.id)
         }catch (e: Exception){
             print(e)
         }

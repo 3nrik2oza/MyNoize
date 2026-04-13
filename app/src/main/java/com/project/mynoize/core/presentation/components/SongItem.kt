@@ -36,7 +36,7 @@ import com.project.mynoize.activities.main.presentation.playlist_screen.Playlist
 import com.project.mynoize.activities.main.presentation.select_songs_screen.SelectSongsEvent
 import com.project.mynoize.activities.main.ui.theme.DarkGray
 import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
-import com.project.mynoize.core.data.Song
+import com.project.mynoize.core.domain.entities.Song
 
 @Composable
 fun SongItem(

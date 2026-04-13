@@ -2,7 +2,7 @@ package com.project.mynoize.activities.main.presentation.main_screen
 
 
 import androidx.media3.common.MediaMetadata
-import com.project.mynoize.core.data.Song
+import com.project.mynoize.core.domain.entities.Song
 
 data class MainScreenState(
     val songList: List<Song> = emptyList(),

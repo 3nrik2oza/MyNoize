@@ -24,7 +24,7 @@ import com.project.mynoize.activities.main.ui.theme.LatoFontFamily
 import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
 import com.project.mynoize.activities.main.ui.theme.Red
 import com.project.mynoize.core.data.Artist
-import com.project.mynoize.core.data.Song
+import com.project.mynoize.core.domain.entities.Song
 
 
 @Composable

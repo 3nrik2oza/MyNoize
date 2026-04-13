@@ -1,7 +1,7 @@
 package com.project.mynoize.core.data.repositories
 
-import com.project.mynoize.core.data.Song
 import com.project.mynoize.core.data.database.SongDao
+import com.project.mynoize.core.data.mappers.toFirebaseSong
 import com.project.mynoize.core.data.mappers.toLocalSongEntity
 import com.project.mynoize.core.data.mappers.toSong
 import com.project.mynoize.core.data.remote_data_source.SongRemoteDataSource
@@ -10,6 +10,7 @@ import com.project.mynoize.core.domain.FbError
 import com.project.mynoize.core.domain.Result
 import com.project.mynoize.core.domain.Result.Error
 import com.project.mynoize.core.domain.Result.Success
+import com.project.mynoize.core.domain.entities.Song
 import com.project.mynoize.core.domain.onSuccess
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -51,8 +52,8 @@ class SongRepository(
         return remoteSource.getSongsByIds(missingSongs.toList())
     }
 
-    suspend fun saveSongLocally(song: Song){
-        localSongsDao.upsertSong(song.toLocalSongEntity())
+    suspend fun saveSongLocally(remoteSong: Song){
+        localSongsDao.upsertSong(remoteSong.toLocalSongEntity())
     }
 
     suspend fun getSongByArtist(artistId: String, connected: Boolean): Result<List<Song>, FbError.Firestore>{
@@ -73,13 +74,13 @@ class SongRepository(
             return Success(localSongs.sortedBy { orderMap[it.id] })
         }
 
-        var remoteSongs = emptyList<Song>()
+        var remoteRemoteSongs = emptyList<Song>()
 
         remoteSource.getSongsByIds(missing.toList()).onSuccess {
-            remoteSongs = it
+            remoteRemoteSongs = it
         }
-        if(remoteSongs.isNotEmpty()){
-            return Success((localSongs + remoteSongs).sortedBy { orderMap[it.id] })
+        if(remoteRemoteSongs.isNotEmpty()){
+            return Success((localSongs + remoteRemoteSongs).sortedBy { orderMap[it.id] })
         }
 
         return Error(FbError.Firestore.UNKNOWN)
@@ -120,8 +121,8 @@ class SongRepository(
     }
 
     suspend fun addSongToFirebase(
-        song: Song
+        remoteSong: Song
     ): EmptyResult<FbError.Firestore>{
-        return remoteSource.addSong(song)
+        return remoteSource.addSong(remoteSong.toFirebaseSong())
     }
 }

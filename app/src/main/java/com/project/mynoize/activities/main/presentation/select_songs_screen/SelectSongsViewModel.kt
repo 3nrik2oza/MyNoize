@@ -66,7 +66,7 @@ class SelectSongsViewModel(
                 val idsSet = _state.value.playlist.songs.toSet()
                 _state.update { state ->
                     state.copy(
-                        songs = songs.filterNot { it.id in idsSet }.map { it.copy(favorite = state.selectedSongs.contains(it)) }
+                        songs = songs.filterNot { it.id in idsSet }.map { it.copy(favorite = state.selectedRemoteSongs.contains(it)) }
                     )
                 }
             }
@@ -75,7 +75,7 @@ class SelectSongsViewModel(
 
     private fun addSongsToPlaylist(){
         viewModelScope.launch {
-            val playlistSongs = _state.value.playlist.songs + _state.value.selectedSongs.map { it.id }
+            val playlistSongs = _state.value.playlist.songs + _state.value.selectedRemoteSongs.map { it.id }
             playlistRepository.updateSongsInRemotePlaylist(songs = playlistSongs, id = _state.value.playlist.id).onError { error ->
                 _alertDialogState.update {
                     it.copy(
@@ -108,14 +108,14 @@ class SelectSongsViewModel(
         if(add){
             _state.update {
                 it.copy(
-                    selectedSongs = it.selectedSongs + it.songs[index],
+                    selectedRemoteSongs = it.selectedRemoteSongs + it.songs[index],
                     songs = songsUpdated
                 )
             }
         }else{
             _state.update {
                 it.copy(
-                    selectedSongs = it.selectedSongs - it.songs[index],
+                    selectedRemoteSongs = it.selectedRemoteSongs - it.songs[index],
                     songs = songsUpdated
                 )
             }

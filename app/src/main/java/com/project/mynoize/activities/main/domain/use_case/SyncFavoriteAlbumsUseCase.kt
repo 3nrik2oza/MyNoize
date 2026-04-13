@@ -1,8 +1,9 @@
 package com.project.mynoize.activities.main.domain.use_case
 
-import com.project.mynoize.core.data.Song
+
 import com.project.mynoize.core.data.repositories.AlbumRepository
 import com.project.mynoize.core.data.repositories.SongRepository
+import com.project.mynoize.core.domain.entities.Song
 import com.project.mynoize.core.domain.onError
 import com.project.mynoize.core.domain.onSuccess
 import kotlinx.coroutines.Dispatchers
@@ -29,15 +30,15 @@ class SyncFavoriteAlbumsUseCase(
 
                 localAlbums.filter { !it.songsDownloaded }
                     .forEach { album ->
-                    var albumSongs = emptyList<Song>()
+                    var albumRemoteSongs = emptyList<Song>()
                     songRepository.getSongByAlbumId(album.id, album.songsDownloaded).onSuccess {
-                        albumSongs = it
+                        albumRemoteSongs = it
                     }
-                    val songsInAlbumIds = albumSongs.map { it.id }
+                    val songsInAlbumIds = albumRemoteSongs.map { it.id }
 
                     val missingSongsIds = songsInAlbumIds.toSet() - songRepository.getExistingSongs(songsInAlbumIds).toSet()
 
-                    albumSongs.filter { it.id in missingSongsIds }.forEach {
+                    albumRemoteSongs.filter { it.id in missingSongsIds }.forEach {
                         downloadMissingSong(it, album.localImageUrl).onError {
                             return@collect
                         }

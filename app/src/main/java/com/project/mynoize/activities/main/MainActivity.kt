@@ -48,7 +48,7 @@ import com.project.mynoize.activities.main.ui.theme.MyNoizeTheme
 import com.project.mynoize.activities.main.presentation.main_screen.MainScreenViewModel
 import com.project.mynoize.activities.main.presentation.playlist_screen.components.ImageWithLoading
 import com.project.mynoize.activities.signin.SignInActivity
-import com.project.mynoize.core.data.Song
+import com.project.mynoize.core.domain.entities.Song
 import com.project.mynoize.notification.MusicService
 import org.koin.android.ext.android.getKoin
 import org.koin.androidx.compose.koinViewModel

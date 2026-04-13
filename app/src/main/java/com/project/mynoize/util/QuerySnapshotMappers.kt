@@ -4,7 +4,7 @@ import com.google.firebase.firestore.QuerySnapshot
 import com.project.mynoize.core.data.Album
 import com.project.mynoize.core.data.Artist
 import com.project.mynoize.core.data.Playlist
-import com.project.mynoize.core.data.Song
+import com.project.mynoize.core.data.firestore.entities.RemoteSong
 
 fun QuerySnapshot.toPlaylists(): List<Playlist>{
     return this.documents.map { document ->
@@ -14,9 +14,9 @@ fun QuerySnapshot.toPlaylists(): List<Playlist>{
     }
 }
 
-fun QuerySnapshot.toSongs(): List<Song>{
+fun QuerySnapshot.toSongs(): List<RemoteSong>{
     return this.documents.map { document ->
-        document.toObject(Song::class.java)!!.apply {
+        document.toObject(RemoteSong::class.java)!!.apply {
             id = document.id
         }
     }

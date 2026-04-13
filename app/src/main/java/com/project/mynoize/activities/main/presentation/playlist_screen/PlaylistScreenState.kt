@@ -2,7 +2,7 @@ package com.project.mynoize.activities.main.presentation.playlist_screen
 
 import com.project.mynoize.core.data.Artist
 import com.project.mynoize.core.data.Playlist
-import com.project.mynoize.core.data.Song
+import com.project.mynoize.core.domain.entities.Song
 import com.project.mynoize.util.BottomSheetType
 
 data class PlaylistScreenState(
