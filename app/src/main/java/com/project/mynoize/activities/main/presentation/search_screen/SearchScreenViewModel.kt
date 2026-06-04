@@ -3,7 +3,7 @@ package com.project.mynoize.activities.main.presentation.search_screen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Timestamp
-import com.project.mynoize.core.data.SearchItem
+import com.project.mynoize.core.domain.entities.SearchItem
 import com.project.mynoize.core.data.repositories.AlbumRepository
 import com.project.mynoize.core.data.repositories.ArtistRepository
 import com.project.mynoize.core.data.repositories.PlaylistRepository

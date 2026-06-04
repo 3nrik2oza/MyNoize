@@ -1,7 +1,7 @@
 package com.project.mynoize.activities.main.domain.use_case
 
 import com.project.mynoize.activities.main.domain.SyncError
-import com.project.mynoize.core.data.Album
+import com.project.mynoize.core.domain.entities.Album
 import com.project.mynoize.core.data.repositories.AlbumRepository
 import com.project.mynoize.core.data.repositories.SongRepository
 import com.project.mynoize.core.data.repositories.StorageRepository
@@ -43,15 +43,15 @@ class DownloadMissingSongUseCase(
     private suspend fun getImageUrl(albumId: String, artistId: String) : Result<String, SyncError>{
         val localAlbum: MutableList<Album> = albumRepository.doesAlbumExist(albumId).toMutableList()
         if(localAlbum.isEmpty()){
-            var album = albumRepository.getAlbum(artistId,albumId).first()
-            storageRepository.downloadToLocalMemory(album.image, "album_images").onSuccess {
+            var album = albumRepository.getAlbum(artistId,albumId).first() ?: return Result.Error(SyncError.FirebaseStorageError)
+            storageRepository.downloadToLocalMemory(album.imageLink, "album_images").onSuccess {
                 album = album.copy(localImageUrl = it)
             }
             albumRepository.saveAlbumLocally(album)
             localAlbum.add(album)
         }
 
-        return Result.Success(localAlbum.first().localImageUrl)
+        return Result.Success(localAlbum.first().localImageUrl!!)
     }
 
 }

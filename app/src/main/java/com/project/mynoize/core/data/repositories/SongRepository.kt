@@ -11,12 +11,14 @@ import com.project.mynoize.core.domain.Result
 import com.project.mynoize.core.domain.Result.Error
 import com.project.mynoize.core.domain.Result.Success
 import com.project.mynoize.core.domain.entities.Song
+import com.project.mynoize.core.domain.map
 import com.project.mynoize.core.domain.onSuccess
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 
 class SongRepository(
     private val userRepository: UserRepository,
@@ -35,6 +37,7 @@ class SongRepository(
             flowOf(emptyList())
         }else{
             remoteSource.favoriteSongs(favoritesIds)
+                .map { dtoList -> dtoList.map { it.toSong() } }
         }
     }
 
@@ -49,7 +52,7 @@ class SongRepository(
 
     suspend fun getMissingSongs(songsIds: List<String>): Result<List<Song>, FbError.Firestore>{
         val missingSongs = songsIds.toSet() - getExistingSongs(songsIds).toSet()
-        return remoteSource.getSongsByIds(missingSongs.toList())
+        return remoteSource.getSongsByIds(missingSongs.toList()).map { dtoList -> dtoList.map { it.toSong() } }
     }
 
     suspend fun saveSongLocally(remoteSong: Song){
@@ -60,7 +63,7 @@ class SongRepository(
         if(!connected){
             return Success(getLocalSongsFromArtist(artistId))
         }
-        return remoteSource.getSongsByArtist(artistId)
+        return remoteSource.getSongsByArtist(artistId).map { dtoList -> dtoList.map { it.toSong() } }
     }
 
     suspend fun getLocalSongsFromArtist(artistId: String): List<Song> =
@@ -77,7 +80,7 @@ class SongRepository(
         var remoteRemoteSongs = emptyList<Song>()
 
         remoteSource.getSongsByIds(missing.toList()).onSuccess {
-            remoteRemoteSongs = it
+            remoteRemoteSongs = it.map { dto -> dto.toSong() }
         }
         if(remoteRemoteSongs.isNotEmpty()){
             return Success((localSongs + remoteRemoteSongs).sortedBy { orderMap[it.id] })
@@ -93,7 +96,7 @@ class SongRepository(
 
 
     suspend fun getSongByAuthors(ids: List<String>): Result<List<Song>, FbError.Firestore>{
-        return remoteSource.getSongsByArtists(ids)
+        return remoteSource.getSongsByArtists(ids).map { dtoList -> dtoList.map { it.toSong() } }
     }
 
     suspend fun getSongByAlbumId(albumId: String, downloaded: Boolean): Result<List<Song>, FbError.Firestore>{
@@ -106,18 +109,18 @@ class SongRepository(
         var merged = emptyList<Song>()
         val remoteSongsResult = remoteSource.getSongsByAlbumId(albumId).onSuccess {
             merged = it.map { song ->
-                localSongs.find { local -> local.id == song.id } ?: song
+                localSongs.find { local -> local.id == song.id } ?: song.toSong()
             }
         }
         if(merged.isNotEmpty()){
             return Success(merged)
         }
 
-        return remoteSongsResult
+        return remoteSongsResult.map { dtoList -> dtoList.map { it.toSong() } }
     }
 
     suspend fun getAllSongsContaining(q: String): Result<List<Song>, FbError.Firestore>{
-        return remoteSource.getSongsContaining(q)
+        return remoteSource.getSongsContaining(q).map { dtoList -> dtoList.map { it.toSong() } }
     }
 
     suspend fun addSongToFirebase(

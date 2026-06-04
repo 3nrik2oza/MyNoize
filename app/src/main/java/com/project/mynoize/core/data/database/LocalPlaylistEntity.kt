@@ -13,7 +13,6 @@ data class LocalPlaylistEntity(
     val imagePath: String,
     val favorite: Boolean,
     val songs: List<String>,
-    val artists: List<String>,
     val localImagePath: String,
     val lastModified: Long,
     val songsDownloaded: Boolean = false

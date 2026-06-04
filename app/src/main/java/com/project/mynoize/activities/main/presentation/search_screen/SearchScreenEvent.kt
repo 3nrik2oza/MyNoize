@@ -1,7 +1,7 @@
 package com.project.mynoize.activities.main.presentation.search_screen
 
-import com.project.mynoize.core.data.Playlist
-import com.project.mynoize.core.data.SearchItem
+import com.project.mynoize.core.domain.entities.Playlist
+import com.project.mynoize.core.domain.entities.SearchItem
 
 sealed interface SearchScreenEvent {
 

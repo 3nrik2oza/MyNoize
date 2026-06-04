@@ -10,6 +10,7 @@ fun InputError.CreatePlaylist.toErrorMessage(): UiText{
         InputError.CreatePlaylist.ENTER_PLAYLIST_NAME -> R.string.error_enter_playlist_name
         InputError.CreatePlaylist.PLAYLIST_NAME_TOO_LONG -> R.string.error_playlist_name_too_long
         InputError.CreatePlaylist.SELECT_PLAYLIST_IMAGE -> R.string.error_select_playlist_image
+        InputError.CreatePlaylist.SELECT_AT_LEAST_ONE_TAG -> R.string.error_select_at_least_one_tag
     }
     return UiText.StringResource(stringRes)
 }
@@ -21,6 +22,8 @@ fun InputError.CreateSong.toErrorMessage() : UiText{
         InputError.CreateSong.SELECT_ALBUM -> R.string.error_select_album
         InputError.CreateSong.SELECT_GENRE -> R.string.error_select_genre
         InputError.CreateSong.SELECT_SUBGENRE -> R.string.error_select_subgenre
+        InputError.CreateSong.SELECT_LANGUAGE -> R.string.error_select_language
+        InputError.CreateSong.SELECT_ERA -> R.string.error_select_era
         InputError.CreateSong.SELECT_SONG_FILE -> R.string.error_select_song
     }
     return UiText.StringResource(stringRes)
@@ -39,6 +42,7 @@ fun InputError.CreateArtist.toErrorMessage(): UiText{
         InputError.CreateArtist.ENTER_ARTIST_NAME -> R.string.error_enter_artist_name
         InputError.CreateArtist.ARTIST_NAME_TOO_LONG -> R.string.error_artist_name_too_long
         InputError.CreateArtist.SELECT_ARTIST_IMAGE -> R.string.error_select_artist_image
+        InputError.CreateArtist.SELECT_ARTIST_COUNTRY -> R.string.error_select_artist_country
     }
     return UiText.StringResource(stringRes)
 }

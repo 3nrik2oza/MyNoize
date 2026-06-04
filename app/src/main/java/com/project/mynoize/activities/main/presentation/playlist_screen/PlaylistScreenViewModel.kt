@@ -164,13 +164,16 @@ class PlaylistScreenViewModel(
         viewModelScope.launch {
             val path = playlistId.split("/")
             albumRepository.getAlbum(path[0], path[1]).collect { album ->
-                _state.update { state ->
-                    state.copy(playlist = album.toPlaylist(), isPlaylist = false)
+                album?.let {
+                    _state.update { state ->
+                        state.copy(playlist = album.toPlaylist(), isPlaylist = false)
+                    }
+
+                    songRepository.getSongByAlbumId(album.id, album.songsDownloaded).onSuccess { songs ->
+                        _state.update { state -> state.copy(songs = songs.map { it.copy(favorite = state.favoriteList.songs.contains(it.id)) }) }
+                    }
                 }
 
-                songRepository.getSongByAlbumId(album.id, album.songsDownloaded).onSuccess { songs ->
-                    _state.update { state -> state.copy(songs = songs.map { it.copy(favorite = state.favoriteList.songs.contains(it.id)) }) }
-                }
             }
         }
 

@@ -34,7 +34,7 @@ import com.project.mynoize.R
 import com.project.mynoize.activities.main.presentation.favorite_screen.FavoriteScreenEvent
 import com.project.mynoize.activities.main.ui.theme.LightGray
 import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
-import com.project.mynoize.core.data.Playlist
+import com.project.mynoize.core.domain.entities.Playlist
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -75,7 +75,7 @@ fun SharedTransitionScope.PlaylistScrollElement(
                             .clickable(
                                 onClick = {
                                     val id =
-                                        if (isPlaylist) playlist.id else playlist.artists[0] + "/" + playlist.id
+                                        if (isPlaylist) playlist.id else playlist.imagePath + "/" + playlist.id
                                     onEvent(FavoriteScreenEvent.OnPlaylistClicked(id, isPlaylist))
                                 })
                     ){
@@ -107,7 +107,7 @@ fun SharedTransitionScope.PlaylistScrollElement(
                                 .clickable(
                                     onClick = {
                                         val id =
-                                            if (isPlaylist) playlist.id else playlist.artists[0] + "/" + playlist.id
+                                            if (isPlaylist) playlist.id else playlist.imagePath + "/" + playlist.id
                                         onEvent(
                                             FavoriteScreenEvent.OnPlaylistClicked(
                                                 id,

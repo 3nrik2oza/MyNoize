@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.project.mynoize.activities.main.presentation.favorite_screen.components.PlaylistScrollElement
-import com.project.mynoize.core.data.Artist
+import com.project.mynoize.core.domain.entities.Artist
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable

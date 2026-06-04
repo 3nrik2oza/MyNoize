@@ -1,6 +1,7 @@
 package com.project.mynoize.activities.main.presentation.create_playlist.domain
 
 import android.net.Uri
+import com.project.mynoize.activities.main.presentation.create_playlist.domain.models.Tag
 import com.project.mynoize.core.domain.EmptyResult
 import com.project.mynoize.core.domain.InputError
 import com.project.mynoize.core.domain.Result
@@ -8,13 +9,17 @@ import com.project.mynoize.core.domain.onError
 
 class CreatePlaylistValidation {
 
-    fun execute(playlistName: String, playlistImage: Uri?): EmptyResult<InputError.CreatePlaylist>{
+    fun execute(playlistName: String, playlistImage: Uri?, tags: List<Tag>): EmptyResult<InputError.CreatePlaylist>{
 
         validatePlaylistName(playlistName).onError {
             return Result.Error(it)
         }
 
         validatePlaylistImage(playlistImage).onError {
+            return Result.Error(it)
+        }
+
+        validatePlaylistTag(tags).onError {
             return Result.Error(it)
         }
 
@@ -35,7 +40,13 @@ class CreatePlaylistValidation {
             return Result.Error(InputError.CreatePlaylist.SELECT_PLAYLIST_IMAGE)
         }
         return Result.Success(Unit)
+    }
 
+    private fun validatePlaylistTag(tags: List<Tag>): EmptyResult<InputError.CreatePlaylist>{
+        if(tags.isEmpty()){
+            return Result.Error(InputError.CreatePlaylist.SELECT_AT_LEAST_ONE_TAG)
+        }
+        return Result.Success(Unit)
     }
 
 }

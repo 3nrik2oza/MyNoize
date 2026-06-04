@@ -13,8 +13,8 @@ import com.project.mynoize.core.data.repositories.StorageRepository
 import com.project.mynoize.core.data.repositories.SongRepository
 import com.project.mynoize.core.presentation.AlertDialogState
 import com.project.mynoize.activities.main.state.ListOfState
-import com.project.mynoize.core.data.Album
-import com.project.mynoize.core.data.Artist
+import com.project.mynoize.core.domain.entities.Album
+import com.project.mynoize.core.domain.entities.Artist
 import com.project.mynoize.core.data.AuthRepository
 
 import com.project.mynoize.core.domain.InputError
@@ -23,8 +23,6 @@ import com.project.mynoize.core.domain.onError
 import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.core.presentation.UiText
 import com.project.mynoize.core.presentation.toErrorMessage
-import com.project.mynoize.util.genres
-import com.project.mynoize.util.subGenreMap
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -72,15 +70,15 @@ class CreateSongViewModel(
                 createSongState.update { it.copy(songName = event.songName) }
             }
             is CreateSongEvent.OnArtistClick -> {
-                artistListState.update { it.copy(index = event.index) }
+                artistListState.update { it.copy(selected = event.artist) }
 
-                loadAlbums(event.index)
+                loadAlbums(event.artist.id)
 
 
-                albumListState.update { it.copy(index = -1) }
+                albumListState.update { it.copy(selected = null) }
             }
             is CreateSongEvent.OnAlbumClick -> {
-                albumListState.update { it.copy(index = event.index) }
+                albumListState.update { it.copy(selected = event.album) }
             }
             is CreateSongEvent.OnAddAlbumClick -> {
                 createSongState.update { it.copy(showCreateAlbum = true) }
@@ -97,11 +95,13 @@ class CreateSongViewModel(
                 }
             }
             is CreateSongEvent.OnGenreClick -> {
-                createSongState.update { it.copy(songGenre = event.index, songSubgenre = -1) }
+                createSongState.update { it.copy(songGenre = event.selected, songSubgenre = null) }
             }
             is CreateSongEvent.OnSubgenreClick -> {
-                createSongState.update { it.copy(songSubgenre = event.index) }
+                createSongState.update { it.copy(songSubgenre = event.selected) }
             }
+            is CreateSongEvent.OnLanguageClick -> createSongState.update { it.copy(language = event.selected) }
+            is CreateSongEvent.OnEraClick -> createSongState.update { it.copy(era = event.selected) }
             else -> Unit
         }
     }
@@ -130,35 +130,19 @@ class CreateSongViewModel(
 
     }
 
-
-
-    fun createSong(songUrl: String): Song{
-        return Song(
-            title = createSongState.value.songName,
-            artistId = artistListState.value.selectedElement().id,
-            artistName = artistListState.value.selectedElement().name,
-            songUrl = songUrl,
-            imageUrl = albumListState.value.selectedElement().image,
-            albumId = albumListState.value.selectedElement().id,
-            albumName = albumListState.value.selectedElement().name,
-            creatorId = auth.getCurrentUserId(),
-            genre = genres[createSongState.value.songGenre],
-            subgenre = subGenreMap[genres[createSongState.value.songGenre]]?.get(createSongState.value.songSubgenre) ?: ""
-        )
-    }
-
-    fun createAlbumType(albumName: String, imageUrl: String): Album{
+    fun createAlbumType(albumName: String, imageUrl: String, imagePath: String, artistId: String): Album{
         return Album(
             name = albumName,
-            image = imageUrl,
+            imageLink = imageUrl,
+            imagePath = imagePath,
             creator = auth.getCurrentUserId(),
-            artist = artistListState.value.selectedElement().id
+            artist = artistId
         )
     }
 
-    fun loadAlbums(index: Int){
+    fun loadAlbums(artistId: String){
         viewModelScope.launch{
-            albumRepository.getAlbums(artistListState.value.list[index].id)
+            albumRepository.getAlbums(artistId)
                 .onSuccess { list ->
                     albumListState.update { it.copy(list = list) }
                 }
@@ -186,13 +170,19 @@ class CreateSongViewModel(
     fun addSongToStorage(){
         alertDialogState.update { it.copy(loading = true) }
 
+        val artist = artistListState.value.selected
+        val album = albumListState.value.selected
+
         createSongValidation.execute(
             songName = createSongState.value.songName,
-            artistIndex = artistListState.value.index,
-            albumIndex = albumListState.value.index,
+            artist = artist,
+            album = album,
             uri = createSongState.value.songUri,
-            genreIndex = createSongState.value.songGenre,
-            subgenreIndex = createSongState.value.songSubgenre
+            genre = createSongState.value.songGenre,
+            subgenre = createSongState.value.songSubgenre,
+            language = createSongState.value.language,
+            era = createSongState.value.era,
+            mood = createSongState.value.songsMoods
         ).onError { error->
 
             createSongState.update { it.copy(songNameError = null, songUriError = null) }
@@ -220,25 +210,26 @@ class CreateSongViewModel(
 
             alertDialogState.update { it.copy(loading = false) }
             return
-        }
-        var remoteSong = Song()
-        val fileName = "songs/${createSongState.value.songName}"
-        var path = ""
-        viewModelScope.launch {
-            storageRepository.addToStorage(
-                createSongState.value.songUri.toUri(),
-                fileName
-            ).onError { error ->
-                alertDialogState.update {
-                    it.copy(show = true, loading = false, message = error.toErrorMessage())
+        }.onSuccess { song ->
+            var remoteSong = song
+            val fileName = "songs/${createSongState.value.songName}"
+            var path = ""
+            viewModelScope.launch {
+                storageRepository.addToStorage(
+                    createSongState.value.songUri.toUri(),
+                    fileName
+                ).onError { error ->
+                    alertDialogState.update {
+                        it.copy(show = true, loading = false, message = error.toErrorMessage())
+                    }
+                }.onSuccess {
+                    remoteSong = song.copy(songUrl = it.downloadLink, audioPath = path)
+                    path = it.path
                 }
-            }.onSuccess {
-                remoteSong = createSong(it.downloadLink)
-                path = it.path
+                addSong(remoteSong, path)
             }
-            addSong(remoteSong, path)
-
         }
+
     }
 
     suspend fun addSong(remoteSong: Song, fileName: String){
@@ -263,6 +254,7 @@ class CreateSongViewModel(
     }
 
     fun createAlbum(imageUri: String, albumName: String){
+        val artistId = artistListState.value.selected?.id ?: return
         createAlbumDialogState.update { it.copy(loading = true) }
 
         val path = "album_images/${imageUri.toUri().lastPathSegment}"
@@ -276,7 +268,7 @@ class CreateSongViewModel(
                     it.copy(show = true, loading = false, message = error.toErrorMessage())
                 }
             }.onSuccess {
-                album = createAlbumType(albumName = albumName, imageUrl =  it.downloadLink)
+                album = createAlbumType(albumName = albumName, imageUrl =  it.downloadLink, imagePath = it.path, artistId = artistId)
             }
             albumRepository.createAlbum(album)
                 .onSuccess { id ->

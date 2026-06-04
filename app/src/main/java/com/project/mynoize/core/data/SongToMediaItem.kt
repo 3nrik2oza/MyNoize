@@ -8,13 +8,13 @@ import com.project.mynoize.core.domain.entities.Song
 
 fun Song.toMediaItem(): MediaItem {
     return MediaItem.Builder()
-        .setUri(localSongUrl.ifEmpty { songUrl })
+        .setUri(localSongUrl ?: songUrl )
         .setMediaMetadata(
             MediaMetadata.Builder()
                 .setTitle(title)
                 .setArtist(artistName)
                 .setAlbumTitle(albumName)
-                .setArtworkUri(localImageUrl.ifEmpty { imageUrl }.toUri() )
+                .setArtworkUri((localImageUrl ?: imageUrl).toUri() )
                 .setDescription(id)
                 .build()
         )

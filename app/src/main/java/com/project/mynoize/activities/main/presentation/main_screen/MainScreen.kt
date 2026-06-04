@@ -52,6 +52,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.toRoute
@@ -97,7 +98,7 @@ import com.project.mynoize.activities.main.ui.theme.DarkGray
 import com.project.mynoize.activities.main.ui.theme.LatoFontFamily
 import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
 import com.project.mynoize.activities.main.ui.theme.Red
-import com.project.mynoize.core.data.SearchItem
+import com.project.mynoize.core.domain.entities.SearchItem
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.getKoin
 
@@ -120,11 +121,11 @@ fun MainScreen(
     val selectedNavigationIndexBefore = rememberSaveable { mutableIntStateOf(0) }
     val createActive = rememberSaveable { mutableStateOf(false) }
 
-    val showBottomBar = when (navController.currentBackStackEntryAsState().value?.destination?.route) {
-        CreateArtistScreen::class.qualifiedName -> false
-        CreateSongScreen::class.qualifiedName -> false
-        else -> true
-    }
+    val currentDestination = navController.currentBackStackEntryAsState().value?.destination
+
+    val showBottomBar = currentDestination?.let {
+        !it.hasRoute(CreateArtistScreen::class) && !it.hasRoute(CreateSongScreen::class)
+    } ?: true
 
     val isConnected = vmMainScreen.isConnected.collectAsStateWithLifecycle()
 

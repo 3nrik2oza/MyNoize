@@ -222,8 +222,6 @@ fun SharedTransitionScope.MusicPlayer(
     state: MainScreenState,
     animatedVisibilityScope: AnimatedVisibilityScope,
 ) {
-
-
     Row(
         modifier
             .fillMaxWidth()

@@ -4,8 +4,8 @@ import com.project.mynoize.core.presentation.UiText
 
 data class ListOfState<T>(
     val list: List<T> = emptyList(),
-    val index: Int = -1,
+    val selected: T? = null,
     val listError: UiText? = null
 ){
-    fun selectedElement(): T = list[index]
+   // fun selectedElement(): T = list[index]
 }

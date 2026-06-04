@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.sp
 import com.project.mynoize.R
 import com.project.mynoize.activities.main.presentation.playlist_screen.components.ImageWithLoading
 import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
-import com.project.mynoize.core.data.Playlist
+import com.project.mynoize.core.domain.entities.Playlist
 
 @Composable
 fun MusicScreen(

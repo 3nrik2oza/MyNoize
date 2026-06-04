@@ -9,7 +9,7 @@ import com.project.mynoize.R
 import com.project.mynoize.activities.main.presentation.create_artist.domain.CreateArtistValidation
 import com.project.mynoize.core.data.repositories.ArtistRepository
 import com.project.mynoize.core.data.repositories.StorageRepository
-import com.project.mynoize.core.data.Artist
+import com.project.mynoize.core.domain.entities.Artist
 import com.project.mynoize.core.data.AuthRepository
 import com.project.mynoize.core.domain.InputError
 import com.project.mynoize.core.domain.onError
@@ -60,11 +60,13 @@ class CreateArtistViewModel(
                         _state.update { it.copy(
                             artistName = artist.name,
                             artistImage = artist.imageLink.toUri(),
+                            country = artist.country,
                             artistToModify = artist)}
                     }
 
                 }
             }
+            is CreateArtistEvent.OnArtistCountryChange -> _state.update { it.copy(country = event.selected) }
             else -> Unit
         }
     }
@@ -72,7 +74,7 @@ class CreateArtistViewModel(
     fun addArtistToFirestore(){
         _state.update { it.copy(loading = true) }
 
-        artistValidation.execute(state.value.artistName, state.value.artistImage).onError { error->
+        artistValidation.execute(state.value.artistName, state.value.artistImage, state.value.country).onError { error->
             _alertDialogState.update {
                 it.copy(show = true, message = error.toErrorMessage())
             }
@@ -87,6 +89,10 @@ class CreateArtistViewModel(
                 }
                 InputError.CreateArtist.SELECT_ARTIST_IMAGE -> {
                     _state.update { it.copy(artistImageError = error.toErrorMessage()) }
+                }
+
+                InputError.CreateArtist.SELECT_ARTIST_COUNTRY -> {
+                    _state.update { it.copy(countryError = error.toErrorMessage()) }
                 }
             }
 
@@ -118,16 +124,17 @@ class CreateArtistViewModel(
 
                         viewModelScope.launch {
                             artistRepository.updateArtist(artist).onError { error ->
-                                _alertDialogState.update { it.copy(show = true, message = error.toErrorMessage()) }
-                                _state.update { it.copy(loading = false) }
+                                _alertDialogState.update { state -> state.copy(show = true, message = error.toErrorMessage()) }
+                                _state.update { state ->  state.copy(loading = false) }
                                 return@launch
                             }.onSuccess {
-                                _state.update { it.copy(loading = false) }
-                                _alertDialogState.update {
-                                    it.copy(
+                                _state.update { state -> state.copy(loading = false) }
+                                _alertDialogState.update { state ->
+                                    state.copy(
                                         show = true,
                                         message = UiText.StringResource(R.string.artist_added_successfully),
-                                        warning = false)
+                                        warning = false
+                                    )
                                 }
                             }
                         }
@@ -189,6 +196,7 @@ class CreateArtistViewModel(
             name = state.value.artistName,
             imageLink = imageUri,
             imagePath = imagePath,
+            country = state.value.country!!,
             creator = auth.getCurrentUserId()
         )
     }

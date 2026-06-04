@@ -35,11 +35,11 @@ import com.project.mynoize.activities.main.ui.theme.NovaSquareFontFamily
 import com.project.mynoize.core.presentation.components.Surrounding
 
 @Composable
-fun <T> CustomDropdown(
+fun <T> CustomDropdownMulti(
     itemList: List<T>,
     title: String = "Type",
     hint: String = "Select",
-    selectedItem: T?,
+    selectedItems: List<T>?,
     onItemClick: (T) -> Unit,
     displayText: (T) -> String = { it.toString() },
     canAdd: Boolean = false,
@@ -55,10 +55,10 @@ fun <T> CustomDropdown(
         errorMessage = errorMessage
     ) {
         Column {
-            DropdownList(
+            DropdownListMulti(
                 itemList = itemList,
                 hint = hint,
-                selectedItem = selectedItem,
+                selectedItem = selectedItems ?: emptyList(),
                 onItemClick = onItemClick,
                 displayText = displayText,
                 canAdd = canAdd,
@@ -69,10 +69,10 @@ fun <T> CustomDropdown(
 }
 
 @Composable
-fun <T> DropdownList(
+fun <T> DropdownListMulti(
     itemList: List<T>,
     hint: String,
-    selectedItem: T?,
+    selectedItem: List<T>,
     onItemClick: (T) -> Unit,
     displayText: (T) -> String = { it.toString() },
     canAdd: Boolean,
@@ -96,9 +96,9 @@ fun <T> DropdownList(
     ) {
         Text(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp),
-            text = if(selectedItem == null) hint else displayText(selectedItem),
+            text = if(selectedItem.isEmpty()) hint else selectedItem.map { displayText(it) }.joinToString { ", " },
             fontFamily = NovaSquareFontFamily,
-            color = if(selectedItem == null) Color.LightGray else Color.Black,
+            color = if(selectedItem.isEmpty()) Color.LightGray else Color.Black,
             textAlign = TextAlign.Start
         )
     }
@@ -110,7 +110,7 @@ fun <T> DropdownList(
                 properties = PopupProperties(excludeFromSystemGesture = true),
                 onDismissRequest = { showDropdown = false },
 
-            ) {
+                ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()

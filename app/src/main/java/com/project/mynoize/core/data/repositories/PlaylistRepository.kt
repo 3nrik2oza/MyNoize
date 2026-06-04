@@ -2,13 +2,15 @@ package com.project.mynoize.core.data.repositories
 
 
 import com.project.mynoize.core.data.AuthRepository
-import com.project.mynoize.core.data.Playlist
+import com.project.mynoize.core.domain.entities.Playlist
 import com.project.mynoize.core.data.database.PlaylistDao
+import com.project.mynoize.core.data.mappers.toFirebasePlaylist
 import com.project.mynoize.core.data.mappers.toLocalPlaylistEntity
 import com.project.mynoize.core.data.mappers.toPlaylist
 import com.project.mynoize.core.data.remote_data_source.PlaylistRemoteDataSource
 import com.project.mynoize.core.domain.FbError
 import com.project.mynoize.core.domain.Result
+import com.project.mynoize.core.domain.map
 import com.project.mynoize.core.domain.onSuccess
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -38,7 +40,9 @@ class PlaylistRepository(
     }
 
 
-    val userPlaylists = remoteSource.userPlaylists(auth.getCurrentUserId())
+    val userPlaylists = remoteSource.userPlaylists(auth.getCurrentUserId()).map {
+        it.map { dto ->  dto.toPlaylist() }
+    }
 
     suspend fun updateFavoritePlaylists(lastUpdateLocally: Long?): List<suspend () -> Unit> {
         val lastUpdatedRemote = userRepository.user.first().lastModifiedFavoritePlaylists.seconds
@@ -109,7 +113,9 @@ class PlaylistRepository(
         if(favoritesIds.isEmpty()){
             flowOf(emptyList())
         }else{
-            remoteSource.favoritePlaylists(favoritesIds)
+            remoteSource.favoritePlaylists(favoritesIds).map {
+                it.map { dto -> dto.toPlaylist() }
+            }
         }
     }
 
@@ -134,19 +140,21 @@ class PlaylistRepository(
                 when {
                     local != null -> flowOf(local.toPlaylist())
                     id == auth.getCurrentUserId() -> flowOf(favoriteSongsPlaylist.first())
-                    else -> remoteSource.getPlaylist(id)
+                    else -> remoteSource.getPlaylist(id).map { it.toPlaylist() }
                 }
             }
     }
 
     suspend fun getPlaylistsWithSongs(ids: List<String>): Result<List<Playlist>, FbError.Firestore>{
-        return remoteSource.getPlaylistsWithSongs(ids)
+        return remoteSource.getPlaylistsWithSongs(ids).map { it.map { dto -> dto.toPlaylist() } }
     }
 
 
 
     suspend fun getRemotePlaylistsContaining(q: String): Result<List<Playlist>, FbError.Firestore> {
-        return remoteSource.getPlaylistsContaining(q, auth.getCurrentUserId())
+        return remoteSource.getPlaylistsContaining(q, auth.getCurrentUserId()).map {
+            it.map { dto -> dto.toPlaylist() }
+        }
     }
 
     suspend fun updateSongsInRemotePlaylist(songs: List<String>, id: String): Result<Unit, FbError.Firestore> {
@@ -155,11 +163,11 @@ class PlaylistRepository(
 
 
     suspend fun createPlaylist(playlist: Playlist): Result<Unit, FbError.Firestore> {
-        return remoteSource.createPlaylist(playlist)
+        return remoteSource.createPlaylist(playlist.toFirebasePlaylist())
     }
 
     suspend fun updatePlaylist(playlist: Playlist): Result<Unit, FbError.Firestore> {
-        return remoteSource.updatePlaylist(playlist)
+        return remoteSource.updatePlaylist(playlist.toFirebasePlaylist())
     }
 
     suspend fun deletePlaylist(playlistId: String){

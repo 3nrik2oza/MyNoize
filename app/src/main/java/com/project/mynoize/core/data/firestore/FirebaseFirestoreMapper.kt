@@ -3,6 +3,7 @@ package com.project.mynoize.core.data.firestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.project.mynoize.core.domain.FbError
 
+
 fun FirebaseFirestoreException.toDomain(): FbError.Firestore{
     return when(code){
         FirebaseFirestoreException.Code.PERMISSION_DENIED -> FbError.Firestore.PERMISSION_DENIED

@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.project.mynoize.R
+import com.project.mynoize.activities.main.presentation.create_playlist.domain.models.Tag
+import com.project.mynoize.activities.main.ui.CustomDropdownMulti
 import com.project.mynoize.activities.main.ui.theme.LatoFontFamily
 import com.project.mynoize.core.presentation.AlertDialogState
 import com.project.mynoize.core.presentation.asString
@@ -60,7 +62,6 @@ fun CreatePlaylistScreen(
             onEvent(CreatePlaylistEvent.OnImageChange(it))
         }
     )
-
 
     if(alertDialogState.show){
         MessageAlertDialog(
@@ -187,6 +188,19 @@ fun CreatePlaylistScreen(
             isError =  state.playlistNameError != null,
             errorMessage = state.playlistNameError?.asString() ?: ""
         )
+
+        CustomDropdownMulti(
+            itemList = Tag.entries,
+            hint = "Select tag/tags",
+            title = "Tags",
+            selectedItems = state.tags,
+            onItemClick = { onEvent(CreatePlaylistEvent.OnTagSelected(it)) },
+            displayText = { it.displayName },
+            isError = state.tagsError != null,
+            errorMessage = state.tagsError?.asString() ?: ""
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
 
         Spacer(Modifier.height(50.dp))
 

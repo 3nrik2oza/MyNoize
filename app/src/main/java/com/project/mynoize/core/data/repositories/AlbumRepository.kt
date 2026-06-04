@@ -1,13 +1,15 @@
 package com.project.mynoize.core.data.repositories
 
 
-import com.project.mynoize.core.data.Album
+import com.project.mynoize.core.domain.entities.Album
 import com.project.mynoize.core.data.database.AlbumDao
 import com.project.mynoize.core.data.mappers.toAlbum
+import com.project.mynoize.core.data.mappers.toDto
 import com.project.mynoize.core.data.mappers.toLocalAlbumEntity
 import com.project.mynoize.core.data.remote_data_source.AlbumRemoteDataSource
 import com.project.mynoize.core.domain.FbError
 import com.project.mynoize.core.domain.Result
+import com.project.mynoize.core.domain.map
 import com.project.mynoize.core.domain.onSuccess
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,7 +34,7 @@ class AlbumRepository(
         if(favoritesIds.isEmpty()){
             flowOf(emptyList())
         }else{
-            remoteSource.favoriteAlbums(favoritesIds)
+            remoteSource.favoriteAlbums(favoritesIds).map { it.map { dto -> dto.toAlbum() } }
         }
     }
 
@@ -79,7 +81,7 @@ class AlbumRepository(
             when{
                 localItem == null -> {
                     var path = ""
-                    storageRepository.downloadToLocalMemory(remoteAlbum.image, "album_image").onSuccess {
+                    storageRepository.downloadToLocalMemory(remoteAlbum.imageLink, "album_image").onSuccess {
                         path = it
                     }
                     if(path != ""){
@@ -90,7 +92,7 @@ class AlbumRepository(
                     try {
                         var path = ""
                         File(localItem.localImageUrl).delete()
-                        storageRepository.downloadToLocalMemory(remoteAlbum.image, "album_image").onSuccess {
+                        storageRepository.downloadToLocalMemory(remoteAlbum.imagePath, "album_image").onSuccess {
                             path = it
                         }
                         if(path != ""){
@@ -116,20 +118,20 @@ class AlbumRepository(
     }
 
     suspend fun getAlbums(artistId: String) : Result<List<Album>, FbError.Firestore>{
-        return remoteSource.getArtistAlbums(artistId)
+        return remoteSource.getArtistAlbums(artistId).map { it.map { dto -> dto.toAlbum() } }
     }
 
-    fun getAlbum(artistId: String, albumId: String) : Flow<Album>{
-        return remoteSource.getAlbum(artistId, albumId)
+    fun getAlbum(artistId: String, albumId: String) : Flow<Album?>{
+        return remoteSource.getAlbum(artistId, albumId).map { it?.toAlbum() }
 
     }
 
     suspend fun getAllAlbumsContaining(q: String): Result<List<Album>, FbError.Firestore> {
-        return remoteSource.getAllAlbumsContaining(q)
+        return remoteSource.getAllAlbumsContaining(q).map { it.map { dto -> dto.toAlbum() } }
     }
 
     suspend fun createAlbum(album: Album): Result<String, FbError.Firestore> {
-        return remoteSource.createAlbum(album)
+        return remoteSource.createAlbum(album.toDto())
     }
 
 

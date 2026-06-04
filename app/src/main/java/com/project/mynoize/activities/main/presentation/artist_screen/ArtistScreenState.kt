@@ -1,6 +1,6 @@
 package com.project.mynoize.activities.main.presentation.artist_screen
 
-import com.project.mynoize.core.data.Artist
+import com.project.mynoize.core.domain.entities.Artist
 import com.project.mynoize.core.domain.entities.Song
 
 data class ArtistScreenState(

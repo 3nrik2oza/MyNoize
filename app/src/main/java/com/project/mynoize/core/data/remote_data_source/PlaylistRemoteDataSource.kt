@@ -4,13 +4,13 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.snapshots
-import com.project.mynoize.core.data.Playlist
+import com.project.mynoize.core.data.firestore.entities.PlaylistDto
 import com.project.mynoize.core.data.firestore.safeFirestoreCall
 import com.project.mynoize.core.domain.EmptyResult
 import com.project.mynoize.core.domain.FbError
 import com.project.mynoize.core.domain.Result
 import com.project.mynoize.util.Constants
-import com.project.mynoize.util.toPlaylists
+import com.project.mynoize.util.toDtoPlaylists
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
@@ -20,35 +20,35 @@ class PlaylistRemoteDataSource(
     private val firestore: FirebaseFirestore
 ) {
 
-    fun userPlaylists(userId: String): Flow<List<Playlist>> {
+    fun userPlaylists(userId: String): Flow<List<PlaylistDto>> {
         return firestore.collection(Constants.PLAYLIST_COLLECTION)
             .whereEqualTo("creator", userId)
             .snapshots()
             .map { snapshots ->
-                snapshots.toPlaylists()
+                snapshots.toDtoPlaylists()
             }
     }
 
-    fun favoritePlaylists(favoriteIds: List<String>): Flow<List<Playlist>>{
+    fun favoritePlaylists(favoriteIds: List<String>): Flow<List<PlaylistDto>>{
         return firestore.collection(Constants.PLAYLIST_COLLECTION)
             .whereIn(FieldPath.documentId(), favoriteIds)
             .snapshots()
-            .map { it.toPlaylists() }
+            .map { it.toDtoPlaylists() }
     }
 
-    fun getPlaylist(playlistId: String): Flow<Playlist>{
+    fun getPlaylist(playlistId: String): Flow<PlaylistDto>{
        return firestore.collection(Constants.PLAYLIST_COLLECTION)
            .document(playlistId)
            .snapshots()
            .map { snapshot ->
-               val playlist = snapshot.toObject(Playlist::class.java) ?: throw IllegalStateException("Playlist not found")
+               val playlist = snapshot.toObject(PlaylistDto::class.java) ?: throw IllegalStateException("Playlist not found")
 
                playlist.copy(id = snapshot.id)
            }
 
     }
 
-    suspend fun getPlaylistsWithSongs(ids: List<String>): Result<List<Playlist>, FbError.Firestore>{
+    suspend fun getPlaylistsWithSongs(ids: List<String>): Result<List<PlaylistDto>, FbError.Firestore>{
         return safeFirestoreCall {
             firestore.collection(Constants.PLAYLIST_COLLECTION)
             .whereArrayContainsAny("songs", ids)
@@ -56,14 +56,14 @@ class PlaylistRemoteDataSource(
             .get()
             .await()
                 .documents.map {
-                    it.toObject(Playlist::class.java)!!.apply {
+                    it.toObject(PlaylistDto::class.java)!!.apply {
                         id = it.id
                     }
                 }
         }
     }
 
-    suspend fun getPlaylistsContaining(q: String, userId: String) : Result<List<Playlist>, FbError.Firestore>{
+    suspend fun getPlaylistsContaining(q: String, userId: String) : Result<List<PlaylistDto>, FbError.Firestore>{
         return safeFirestoreCall {
             firestore.collection(Constants.PLAYLIST_COLLECTION)
                 .whereGreaterThanOrEqualTo("nameLower", q)
@@ -72,7 +72,7 @@ class PlaylistRemoteDataSource(
                 .limit(25)
                 .get()
                 .await()
-                .toPlaylists()
+                .toDtoPlaylists()
         }
     }
 
@@ -87,7 +87,7 @@ class PlaylistRemoteDataSource(
         }
     }
 
-    suspend fun createPlaylist(playlist: Playlist): EmptyResult<FbError.Firestore>{
+    suspend fun createPlaylist(playlist: PlaylistDto): EmptyResult<FbError.Firestore>{
         return safeFirestoreCall {
             firestore.collection(Constants.PLAYLIST_COLLECTION)
                 .add(playlist.copy(nameLower = playlist.name.lowercase()))
@@ -97,7 +97,7 @@ class PlaylistRemoteDataSource(
         }
     }
 
-    suspend fun updatePlaylist(playlist: Playlist): EmptyResult<FbError.Firestore>{
+    suspend fun updatePlaylist(playlist: PlaylistDto): EmptyResult<FbError.Firestore>{
         return safeFirestoreCall {
             firestore.collection(Constants.PLAYLIST_COLLECTION)
                 .document(playlist.id)

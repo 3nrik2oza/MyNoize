@@ -1,16 +1,20 @@
 package com.project.mynoize.core.data.repositories
 
-import com.project.mynoize.core.data.Artist
+import com.project.mynoize.core.domain.entities.Artist
+import com.project.mynoize.core.data.mappers.toArtist
+import com.project.mynoize.core.data.mappers.toDto
 import com.project.mynoize.core.data.remote_data_source.ArtistRemoteDataSource
 import com.project.mynoize.core.domain.EmptyResult
 import com.project.mynoize.core.domain.FbError
 import com.project.mynoize.core.domain.Result
 import com.project.mynoize.core.domain.Result.*
+import com.project.mynoize.core.domain.map
 import com.project.mynoize.core.domain.onSuccess
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 
 class ArtistRepository(
     private val userRepository: UserRepository,
@@ -26,13 +30,16 @@ class ArtistRepository(
         if(favoritesIds.isEmpty()){
             flowOf(emptyList())
         }else{
-            remoteSource.favoriteArtists(favoritesIds)
+            remoteSource.favoriteArtists(favoritesIds).map {
+                it.map { dto -> dto.toArtist() }
+            }
         }
     }
+    //TODO(update remote data source so that it only uses DTO classes)
 
 
     suspend fun getArtists(): Result<List<Artist>, FbError.Firestore> {
-        return remoteSource.getArtists()
+        return remoteSource.getArtists().map { it.map { dto -> dto.toArtist() } }
     }
 
     suspend fun getArtist(artistId: String): Result<Artist, FbError.Firestore> {
@@ -40,7 +47,7 @@ class ArtistRepository(
 
         if(loadedArtist != null) return Success(loadedArtist)
 
-        val getRemoteArtist = remoteSource.getArtist(artistId)
+        val getRemoteArtist = remoteSource.getArtist(artistId).map { it.toArtist() }
         getRemoteArtist.onSuccess {
             loadedArtists.add(it)
         }
@@ -49,18 +56,18 @@ class ArtistRepository(
     }
 
     suspend fun getArtistsContaining(q: String): Result<List<Artist>, FbError.Firestore> {
-        return remoteSource.getArtistContaining(q)
+        return remoteSource.getArtistContaining(q).map { it.map { dto -> dto.toArtist() } }
 
     }
 
     suspend fun createArtist(artist: Artist): EmptyResult<FbError.Firestore>{
 
-        return remoteSource.createArtist(artist)
+        return remoteSource.createArtist(artist.toDto())
 
     }
 
     suspend fun updateArtist(artist: Artist): EmptyResult<FbError.Firestore>{
-        val result = remoteSource.updateArtist(artist)
+        val result = remoteSource.updateArtist(artist.toDto())
         result.onSuccess {
             loadedArtists.removeIf { it.id == artist.id }
             loadedArtists.add(artist)

@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.project.mynoize.activities.main.presentation.playlist_screen.PlaylistScreenEvent
 import com.project.mynoize.activities.main.ui.theme.DarkGray
 import com.project.mynoize.activities.main.ui.theme.LatoFontFamily
-import com.project.mynoize.core.data.Playlist
+import com.project.mynoize.core.domain.entities.Playlist
 
 
 @Composable

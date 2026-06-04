@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
@@ -33,10 +35,12 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.project.mynoize.R
+import com.project.mynoize.activities.main.ui.CustomDropdown
 import com.project.mynoize.activities.main.ui.theme.LatoFontFamily
 import com.project.mynoize.core.presentation.AlertDialogState
 import com.project.mynoize.core.presentation.asString
@@ -44,6 +48,7 @@ import com.project.mynoize.core.presentation.components.MessageAlertDialog
 import com.project.mynoize.core.presentation.components.CustomButton
 import com.project.mynoize.core.presentation.components.CustomTextField
 import com.project.mynoize.core.presentation.components.Surrounding
+import com.project.mynoize.util.Country
 
 @Composable
 fun CreateArtistScreen(
@@ -60,13 +65,10 @@ fun CreateArtistScreen(
             onEvent(CreateArtistEvent.OnImageChange(it))
         }
     )
-
-
     if(alertDialogState.show){
         MessageAlertDialog(
             onDismiss = {
                 if(alertDialogState.warning){
-
                     onEvent(CreateArtistEvent.OnDismissAlertDialog)
                 }else{
                     onEvent(CreateArtistEvent.OnBackClick)
@@ -85,35 +87,35 @@ fun CreateArtistScreen(
             detectTapGestures(onTap = {
                 localFocusManager.clearFocus()
             })
-        },
+        }
+        .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ){
+        Box(
+            modifier = Modifier,
+            contentAlignment = Alignment.CenterStart
+        ){
 
-Box(
-    modifier = Modifier,
-    contentAlignment = Alignment.CenterStart
-){
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                Modifier.size(35.dp)
+                    .clickable{
+                        onEvent(CreateArtistEvent.OnBackClick)
+                    }
+                    .padding(end = 5.dp)
+            )
 
-    Icon(
-        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-        contentDescription = "Back",
-        Modifier.size(35.dp)
-            .clickable{
-                onEvent(CreateArtistEvent.OnBackClick)
-            }
-    )
+            Text(
+                text = "ADD NEW ARTIST",
+                fontFamily = LatoFontFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 30.sp,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
 
-    Text(
-        text = "ADD NEW ARTIST",
-        fontFamily = LatoFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 30.sp,
-        modifier = Modifier.fillMaxWidth(),
-        textAlign = TextAlign.Center
-    )
-
-}
-
+        }
 
         Spacer(Modifier.height(20.dp))
 
@@ -121,7 +123,6 @@ Box(
             isError = state.artistImageError != null,
             errorMessage = state.artistImageError?.asString() ?: ""
         ) {
-
             Box(modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ){
@@ -149,8 +150,6 @@ Box(
                                 .size(90.dp)
                         )
                     }
-
-
                 }else {
                     AsyncImage(
                         model = state.artistImage,
@@ -169,10 +168,7 @@ Box(
                     )
                 }
             }
-
         }
-
-
 
         Spacer(Modifier.height(20.dp))
 
@@ -185,6 +181,19 @@ Box(
             },
             isError =  state.artistNameError != null,
             errorMessage = state.artistNameError?.asString() ?: ""
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        CustomDropdown(
+            itemList = Country.entries,
+            hint = "Select Country",
+            title = "Country",
+            selectedItem = state.country,
+            onItemClick = { onEvent(CreateArtistEvent.OnArtistCountryChange(it)) },
+            displayText = { it.displayName },
+            isError = state.countryError != null,
+            errorMessage = state.countryError?.asString() ?: ""
         )
 
         Spacer(Modifier.height(50.dp))
@@ -203,4 +212,12 @@ Box(
     }
 }
 
-
+@Composable
+@Preview(showBackground = true)
+private fun CreateArtistScreenPreview(){
+    CreateArtistScreen(
+        state = CreateArtistState(),
+        alertDialogState = AlertDialogState(),
+        onEvent = {}
+    ) 
+}

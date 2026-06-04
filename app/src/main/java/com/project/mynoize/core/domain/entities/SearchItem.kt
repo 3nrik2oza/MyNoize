@@ -1,6 +1,4 @@
-package com.project.mynoize.core.data
-
-import com.project.mynoize.core.domain.entities.Song
+package com.project.mynoize.core.domain.entities
 
 sealed class SearchItem(
     open val id: String = "",
@@ -15,7 +13,7 @@ sealed class SearchItem(
         id = album.id,
         title = album.name,
         subtitle = "",
-        imageUrl = album.localImageUrl.ifEmpty { album.image },
+        imageUrl = album.localImageUrl ?:  album.imageLink ,
         favorite = album.favorite
     )
 
@@ -35,7 +33,7 @@ sealed class SearchItem(
         id = song.id,
         title = song.title,
         subtitle = song.artistName,
-        imageUrl = song.localImageUrl.ifEmpty { song.imageUrl},
+        imageUrl = song.localImageUrl ?: song.imageUrl,
         favorite = song.favorite
     )
 

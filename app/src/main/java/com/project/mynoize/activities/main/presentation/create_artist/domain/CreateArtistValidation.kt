@@ -5,16 +5,19 @@ import com.project.mynoize.core.domain.EmptyResult
 import com.project.mynoize.core.domain.InputError
 import com.project.mynoize.core.domain.Result
 import com.project.mynoize.core.domain.onError
+import com.project.mynoize.util.Country
 
 class CreateArtistValidation {
 
-    fun execute(artistName: String, artistImage: Uri?): EmptyResult<InputError.CreateArtist>{
+    fun execute(artistName: String, artistImage: Uri?, country: Country?): EmptyResult<InputError.CreateArtist>{
 
         validateArtistImage(artistImage).onError {
             return Result.Error(it)
         }
-
         validateArtistName(artistName).onError {
+            return Result.Error(it)
+        }
+        validateCountry(country).onError {
             return Result.Error(it)
         }
 
@@ -36,6 +39,14 @@ class CreateArtistValidation {
             Result.Error(InputError.CreateArtist.ARTIST_NAME_TOO_LONG)
         }
         else {
+            Result.Success(Unit)
+        }
+    }
+
+    private fun validateCountry(country: Country?): EmptyResult<InputError.CreateArtist>{
+        return if(country == null){
+            Result.Error(InputError.CreateArtist.SELECT_ARTIST_IMAGE)
+        }else{
             Result.Success(Unit)
         }
     }

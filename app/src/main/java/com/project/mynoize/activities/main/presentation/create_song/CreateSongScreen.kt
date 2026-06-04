@@ -41,16 +41,18 @@ import com.project.mynoize.activities.main.state.ListOfState
 import com.project.mynoize.activities.main.ui.CustomDropdown
 import com.project.mynoize.activities.main.ui.CustomSelectFileButton
 import com.project.mynoize.activities.main.ui.theme.LatoFontFamily
-import com.project.mynoize.core.data.Album
-import com.project.mynoize.core.data.Artist
+import com.project.mynoize.core.domain.entities.Album
+import com.project.mynoize.core.domain.entities.Artist
 import com.project.mynoize.core.presentation.AlertDialogState
 import com.project.mynoize.core.presentation.components.CustomButton
 import com.project.mynoize.core.presentation.components.CustomTextField
 import com.project.mynoize.core.presentation.components.MessageAlertDialog
 import com.project.mynoize.core.presentation.UiText
 import com.project.mynoize.core.presentation.asString
-import com.project.mynoize.util.genres
-import com.project.mynoize.util.subGenreMap
+import com.project.mynoize.util.Era
+import com.project.mynoize.util.Genre
+import com.project.mynoize.util.Language
+import com.project.mynoize.util.SubGenre
 
 
 @Composable
@@ -155,10 +157,10 @@ fun CreateSongScreen(
         )
 
         CustomDropdown(
-            itemList = artistListState.list.map { it.name },
+            itemList = artistListState.list,
             hint = "Select Artist",
             title = "Artist",
-            selectedIndex = artistListState.index,
+            selectedItem = artistListState.selected,
             onItemClick = {
                 if(!alertDialogState.loading){
                     onEvent(CreateSongEvent.OnArtistClick(it))
@@ -171,12 +173,12 @@ fun CreateSongScreen(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        if(artistListState.index != -1){
+        if(artistListState.selected != null){
             CustomDropdown(
-                itemList = albumListState.list.map {it.name},
+                itemList = albumListState.list,
                 hint = "Select Album",
                 title = "Album",
-                selectedIndex = albumListState.index,
+                selectedItem = albumListState.selected,
                 onItemClick = {
                     if(!alertDialogState.loading){
                         onEvent(CreateSongEvent.OnAlbumClick(it))
@@ -197,38 +199,64 @@ fun CreateSongScreen(
         Spacer(modifier = Modifier.height(10.dp))
 
         CustomDropdown(
-            itemList = genres,
-            hint = "Select Genre",
+            itemList = Genre.entries,
+            hint = "Select a Genre",
             title = "Genre",
-            selectedIndex = createSongState.songGenre,
+            selectedItem = createSongState.songGenre,
             onItemClick = {
                 if(!alertDialogState.loading){
                     onEvent(CreateSongEvent.OnGenreClick(it))
                 }
             },
+            displayText = { it.displayName },
             isError = createSongState.songGenreError != null,
             errorMessage = createSongState.songGenreError?.asString() ?: ""
         )
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        if(createSongState.songGenre != -1){
+        if(createSongState.songGenre != null){
             CustomDropdown(
-                itemList = subGenreMap[genres[createSongState.songGenre]]!!,
+                itemList = SubGenre.entries,
                 hint = "Select Subgenre",
                 title = "Subgenre",
-                selectedIndex = createSongState.songSubgenre,
+                selectedItem = createSongState.songSubgenre,
                 onItemClick = {
                     if(!alertDialogState.loading){
                         onEvent(CreateSongEvent.OnSubgenreClick(it))
                     }
                 },
+                displayText = { it.displayName },
                 isError = createSongState.songSubgenreError != null,
                 errorMessage = createSongState.songSubgenreError?.asString() ?: ""
             )
 
             Spacer(modifier = Modifier.height(10.dp))
         }
+
+        CustomDropdown(
+            itemList = Language.entries,
+            hint = "Select language",
+            title = "Language",
+            selectedItem = createSongState.language,
+            onItemClick = { onEvent(CreateSongEvent.OnLanguageClick(it)) },
+            displayText = { it.displayName },
+            isError = createSongState.languageError != null,
+            errorMessage = createSongState.languageError?.asString() ?: ""
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+        
+        CustomDropdown(
+            itemList = Era.entries,
+            hint = "Select era",
+            title = "Era",
+            selectedItem = createSongState.era,
+            onItemClick = { onEvent(CreateSongEvent.OnEraClick(it)) },
+            displayText = { it.displayName },
+            isError = createSongState.eraError != null,
+            errorMessage = createSongState.eraError?.asString() ?: ""
+        )
 
         if(!alertDialogState.loading){
             CustomSelectFileButton(
@@ -249,7 +277,6 @@ fun CreateSongScreen(
         }else{
             CircularProgressIndicator()
         }
-
 
         Spacer(Modifier.height(100.dp))
     }

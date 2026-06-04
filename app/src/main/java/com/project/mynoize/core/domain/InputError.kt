@@ -7,6 +7,8 @@ sealed interface InputError: Error {
         SELECT_ALBUM,
         SELECT_GENRE,
         SELECT_SUBGENRE,
+        SELECT_LANGUAGE,
+        SELECT_ERA,
         SELECT_SONG_FILE
     }
 
@@ -19,12 +21,14 @@ sealed interface InputError: Error {
         ENTER_ARTIST_NAME,
         ARTIST_NAME_TOO_LONG,
         SELECT_ARTIST_IMAGE,
+        SELECT_ARTIST_COUNTRY
     }
 
     enum class CreatePlaylist: InputError{
         ENTER_PLAYLIST_NAME,
         PLAYLIST_NAME_TOO_LONG,
-        SELECT_PLAYLIST_IMAGE
+        SELECT_PLAYLIST_IMAGE,
+        SELECT_AT_LEAST_ONE_TAG
     }
 
     enum class SingIn: InputError{

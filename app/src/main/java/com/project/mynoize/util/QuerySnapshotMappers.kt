@@ -1,38 +1,38 @@
 package com.project.mynoize.util
 
 import com.google.firebase.firestore.QuerySnapshot
-import com.project.mynoize.core.data.Album
-import com.project.mynoize.core.data.Artist
-import com.project.mynoize.core.data.Playlist
-import com.project.mynoize.core.data.firestore.entities.RemoteSong
+import com.project.mynoize.core.data.firestore.entities.AlbumDto
+import com.project.mynoize.core.data.firestore.entities.ArtistDto
+import com.project.mynoize.core.data.firestore.entities.PlaylistDto
+import com.project.mynoize.core.data.firestore.entities.SongDto
 
-fun QuerySnapshot.toPlaylists(): List<Playlist>{
+fun QuerySnapshot.toDtoPlaylists(): List<PlaylistDto>{
     return this.documents.map { document ->
-        document.toObject(Playlist::class.java)!!.apply {
+        document.toObject(PlaylistDto::class.java)!!.apply {
             id = document.id
         }
     }
 }
 
-fun QuerySnapshot.toSongs(): List<RemoteSong>{
+fun QuerySnapshot.toDtoSongs(): List<SongDto>{
     return this.documents.map { document ->
-        document.toObject(RemoteSong::class.java)!!.apply {
+        document.toObject(SongDto::class.java)!!.apply {
             id = document.id
         }
     }
 }
 
-fun QuerySnapshot.toAlbums(): List<Album>{
+fun QuerySnapshot.toDtoAlbums(): List<AlbumDto>{
     return this.documents.map { document ->
-        document.toObject(Album::class.java)!!.apply {
+        document.toObject(AlbumDto::class.java)!!.apply {
             id = document.id
         }
     }
 }
 
-fun QuerySnapshot.toArtists(): List<Artist>{
+fun QuerySnapshot.toDtoArtists(): List<ArtistDto>{
     return this.documents.map { document ->
-        document.toObject(Artist::class.java)!!.apply {
+        document.toObject(ArtistDto::class.java)!!.apply {
             id = document.id
         }
     }

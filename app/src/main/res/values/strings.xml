@@ -47,6 +47,7 @@
     <string name="error_enter_artist_name">Please enter artist name</string>
     <string name="error_artist_name_too_long">Artist name is too long</string>
     <string name="error_select_artist_image">Please select artist image</string>
+    <string name="error_select_artist_country">Please select country</string>
     <string name="artist_added_successfully">Artist has been added successfully</string>
 
 
@@ -56,6 +57,8 @@
     <string name="error_select_song">Please select song file</string>
     <string name="error_select_genre">Please select genre</string>
     <string name="error_select_subgenre">Please select subgenre</string>
+    <string name="error_select_language">Please select language</string>
+    <string name="error_select_era">Please select era</string>
 
     <string name="error_loading_artist_failed">Loading artists failed. Try to restart the app</string>
     <string name="error_loading_album_failed">Loading albums failed. Try to reselect artist or to restart the app</string>
@@ -69,6 +72,7 @@
     <string name="error_enter_playlist_name">Please enter playlist name</string>
     <string name="error_playlist_name_too_long">Playlist name is too long</string>
     <string name="error_select_playlist_image">Please select playlist image</string>
+    <string name="error_select_at_least_one_tag">Please select at least one tag</string>
     <string name="playlist_added_successfully">Playlist added successfully</string>
     <string name="playlist_updated_successfully">Playlist updated successfully</string>
 

@@ -1,18 +1,19 @@
 package com.project.mynoize.core.data.mappers
 
-import com.project.mynoize.core.data.Artist
+import com.project.mynoize.core.domain.entities.Artist
 import com.project.mynoize.core.data.database.LocalArtistEntity
+import com.project.mynoize.core.data.firestore.entities.ArtistDto
+import com.project.mynoize.util.Country
 
 fun LocalArtistEntity.toArtist(): Artist{
     return Artist(
         id = id,
         name = name,
-        nameLower = name.lowercase(),
         creator = creator,
+        country = null,
         imageLink = imageLink,
         imagePath = imagePath,
         favorite = favorite,
-        songs = songs
     )
 }
 
@@ -24,7 +25,31 @@ fun Artist.toLocalArtistEntity(localImagePath: String = ""): LocalArtistEntity {
         imageLink = imageLink,
         imagePath = imagePath,
         favorite = favorite,
-        songs = songs,
+        songs = emptyList(),
         localImagePath = localImagePath
+    )
+}
+
+fun Artist.toDto(): ArtistDto{
+    return ArtistDto(
+        id = id,
+        name = name,
+        nameLower = name.lowercase(),
+        creator = creator,
+        country = country?.displayName ?: "",
+        imageLink = imageLink,
+        imagePath = imagePath
+    )
+}
+
+fun ArtistDto.toArtist(): Artist{
+    return Artist(
+        id = id,
+        name = name,
+        creator = creator,
+        country = Country.fromDisplayName(country),
+        imageLink = imageLink,
+        imagePath = imagePath,
+        favorite = false
     )
 }
