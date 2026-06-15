@@ -17,7 +17,8 @@ fun InputError.CreatePlaylist.toErrorMessage(): UiText{
 
 fun InputError.CreateSong.toErrorMessage() : UiText{
     val stringRes = when(this){
-        InputError.CreateSong.ENTER_SONG_NAME -> R.string.error_song_name
+        InputError.CreateSong.ENTER_SONG_NAME -> R.string.error_song_name_empty
+        InputError.CreateSong.SONG_NAME_TOO_LONG -> R.string.error_song_name_too_long
         InputError.CreateSong.SELECT_ARTIST -> R.string.error_select_artist
         InputError.CreateSong.SELECT_ALBUM -> R.string.error_select_album
         InputError.CreateSong.SELECT_GENRE -> R.string.error_select_genre
@@ -31,8 +32,10 @@ fun InputError.CreateSong.toErrorMessage() : UiText{
 
 fun InputError.CreateAlbum.toErrorMessage(): UiText{
     val stringRes = when(this){
-        InputError.CreateAlbum.ENTER_ALBUM_NAME -> R.string.error_enter_album_name
         InputError.CreateAlbum.SELECT_IMAGE -> R.string.error_select_image
+        InputError.CreateAlbum.ENTER_ALBUM_NAME -> R.string.error_enter_album_name
+        InputError.CreateAlbum.ALBUM_NAME_TOO_LONG -> R.string.error_album_name_too_long
+        InputError.CreateAlbum.SELECT_ERA -> R.string.error_select_era
     }
     return UiText.StringResource(stringRes)
 }

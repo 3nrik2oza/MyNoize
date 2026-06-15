@@ -73,6 +73,54 @@ fun SignUpScreen(
 
         Spacer(Modifier.height(33.dp))
 
+        CustomTextField(
+            title = "Username",
+            hintText = "Enter your username",
+            inputValue = state.username,
+            onValueChange = {
+                onEvent(SignUpEvent.OnUsernameChange(it))
+            },
+            isError = state.usernameError != null,
+            enabled = !state.creatingAccount,
+            errorMessage = state.usernameError?.asString() ?: ""
+        )
+
+        CustomTextField(
+            title = "Email",
+            hintText = "Enter your email",
+            inputValue = state.email,
+            onValueChange = {
+                onEvent(SignUpEvent.OnEmailChange(it))
+            },
+            isError = state.emailError != null,
+            enabled = !state.creatingAccount,
+            errorMessage = state.emailError?.asString() ?: ""
+        )
+
+        CustomPasswordTextField(
+            title = "Password",
+            hintText = "Enter your password",
+            inputValue = state.password,
+            onValueChange = {
+                onEvent(SignUpEvent.OnPasswordChange(it))
+            },
+            isError = state.passwordError != null,
+            enabled = !state.creatingAccount,
+            errorMessage = state.passwordError?.asString() ?: ""
+        )
+
+        CustomPasswordTextField(
+            title = "Confirm password",
+            hintText = "Repeat your password",
+            inputValue = state.repeatedPassword,
+            onValueChange = {
+                onEvent(SignUpEvent.OnRepeatedPasswordChange(it))
+            },
+            isError = state.repeatedPasswordError != null,
+            enabled = !state.creatingAccount,
+            errorMessage = state.repeatedPasswordError?.asString() ?: ""
+        )
+
         if(state.creatingAccount){
             Column(
                 modifier = Modifier.fillMaxSize(),
@@ -92,54 +140,11 @@ fun SignUpScreen(
             Column (
                 Modifier.fillMaxSize().padding(horizontal = 20.dp)
             ){
-                CustomTextField(
-                    title="Username",
-                    hintText = "Enter your username",
-                    inputValue = state.username,
-                    onValueChange = {
-                        onEvent(SignUpEvent.OnUsernameChange(it))
-                    },
-                    isError = state.usernameError != null,
-                    errorMessage = state.usernameError?.asString() ?: ""
-                )
-
-                CustomTextField(
-                    title = "Email",
-                    hintText = "Enter your email",
-                    inputValue = state.email,
-                    onValueChange = {
-                        onEvent(SignUpEvent.OnEmailChange(it))
-                    },
-                    isError = state.emailError != null,
-                    errorMessage = state.emailError?.asString() ?: ""
-                )
-
-                CustomPasswordTextField(
-                    title = "Password",
-                    hintText = "Enter your password",
-                    inputValue = state.password,
-                    onValueChange = {
-                        onEvent(SignUpEvent.OnPasswordChange(it))
-                    },
-                    isError = state.passwordError != null,
-                    errorMessage = state.passwordError?.asString() ?: ""
-                )
-
-                CustomPasswordTextField(
-                    title = "Confirm password",
-                    hintText = "Repeat your password",
-                    inputValue = state.repeatedPassword,
-                    onValueChange = {
-                        onEvent(SignUpEvent.OnRepeatedPasswordChange(it))
-                    },
-                    isError = state.repeatedPasswordError != null,
-                    errorMessage = state.repeatedPasswordError?.asString() ?: ""
-                )
-
                 CustomButton(
                     modifier = Modifier,
                     text = "SIGN UP",
-                    {onEvent(SignUpEvent.OnSignUpClick)}
+                    enabled = true,
+                    onClick = {onEvent(SignUpEvent.OnSignUpClick)}
                 )
 
                 Box(

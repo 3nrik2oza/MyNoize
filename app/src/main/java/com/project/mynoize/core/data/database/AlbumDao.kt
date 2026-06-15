@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Query
 import androidx.room.Upsert
+import com.project.mynoize.core.domain.entities.Album
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -23,6 +24,9 @@ interface AlbumDao {
 
     @Query("SELECT * FROM LocalAlbumEntity where id = :id")
     suspend fun getAlbumFromId(id: String): List<LocalAlbumEntity>
+
+    @Query("SELECT * FROM LocalAlbumEntity where id = :id")
+    fun getAlbumFromIdFlow(id: String): Flow<List<LocalAlbumEntity>>
 
     @Query("SELECT * FROM LocalAlbumEntity where id in (:ids)")
     fun getAlbumsFromIds(ids: List<String>): List<LocalAlbumEntity>

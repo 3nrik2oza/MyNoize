@@ -7,10 +7,12 @@ import com.project.mynoize.core.data.mappers.toAlbum
 import com.project.mynoize.core.data.mappers.toDto
 import com.project.mynoize.core.data.mappers.toLocalAlbumEntity
 import com.project.mynoize.core.data.remote_data_source.AlbumRemoteDataSource
+import com.project.mynoize.core.domain.EmptyResult
 import com.project.mynoize.core.domain.FbError
 import com.project.mynoize.core.domain.Result
 import com.project.mynoize.core.domain.map
 import com.project.mynoize.core.domain.onSuccess
+import com.project.mynoize.util.toPlaylist
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -86,18 +88,15 @@ class AlbumRepository(
                     }
                     if(path != ""){
                         albumDao.upsertAlbum(remoteAlbum.copy(localImageUrl = path).toLocalAlbumEntity())
-                    }// finish this function
+                    }
                 }
                 localItem.lastModified < remoteAlbum.lastModified -> {
                     try {
-                        var path = ""
                         File(localItem.localImageUrl).delete()
-                        storageRepository.downloadToLocalMemory(remoteAlbum.imagePath, "album_image").onSuccess {
-                            path = it
+                        storageRepository.downloadToLocalMemory(remoteAlbum.imageLink, "album_image").onSuccess {
+                            albumDao.upsertAlbum(remoteAlbum.copy(localImageUrl = it).toLocalAlbumEntity())
                         }
-                        if(path != ""){
-                            albumDao.upsertAlbum(remoteAlbum.copy(localImageUrl = path).toLocalAlbumEntity())
-                        }
+
                     }catch (e: Exception){
                         if(e is CancellationException){
                             throw e
@@ -107,8 +106,6 @@ class AlbumRepository(
                 }
             }
         }
-
-
         return emptyList()
     }
 
@@ -121,9 +118,15 @@ class AlbumRepository(
         return remoteSource.getArtistAlbums(artistId).map { it.map { dto -> dto.toAlbum() } }
     }
 
-    fun getAlbum(artistId: String, albumId: String) : Flow<Album?>{
-        return remoteSource.getAlbum(artistId, albumId).map { it?.toAlbum() }
-
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun getAlbum(artistId: String, albumId: String): Flow<Album?> {
+        return albumDao.getAlbumFromIdFlow(albumId)
+            .flatMapLatest { local ->
+                when {
+                    local.size == 1 -> flowOf(local.first().toAlbum())
+                    else -> remoteSource.getAlbum(artistId, albumId).map { it?.toAlbum() }
+                }
+            }
     }
 
     suspend fun getAllAlbumsContaining(q: String): Result<List<Album>, FbError.Firestore> {
@@ -132,6 +135,14 @@ class AlbumRepository(
 
     suspend fun createAlbum(album: Album): Result<String, FbError.Firestore> {
         return remoteSource.createAlbum(album.toDto())
+    }
+
+    suspend fun addSongToAlbum(album: Album, songId: String): EmptyResult<FbError.Firestore>{
+        return remoteSource.addSongToAlbum(
+            artistId = album.artist,
+            albumId = album.id,
+            songId = songId
+        )
     }
 
 

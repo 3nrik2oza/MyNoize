@@ -1,7 +1,6 @@
 package com.project.mynoize.util
 
 enum class Country(val displayName: String) {
-    // EU Countries (27)
     CROATIA("Croatia"),
     SERBIA("Serbia"),
     BOSNIA_AND_HERZEGOVINA("Bosnia and Herzegovina"),
@@ -95,7 +94,8 @@ enum class Language(val displayName: String) {
     TURKISH("tr"),
     DANISH("da"),
     NORWEGIAN("no"),
-    FINNISH("fi");
+    FINNISH("fi"),
+    OTHER("other");
 
     companion object {
         fun fromDisplayName(name: String): Language? =

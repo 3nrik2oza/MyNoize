@@ -23,6 +23,7 @@ fun CustomSelectFileButton(
     text: String = "Select song",
     onClick: () -> Unit,
     isError: Boolean = false,
+    enabled: Boolean,
     errorMessage: String = ""
 ){
 
@@ -36,17 +37,18 @@ fun CustomSelectFileButton(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
-                    .background(color = Color.Black, shape = RectangleShape)
+                    .background(color = if(enabled)Color.Black else Color.DarkGray, shape = RectangleShape)
                     .padding((3/2).dp)
                     .background(color = Color.White, shape = RectangleShape)
                     .clickable{
-                        onClick()
+                        if(enabled) { onClick() }
                     }
             ){
                 Text(
                     text = text,
                     maxLines = 2,
                     modifier = Modifier.padding(horizontal = 10.dp),
+                    color = if(enabled)Color.Black else Color.DarkGray,
                     fontFamily = NovaSquareFontFamily
                 )
             }
@@ -59,7 +61,8 @@ fun CustomSelectFileButton(
 @Composable
 fun ShowCustomSelectFileButton(){
     CustomSelectFileButton(
-        onClick = {}
+        onClick = {},
+        enabled = true
     )
 
 }

@@ -75,75 +75,62 @@ fun SignInScreen(
 
         Spacer(Modifier.height(31.dp))
 
-        if(state.loading){
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ){
-                CircularProgressIndicator()
-            }
-        }else{
-            Column(
-                Modifier.fillMaxWidth().padding(horizontal = 20.dp)
-            ){
-
-                CustomTextField(
-                    title = "EMAIL",
-                    hintText = "Your email",
-                    inputValue =  state.email,
-                    onValueChange = {onEvent(SignInEvent.OnEmailChange(it))},
-                    isError = state.emailError != null,
-                    errorMessage = state.emailError?.asString() ?: ""
-                )
+        CustomTextField(
+            title = "EMAIL",
+            hintText = "Your email",
+            inputValue =  state.email,
+            onValueChange = {onEvent(SignInEvent.OnEmailChange(it))},
+            isError = state.emailError != null,
+            enabled = !state.loading,
+            errorMessage = state.emailError?.asString() ?: ""
+        )
 
 
-                CustomPasswordTextField(
-                    title = "PASSWORD",
-                    hintText = "Your password",
-                    inputValue = state.password,
-                    onValueChange = {onEvent(SignInEvent.OnPasswordChange(it))},
-                    isError = state.passwordError != null,
-                    errorMessage = state.passwordError?.asString() ?: ""
-                )
+        CustomPasswordTextField(
+            title = "PASSWORD",
+            hintText = "Your password",
+            inputValue = state.password,
+            onValueChange = {onEvent(SignInEvent.OnPasswordChange(it))},
+            isError = state.passwordError != null,
+            enabled = !state.loading,
+            errorMessage = state.passwordError?.asString() ?: ""
+        )
 
-                CustomButton (
-                    modifier = Modifier,
-                    text = "SIGN IN",
-                    {
-                        onEvent(SignInEvent.OnSignInClick)
-                    }
-                )
+        CustomButton (
+            modifier = Modifier,
+            text = "SIGN IN",
+            enabled = !state.loading,
+            onClick = { onEvent(SignInEvent.OnSignInClick) }
+        )
 
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ){
-                    Text(
-                        text="Don't have an account? Sign up",
-                        modifier = Modifier.clickable{
-                            navController.navigate(ScreenSignUp)
-                        },
-                        fontFamily = NovaSquareFontFamily,
-                    )
-                }
-
-                Spacer(Modifier.height(18.dp))
-
-                Box(
-                    Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ){
-                    Text(
-                        text="G",
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = Color.Black,
-                        modifier = Modifier.clickable{ onEvent(SignInEvent.OnSignInWithGoogleClick) }
-                    )
-                }
-
-            }
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ){
+            Text(
+                text="Don't have an account? Sign up",
+                modifier = Modifier.clickable{
+                    navController.navigate(ScreenSignUp)
+                },
+                fontFamily = NovaSquareFontFamily,
+            )
         }
+
+        Spacer(Modifier.height(18.dp))
+
+        Box(
+            Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ){
+            Text(
+                text="G",
+                fontSize = 30.sp,
+                fontWeight = FontWeight.Normal,
+                color = Color.Black,
+                modifier = Modifier.clickable{ onEvent(SignInEvent.OnSignInWithGoogleClick) }
+            )
+        }
+        
     }
 }
 

@@ -1,10 +1,12 @@
 package com.project.mynoize.core.data.remote_data_source
 
 import com.google.firebase.firestore.FieldPath
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.snapshots
 import com.project.mynoize.core.data.firestore.entities.AlbumDto
 import com.project.mynoize.core.data.firestore.safeFirestoreCall
+import com.project.mynoize.core.domain.EmptyResult
 import com.project.mynoize.core.domain.FbError
 import com.project.mynoize.core.domain.Result
 import com.project.mynoize.util.Constants
@@ -18,12 +20,13 @@ class AlbumRemoteDataSource(
 ) {
 
     fun favoriteAlbums(favoriteIds: List<String>): Flow<List<AlbumDto>> {
-        return firestore.collection(Constants.ALBUM_COLLECTION)
-            .whereIn(FieldPath.documentId(), favoriteIds)
+        val albums = firestore.collectionGroup(Constants.ALBUM_COLLECTION)
+            .whereIn("id", favoriteIds)
             .snapshots()
             .map { snapshot ->
                 snapshot.toObjects(AlbumDto::class.java)
             }
+        return albums
     }
 
     fun getAlbum(artistId: String, albumId: String): Flow<AlbumDto?>{
@@ -74,6 +77,27 @@ class AlbumRemoteDataSource(
             albumRef.set(albumWithId).await()
 
             albumRef.id
+        }
+    }
+
+    suspend fun addSongToAlbum(artistId: String, albumId: String, songId: String): EmptyResult<FbError.Firestore>{
+        return safeFirestoreCall {
+            firestore.collection(Constants.ARTIST_COLLECTION)
+                .document(artistId)
+                .collection(Constants.ALBUM_COLLECTION)
+                .document(albumId)
+                .update("songList", FieldValue.arrayUnion(songId))
+        }
+    }
+
+    suspend fun removeSongFromAlbum(artistId: String, albumId: String, songId: String): EmptyResult<FbError.Firestore> {
+        return safeFirestoreCall {
+            firestore.collection(Constants.ARTIST_COLLECTION)
+                .document(artistId)
+                .collection(Constants.ALBUM_COLLECTION)
+                .document(albumId)
+                .update("songList", FieldValue.arrayRemove(songId))
+                .await()
         }
     }
 }

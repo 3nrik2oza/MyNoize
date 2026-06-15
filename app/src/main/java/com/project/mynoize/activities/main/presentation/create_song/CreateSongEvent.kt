@@ -6,6 +6,7 @@ import com.project.mynoize.core.domain.entities.Artist
 import com.project.mynoize.util.Era
 import com.project.mynoize.util.Genre
 import com.project.mynoize.util.Language
+import com.project.mynoize.util.Mood
 import com.project.mynoize.util.SubGenre
 
 sealed interface CreateSongEvent {
@@ -18,6 +19,7 @@ sealed interface CreateSongEvent {
     data class OnSubgenreClick(val selected: SubGenre): CreateSongEvent
     data class OnLanguageClick(val selected: Language): CreateSongEvent
     data class OnEraClick(val selected: Era): CreateSongEvent
+    data class OnMoodClick(val selected: Mood): CreateSongEvent
 
     object OnAddAlbumClick: CreateSongEvent
     object OnAddSongClick: CreateSongEvent

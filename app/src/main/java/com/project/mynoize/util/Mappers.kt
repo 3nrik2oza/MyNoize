@@ -9,6 +9,7 @@ fun Album.toPlaylist(): Playlist {
         name = name,
         creator = creator,
         imageLink = imageLink,
+        localImagePath = localImageUrl ?: "",
         imagePath = artist,
         favorite = favorite,
         songs = songs,

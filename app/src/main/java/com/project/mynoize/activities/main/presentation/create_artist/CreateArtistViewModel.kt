@@ -66,15 +66,19 @@ class CreateArtistViewModel(
 
                 }
             }
+            is CreateArtistEvent.OnArtistGenreChange -> {
+                _state.update { it.copy(genre = event.selected) }
+            }
             is CreateArtistEvent.OnArtistCountryChange -> _state.update { it.copy(country = event.selected) }
-            else -> Unit
+            is CreateArtistEvent.OnBackClick -> {}
         }
     }
 
     fun addArtistToFirestore(){
         _state.update { it.copy(loading = true) }
+        val state = _state.value
 
-        artistValidation.execute(state.value.artistName, state.value.artistImage, state.value.country).onError { error->
+        artistValidation.execute(state.artistName, state.artistImage, state.country).onError { error->
             _alertDialogState.update {
                 it.copy(show = true, message = error.toErrorMessage())
             }
@@ -100,14 +104,14 @@ class CreateArtistViewModel(
             return
         }
 
-        if(state.value.artistToModify != null){
-            val oldArtist = state.value.artistToModify!!
-            var artist = oldArtist.copy(name = state.value.artistName)
-            if(oldArtist.imageLink.toUri() != state.value.artistImage){
-                val fileName = "artist_images/${state.value.artistImage!!.lastPathSegment}"
+        if(state.artistToModify != null){
+            val oldArtist = state.artistToModify
+            var artist = oldArtist.copy(name = state.artistName, genre = state.genre ?: oldArtist.genre)
+            if(oldArtist.imageLink.toUri() != state.artistImage){
+                val fileName = "artist_images/${state.artistImage!!.lastPathSegment}"
                 viewModelScope.launch {
                     storageRepository.addToStorage(
-                        file = state.value.artistImage!!,
+                        file = state.artistImage,
                         path = fileName
                     ).onError { error ->
                         _alertDialogState.update { it.copy(show = true, message = error.toErrorMessage()) }
@@ -160,12 +164,12 @@ class CreateArtistViewModel(
             return
         }
 
-        val fileName = "artist_images/${state.value.artistImage!!.lastPathSegment}"
+        val fileName = "artist_images/${state.artistImage!!.lastPathSegment}"
 
         var artist = Artist()
         viewModelScope.launch {
             storageRepository.addToStorage(
-                file = state.value.artistImage!!,
+                file = state.artistImage,
                 path = fileName
             ).onError { error ->
                 _alertDialogState.update { it.copy(show = true, message = error.toErrorMessage()) }
@@ -192,11 +196,13 @@ class CreateArtistViewModel(
     }
 
     fun createArtist(imageUri: String, imagePath: String): Artist{
+        val state = state.value
         return Artist(
-            name = state.value.artistName,
+            name = state.artistName,
             imageLink = imageUri,
             imagePath = imagePath,
-            country = state.value.country!!,
+            country = state.country!!,
+            genre = state.genre,
             creator = auth.getCurrentUserId()
         )
     }

@@ -26,6 +26,7 @@ fun CustomTextField(
     numberOfLines: Int = 1,
     onValueChange: (String) -> Unit,
     isError: Boolean,
+    enabled: Boolean,
     errorMessage: String = ""
 
 ) {
@@ -43,7 +44,7 @@ fun CustomTextField(
             shape = RectangleShape,
             placeholder = { Text(text = hintText, fontFamily = NovaSquareFontFamily, color = Color.LightGray) },
             maxLines = numberOfLines,
-            onValueChange = onValueChange,
+            onValueChange = { if(enabled) onValueChange(it)},
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None),
             textStyle = TextStyle.Default.copy(fontFamily = NovaSquareFontFamily)
         )
@@ -62,6 +63,7 @@ fun ShowCustomTextField(){
             hintText = "Your name",
             inputValue = "",
             onValueChange = {},
+            enabled = true,
             isError = false
         )
     }

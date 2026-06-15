@@ -35,8 +35,6 @@ class ArtistRepository(
             }
         }
     }
-    //TODO(update remote data source so that it only uses DTO classes)
-
 
     suspend fun getArtists(): Result<List<Artist>, FbError.Firestore> {
         return remoteSource.getArtists().map { it.map { dto -> dto.toArtist() } }

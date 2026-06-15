@@ -1,5 +1,6 @@
 package com.project.mynoize.activities.main.presentation.create_song.domain
 
+import com.project.mynoize.activities.main.presentation.create_song.CreateSongState
 import com.project.mynoize.core.domain.EmptyResult
 import com.project.mynoize.core.domain.InputError
 import com.project.mynoize.core.domain.Result
@@ -15,46 +16,47 @@ import com.project.mynoize.util.SubGenre
 
 class CreateSongValidation {
 
-    fun execute(songName: String, artist: Artist?, album: Album?, uri: String, genre: Genre?, subgenre: SubGenre?, language: Language?, era: Era?, mood :List<Mood>?): Result<Song, InputError.CreateSong>{
-        validateSongName(songName = songName).onError {
+    fun execute(state: CreateSongState): Result<Song, InputError.CreateSong>{
+        validateSongName(songName = state.songName).onError {
             return Result.Error(it)
         }
 
-        validateArtistSelected(artist).onError {
+        validateArtistSelected(state.selectedArtist).onError {
             return Result.Error(it)
         }
 
-        validateAlbumSelected(album).onError {
+        validateAlbumSelected(state.selectedAlbum).onError {
             return Result.Error(it)
         }
 
-        validateGenreSelected(genre, subgenre).onError {
+        validateGenreSelected(state.songGenre, state.songSubgenre).onError {
             return Result.Error(it)
         }
 
-        validateSongUri(uri = uri).onError {
+        validateSongUri(uri = state.songUri).onError {
             return Result.Error(it)
         }
 
-        validateLanguage(language).onError {
+        validateLanguage(state.language).onError {
             return Result.Error(it)
         }
 
-        validateEra(era).onError {
+        validateEra(state.era).onError {
             return Result.Error(it)
         }
 
         val song = Song(
-            title = songName,
-            artistId = artist!!.id,
-            artistName = artist.name,
-            genre = genre,
-            subgenre = subgenre,
-            mood = mood,
-            language = language!!,
-            era = era!!,
-            albumName = album!!.name,
-            albumId = album.id,
+            title = state.songName,
+            artistId = state.selectedArtist!!.id,
+            artistName = state.selectedArtist.name,
+            genre = state.songGenre,
+            subgenre = state.songSubgenre,
+            mood = state.moods,
+            language = state.language,
+            era = state.era,
+            albumName = state.selectedAlbum!!.name,
+            albumId = state.selectedAlbum.id,
+            imageUrl = state.selectedAlbum.imageLink
         )
         return Result.Success(song)
     }
@@ -62,7 +64,9 @@ class CreateSongValidation {
     private fun validateSongName(songName: String): EmptyResult<InputError.CreateSong>{
         val result = if(songName.isEmpty()){
             Result.Error(InputError.CreateSong.ENTER_SONG_NAME)
-        } else {
+        } else if(songName.length > 30){
+            Result.Error(InputError.CreateSong.SONG_NAME_TOO_LONG)
+        } else{
             Result.Success(Unit)
         }
         return result

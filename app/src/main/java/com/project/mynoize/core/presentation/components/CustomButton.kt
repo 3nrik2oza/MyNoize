@@ -23,6 +23,7 @@ fun CustomButton(
     modifier: Modifier = Modifier,
     text: String,
     onClick: () -> Unit,
+    enabled: Boolean,
     fontSize : TextUnit = 25.sp
 ) {
 
@@ -35,7 +36,8 @@ fun CustomButton(
             modifier = modifier,
             onClick = onClick,
             shape = RectangleShape,
-            colors = ButtonDefaults.buttonColors(containerColor = Red)
+            enabled = enabled,
+            colors = ButtonDefaults.buttonColors(containerColor = if(enabled)Red else Red.copy(alpha = 0.7f))
         ) {
             Text(
                 text = text,

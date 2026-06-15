@@ -41,6 +41,7 @@ fun CustomPasswordTextField(
     numberOfLines: Int = 1,
     onValueChange: (String) -> Unit,
     isError: Boolean,
+    enabled: Boolean,
     errorMessage: String = ""
 ){
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
@@ -51,6 +52,12 @@ fun CustomPasswordTextField(
         isError = isError,
         errorMessage = errorMessage
     ){
+        val description = if (passwordVisible) "Hide password" else "Show password"
+        val trailIcon = when(passwordVisible){
+            true -> Icons.Filled.VisibilityOff
+            false -> Icons.Filled.Visibility
+        }
+
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
             colors = ModifiedTextInputColors,
@@ -58,64 +65,15 @@ fun CustomPasswordTextField(
             shape = RectangleShape,
             placeholder = { Text(text=hintText, fontFamily = NovaSquareFontFamily, color = Color.LightGray) },
             maxLines = numberOfLines,
-            onValueChange = onValueChange,
+            onValueChange = { if(enabled) onValueChange },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             trailingIcon = {
-                val image = if (passwordVisible)
-                    Icons.Filled.VisibilityOff
-                else Icons.Filled.Visibility
-
-                // Please provide localized description for accessibility services
-                val description = if (passwordVisible) "Hide password" else "Show password"
-
                 IconButton(onClick = {passwordVisible = !passwordVisible}){
-                    Icon(imageVector  = image, description)
+                    Icon(imageVector  = trailIcon, description)
                 }
             },
             textStyle = TextStyle.Default.copy(fontFamily = NovaSquareFontFamily)
         )
     }
-/*
-    MaterialTheme(
-        colorScheme = MaterialTheme.colorScheme.copy(background = Color.White)
-    ) {
-        Column {
-            Text(text = title)
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(25.dp),
-                colors = AppTextInputColors,
-                value = inputValue,
-                placeholder = { Text(hintText) },
-                maxLines = numberOfLines,
-                onValueChange = onValueChange,
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                isError = isError,
-                trailingIcon = {
-                    val image = if (passwordVisible)
-                        Icons.Filled.VisibilityOff
-                    else Icons.Filled.Visibility
-
-                    // Please provide localized description for accessibility services
-                    val description = if (passwordVisible) "Hide password" else "Show password"
-
-                    IconButton(onClick = {passwordVisible = !passwordVisible}){
-                        Icon(imageVector  = image, description)
-                    }
-                }
-            )
-            if(isError){
-                Spacer(modifier = Modifier.height(5.dp))
-                Text(
-                    text = errorMessage,
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-            Spacer(modifier = Modifier.height(20.dp))
-        }
-    }*/
-
-
 }

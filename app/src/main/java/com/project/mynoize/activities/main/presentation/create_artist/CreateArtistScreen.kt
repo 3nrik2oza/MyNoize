@@ -24,6 +24,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,6 +53,7 @@ import com.project.mynoize.core.presentation.components.CustomButton
 import com.project.mynoize.core.presentation.components.CustomTextField
 import com.project.mynoize.core.presentation.components.Surrounding
 import com.project.mynoize.util.Country
+import com.project.mynoize.util.Genre
 
 @Composable
 fun CreateArtistScreen(
@@ -58,6 +63,9 @@ fun CreateArtistScreen(
 ){
 
     val localFocusManager = LocalFocusManager.current
+
+    var showCountryDropdown by rememberSaveable { mutableStateOf(false) }
+    var showGenreDropdown by rememberSaveable { mutableStateOf(false) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -86,6 +94,7 @@ fun CreateArtistScreen(
         .pointerInput(Unit){
             detectTapGestures(onTap = {
                 localFocusManager.clearFocus()
+                showCountryDropdown = false
             })
         }
         .verticalScroll(rememberScrollState()),
@@ -180,6 +189,7 @@ fun CreateArtistScreen(
                 onEvent(CreateArtistEvent.OnArtistNameChange(it))
             },
             isError =  state.artistNameError != null,
+            enabled = !state.loading,
             errorMessage = state.artistNameError?.asString() ?: ""
         )
 
@@ -193,21 +203,35 @@ fun CreateArtistScreen(
             onItemClick = { onEvent(CreateArtistEvent.OnArtistCountryChange(it)) },
             displayText = { it.displayName },
             isError = state.countryError != null,
-            errorMessage = state.countryError?.asString() ?: ""
+            showDropdown = showCountryDropdown,
+            onToggleShow = { showCountryDropdown = !showCountryDropdown },
+            enabled = !state.loading,
+            errorMessage = state.countryError?.asString() ?: "",
+        )
+
+        CustomDropdown(
+            itemList = Genre.entries,
+            hint = "Select Genre",
+            title = "Genre",
+            selectedItem = state.genre,
+            onItemClick = { onEvent(CreateArtistEvent.OnArtistGenreChange(it)) },
+            displayText = { it.displayName },
+            isError = false,
+            showDropdown = showGenreDropdown,
+            onToggleShow = { showGenreDropdown = !showGenreDropdown },
+            enabled = !state.loading,
+            errorMessage = "",
         )
 
         Spacer(Modifier.height(50.dp))
 
-        if(!state.loading){
-            CustomButton(
-                text = "ADD",
-                onClick = {
-                    onEvent(CreateArtistEvent.OnAddArtistClick)
-                }
-            )
-        }else{
-            CircularProgressIndicator()
-        }
+        CustomButton(
+            text = "ADD",
+            enabled = !state.loading,
+            onClick = {
+                onEvent(CreateArtistEvent.OnAddArtistClick)
+            }
+        )
 
     }
 }

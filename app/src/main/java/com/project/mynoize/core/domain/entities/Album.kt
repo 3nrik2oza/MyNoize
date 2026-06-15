@@ -1,6 +1,7 @@
 package com.project.mynoize.core.domain.entities
 
 import com.google.firebase.Timestamp
+import com.project.mynoize.util.Era
 
 data class Album (
     var id: String = "",
@@ -10,6 +11,7 @@ data class Album (
     val localImageUrl: String? = null,
     val creator: String = "",
     val artist: String = "",
+    val era: Era? = null,
     val favorite: Boolean = false,
     val songs: List<String> = listOf(),
     val lastModified: Timestamp = Timestamp.now(),

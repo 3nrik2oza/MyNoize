@@ -124,7 +124,7 @@ fun MainScreen(
     val currentDestination = navController.currentBackStackEntryAsState().value?.destination
 
     val showBottomBar = currentDestination?.let {
-        !it.hasRoute(CreateArtistScreen::class) && !it.hasRoute(CreateSongScreen::class)
+        !it.hasRoute(CreateArtistScreen::class) && !it.hasRoute(CreateSongScreen::class) && !it.hasRoute(CreatePlaylistScreen::class)
     } ?: true
 
     val isConnected = vmMainScreen.isConnected.collectAsStateWithLifecycle()
@@ -392,19 +392,15 @@ fun MainScreen(
                     composable<CreateSongScreen> {
                         val vm = koinViewModel<CreateSongViewModel>(scope = getKoin().getScope("USER_SESSION"))
 
-                        val createSongState by vm.createSongState.collectAsStateWithLifecycle()
-                        val artistListState by vm.artistListState.collectAsStateWithLifecycle()
-                        val albumListState by vm.albumListState.collectAsStateWithLifecycle()
+                        val createSongState by vm.state.collectAsStateWithLifecycle()
                         val alertDialogState by vm.alertDialogState.collectAsStateWithLifecycle()
                         val createAlbumDialogState by vm.createAlbumDialogState.collectAsStateWithLifecycle()
 
 
                         CreateSongScreen(
-                            createSongState = createSongState,
+                            state = createSongState,
                             alertDialogState = alertDialogState,
                             createAlbumDialogState = createAlbumDialogState,
-                            albumListState = albumListState,
-                            artistListState = artistListState,
                             onEvent = { event ->
                                 when(event){
                                     CreateSongEvent.OnBackClick -> {

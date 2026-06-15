@@ -51,7 +51,8 @@
     <string name="artist_added_successfully">Artist has been added successfully</string>
 
 
-    <string name="error_song_name">Please enter song name</string>
+    <string name="error_song_name_empty">Please enter song name</string>
+    <string name="error_song_name_too_long">Song name is too long</string>
     <string name="error_select_artist">Please select artist</string>
     <string name="error_select_album">Please select album</string>
     <string name="error_select_song">Please select song file</string>
@@ -67,6 +68,7 @@
 
     <string name="error_select_image">Please select image</string>
     <string name="error_enter_album_name">Please enter album name </string>
+    <string name="error_album_name_too_long">Album name is too long (max 30 chars)</string>
 
     //Create Playlist
     <string name="error_enter_playlist_name">Please enter playlist name</string>

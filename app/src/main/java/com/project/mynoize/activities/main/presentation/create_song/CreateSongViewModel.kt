@@ -12,17 +12,16 @@ import com.project.mynoize.core.data.repositories.ArtistRepository
 import com.project.mynoize.core.data.repositories.StorageRepository
 import com.project.mynoize.core.data.repositories.SongRepository
 import com.project.mynoize.core.presentation.AlertDialogState
-import com.project.mynoize.activities.main.state.ListOfState
 import com.project.mynoize.core.domain.entities.Album
-import com.project.mynoize.core.domain.entities.Artist
 import com.project.mynoize.core.data.AuthRepository
 
-import com.project.mynoize.core.domain.InputError
 import com.project.mynoize.core.domain.entities.Song
 import com.project.mynoize.core.domain.onError
 import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.core.presentation.UiText
 import com.project.mynoize.core.presentation.toErrorMessage
+import com.project.mynoize.util.Era
+import com.project.mynoize.util.toLanguage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -37,14 +36,8 @@ class CreateSongViewModel(
     private val auth: AuthRepository
 ): ViewModel() {
 
-    private val _createSongState = MutableStateFlow(CreateSongState())
-    val createSongState = _createSongState
-
-    private val _artistListState = MutableStateFlow(ListOfState<Artist>())
-    var artistListState = _artistListState
-
-    private val _albumListState = MutableStateFlow(ListOfState<Album>())
-    val albumListState = _albumListState
+    private val _state = MutableStateFlow(CreateSongState())
+    val state = _state
 
     private val _createAlbumDialogState = MutableStateFlow(AlertDialogState())
     val createAlbumDialogState = _createAlbumDialogState
@@ -55,7 +48,7 @@ class CreateSongViewModel(
     init{
         viewModelScope.launch {
             artistRepository.getArtists().onSuccess { list ->
-                artistListState.update { it.copy(list = list) }
+                state.update { it.copy(artistList = list) }
             }.onError { _ ->
                 alertDialogState.update {
                     it.copy(show = true, message = UiText.StringResource(R.string.error_loading_artist_failed))
@@ -67,21 +60,24 @@ class CreateSongViewModel(
     fun onEvent(event: CreateSongEvent) {
         when(event){
             is CreateSongEvent.OnSongNameChange -> {
-                createSongState.update { it.copy(songName = event.songName) }
+                state.update { it.copy(songName = event.songName) }
             }
             is CreateSongEvent.OnArtistClick -> {
-                artistListState.update { it.copy(selected = event.artist) }
-
+                state.update {
+                    it.copy(
+                        selectedArtist = event.artist,
+                        language = event.artist.country?.toLanguage(),
+                        songGenre = event.artist.genre,
+                        selectedAlbum = null
+                    )
+                }
                 loadAlbums(event.artist.id)
-
-
-                albumListState.update { it.copy(selected = null) }
             }
             is CreateSongEvent.OnAlbumClick -> {
-                albumListState.update { it.copy(selected = event.album) }
+                state.update { it.copy(selectedAlbum = event.album, era = event.album.era) }
             }
             is CreateSongEvent.OnAddAlbumClick -> {
-                createSongState.update { it.copy(showCreateAlbum = true) }
+                state.update { it.copy(showCreateAlbum = true) }
             }
             is CreateSongEvent.OnSelectSongClick -> {
                 loadSongTitle(event.context, event.songUri)
@@ -95,14 +91,19 @@ class CreateSongViewModel(
                 }
             }
             is CreateSongEvent.OnGenreClick -> {
-                createSongState.update { it.copy(songGenre = event.selected, songSubgenre = null) }
+                state.update { it.copy(songGenre = event.selected, songSubgenre = null) }
             }
             is CreateSongEvent.OnSubgenreClick -> {
-                createSongState.update { it.copy(songSubgenre = event.selected) }
+                state.update { it.copy(songSubgenre = event.selected) }
             }
-            is CreateSongEvent.OnLanguageClick -> createSongState.update { it.copy(language = event.selected) }
-            is CreateSongEvent.OnEraClick -> createSongState.update { it.copy(era = event.selected) }
-            else -> Unit
+            is CreateSongEvent.OnLanguageClick -> state.update { it.copy(language = event.selected) }
+            is CreateSongEvent.OnEraClick -> state.update { it.copy(era = event.selected) }
+            is CreateSongEvent.OnMoodClick -> state.update {
+                val containsMood = it.moods.contains(event.selected)
+                val moods = if(containsMood) it.moods - event.selected else  it.moods + event.selected
+                it.copy(moods = if(moods.size < 4) moods else it.moods )
+            }
+            is CreateSongEvent.OnBackClick -> {}
         }
     }
 
@@ -117,25 +118,25 @@ class CreateSongViewModel(
                 }
             }
             is CreateAlbumEvent.OnDismissCreateAlbumDialog -> {
-                createSongState.update { it.copy(showCreateAlbum = false) }
+                state.update { it.copy(showCreateAlbum = false) }
             }
             is CreateAlbumEvent.OnCreateAlbum -> {
                 createAlbum(
                     imageUri = event.imageUri,
-                    albumName = event.albumName
+                    albumName = event.albumName,
+                    era = event.era
                 )
-
             }
         }
-
     }
 
-    fun createAlbumType(albumName: String, imageUrl: String, imagePath: String, artistId: String): Album{
+    fun createAlbumType(albumName: String, imageUrl: String, imagePath: String, artistId: String, era: Era): Album{
         return Album(
             name = albumName,
             imageLink = imageUrl,
             imagePath = imagePath,
             creator = auth.getCurrentUserId(),
+            era = era,
             artist = artistId
         )
     }
@@ -144,7 +145,7 @@ class CreateSongViewModel(
         viewModelScope.launch{
             albumRepository.getAlbums(artistId)
                 .onSuccess { list ->
-                    albumListState.update { it.copy(list = list) }
+                    state.update { it.copy(albumList = list) }
                 }
                 .onError {
                     alertDialogState.update {
@@ -155,13 +156,22 @@ class CreateSongViewModel(
     }
 
     fun loadSongTitle(context: Context, uri: String) {
-        createSongState.update { it.copy(songUri = uri) }
+        state.update { it.copy(songUri = uri) }
         val cursor = context.contentResolver.query(uri.toUri(), null, null, null, null)
         cursor?.use { cursor->
             if (cursor.moveToFirst()) {
                 val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
                 if (index != -1) {
-                    createSongState.update { it.copy(songTitle = cursor.getString(index).removeSuffix(".mp3")) }
+                    val loadedTitle = cursor.getString(index).removeSuffix(".mp3")
+                    state.update {
+                        it.copy(
+                            songTitle = loadedTitle,
+                            songName = loadedTitle
+                                .replace(Regex("\\[.*?]"), "")
+                                .replace(Regex("\\(.*?\\)"), "")
+                                .trim()
+                        )
+                    }
                 }
             }
         }
@@ -169,92 +179,65 @@ class CreateSongViewModel(
 
     fun addSongToStorage(){
         alertDialogState.update { it.copy(loading = true) }
+        state.update { it.copy(error = null) }
 
-        val artist = artistListState.value.selected
-        val album = albumListState.value.selected
+        val currentState = state.value
 
         createSongValidation.execute(
-            songName = createSongState.value.songName,
-            artist = artist,
-            album = album,
-            uri = createSongState.value.songUri,
-            genre = createSongState.value.songGenre,
-            subgenre = createSongState.value.songSubgenre,
-            language = createSongState.value.language,
-            era = createSongState.value.era,
-            mood = createSongState.value.songsMoods
+            state = currentState
         ).onError { error->
-
-            createSongState.update { it.copy(songNameError = null, songUriError = null) }
-            artistListState.update { it.copy(listError = null) }
-            albumListState.update { it.copy(listError = null) }
-
-            if(error == InputError.CreateSong.ENTER_SONG_NAME){
-                createSongState.update { it.copy(songNameError = error.toErrorMessage()) }
-            }
-            if(error == InputError.CreateSong.SELECT_ARTIST){
-                artistListState.update { it.copy(listError = error.toErrorMessage()) }
-            }
-            if(error == InputError.CreateSong.SELECT_ALBUM){
-                albumListState.update { it.copy(listError = error.toErrorMessage()) }
-            }
-            if(error == InputError.CreateSong.SELECT_SONG_FILE){
-                createSongState.update { it.copy(songUriError = error.toErrorMessage()) }
-            }
-            if(error == InputError.CreateSong.SELECT_GENRE){
-                createSongState.update { it.copy(songGenreError = error.toErrorMessage()) }
-            }
-            if(error == InputError.CreateSong.SELECT_SUBGENRE){
-                createSongState.update { it.copy(songSubgenreError = error.toErrorMessage()) }
-            }
+            state.update { it.copy(error = error) }
 
             alertDialogState.update { it.copy(loading = false) }
             return
         }.onSuccess { song ->
-            var remoteSong = song
-            val fileName = "songs/${createSongState.value.songName}"
-            var path = ""
+            val fileName = "songs/${song.title}"
             viewModelScope.launch {
                 storageRepository.addToStorage(
-                    createSongState.value.songUri.toUri(),
+                    currentState.songUri.toUri(),
                     fileName
                 ).onError { error ->
                     alertDialogState.update {
                         it.copy(show = true, loading = false, message = error.toErrorMessage())
                     }
                 }.onSuccess {
-                    remoteSong = song.copy(songUrl = it.downloadLink, audioPath = path)
-                    path = it.path
+                    addSong(
+                        song.copy(
+                            songUrl = it.downloadLink,
+                            audioPath = it.path,
+                            creatorId = auth.getCurrentUserId(),
+                            )
+                    )
                 }
-                addSong(remoteSong, path)
             }
         }
-
     }
 
-    suspend fun addSong(remoteSong: Song, fileName: String){
+    suspend fun addSong(remoteSong: Song){
         songRepository.addSongToFirebase(remoteSong)
             .onSuccess {
                 alertDialogState.update {
                     it.copy(
                         show = true,
                         message = UiText.StringResource(R.string.song_added_successfully),
-                        warning = false)
+                        warning = false
+                    )
                 }
-
             }.onError { error ->
-                alertDialogState.update {it.copy(
-                    show = true,
-                    loading = false,
-                    message = error.toErrorMessage(),
-                    warning = true
-                ) }
-                storageRepository.removeFromStorage(fileName)
+                alertDialogState.update {
+                    it.copy(
+                        show = true,
+                        loading = false,
+                        message = error.toErrorMessage(),
+                        warning = true
+                    )
+                }
+                storageRepository.removeFromStorage(remoteSong.audioPath)
             }
     }
 
-    fun createAlbum(imageUri: String, albumName: String){
-        val artistId = artistListState.value.selected?.id ?: return
+    fun createAlbum(imageUri: String, albumName: String, era: Era){
+        val artistId = state.value.selectedArtist?.id ?: return
         createAlbumDialogState.update { it.copy(loading = true) }
 
         val path = "album_images/${imageUri.toUri().lastPathSegment}"
@@ -268,12 +251,17 @@ class CreateSongViewModel(
                     it.copy(show = true, loading = false, message = error.toErrorMessage())
                 }
             }.onSuccess {
-                album = createAlbumType(albumName = albumName, imageUrl =  it.downloadLink, imagePath = it.path, artistId = artistId)
+                album = createAlbumType(
+                    albumName = albumName,
+                    imageUrl =  it.downloadLink,
+                    imagePath = it.path,
+                    artistId = artistId,
+                    era = era
+                )
             }
             albumRepository.createAlbum(album)
                 .onSuccess { id ->
-                    albumListState.update { it.copy(list = albumListState.value.list + album.copy(id = id)) }
-                    createSongState.update { it.copy(showCreateAlbum = false) }
+                    state.update { it.copy(showCreateAlbum = false, albumList = it.albumList + album.copy(id = id)) }
                     createAlbumDialogState.update { it.copy(loading = false) }
                 }
                 .onError { error->

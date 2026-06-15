@@ -13,7 +13,7 @@ sealed class SearchItem(
         id = album.id,
         title = album.name,
         subtitle = "",
-        imageUrl = album.localImageUrl ?:  album.imageLink ,
+        imageUrl = if(album.localImageUrl.isNullOrBlank()) album.imageLink else album.localImageUrl,
         favorite = album.favorite
     )
 

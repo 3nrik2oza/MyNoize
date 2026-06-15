@@ -4,6 +4,7 @@ import android.net.Uri
 import com.project.mynoize.core.domain.entities.Artist
 import com.project.mynoize.core.presentation.UiText
 import com.project.mynoize.util.Country
+import com.project.mynoize.util.Genre
 
 data class CreateArtistState(
     val loading: Boolean = false,
@@ -13,5 +14,6 @@ data class CreateArtistState(
     val artistNameError: UiText? = null,
     val country: Country? = null,
     val countryError: UiText? = null,
+    val genre: Genre? = null,
     val artistToModify: Artist? = null,
 )

@@ -4,6 +4,7 @@ import com.google.firebase.Timestamp
 import com.project.mynoize.core.domain.entities.Album
 import com.project.mynoize.core.data.database.LocalAlbumEntity
 import com.project.mynoize.core.data.firestore.entities.AlbumDto
+import com.project.mynoize.util.Era
 
 fun LocalAlbumEntity.toAlbum(): Album {
     return Album(
@@ -40,9 +41,10 @@ fun AlbumDto.toAlbum(): Album{
         name = name,
         imageLink = imageLink,
         imagePath = imagePath,
-        localImageUrl = "",
+        localImageUrl = null,
         creator = creator,
         artist = artist,
+        era = Era.fromDisplayName(era),
         favorite = false,
         songs = emptyList(),
         lastModified = lastModified,
@@ -57,6 +59,7 @@ fun Album.toDto(): AlbumDto{
         nameLower = name.lowercase(),
         imageLink = imageLink,
         imagePath = imagePath,
+        era = era?.displayName ?: "",
         creator = creator,
         artist = artist,
         lastModified = lastModified

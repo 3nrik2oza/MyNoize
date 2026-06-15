@@ -1,5 +1,6 @@
 package com.project.mynoize.activities.main.presentation.playlist_screen
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.mynoize.core.data.AuthRepository
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
 
 class PlaylistScreenViewModel(
     private val storageRepository: StorageRepository,
@@ -147,7 +149,6 @@ class PlaylistScreenViewModel(
     private fun setPlaylistData(playlistId: String, isPlaylist: Boolean){
         if(isPlaylist){
             viewModelScope.launch {
-
                 playlistRepository.getPlaylist(playlistId).collect { playlist ->
                     _state.update { state ->
                         state.copy(playlist = playlist, isUserCreator = playlist.creator == authRepository.getCurrentUserId())
@@ -167,6 +168,12 @@ class PlaylistScreenViewModel(
                 album?.let {
                     _state.update { state ->
                         state.copy(playlist = album.toPlaylist(), isPlaylist = false)
+                    }
+                    val file = File(album.localImageUrl ?: "")
+                    if(file.exists()){
+                        Log.d("ImageDebug", "exists")
+                    }else{
+                        Log.d("ImageDebug", "does not exist")
                     }
 
                     songRepository.getSongByAlbumId(album.id, album.songsDownloaded).onSuccess { songs ->

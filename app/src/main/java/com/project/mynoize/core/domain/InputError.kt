@@ -3,6 +3,7 @@ package com.project.mynoize.core.domain
 sealed interface InputError: Error {
     enum class CreateSong : InputError{
         ENTER_SONG_NAME,
+        SONG_NAME_TOO_LONG,
         SELECT_ARTIST,
         SELECT_ALBUM,
         SELECT_GENRE,
@@ -14,7 +15,9 @@ sealed interface InputError: Error {
 
     enum class CreateAlbum: InputError{
         SELECT_IMAGE,
-        ENTER_ALBUM_NAME
+        ENTER_ALBUM_NAME,
+        ALBUM_NAME_TOO_LONG,
+        SELECT_ERA
     }
 
     enum class CreateArtist: InputError{
