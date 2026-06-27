@@ -10,6 +10,7 @@ import com.project.mynoize.core.data.repositories.PlaylistRepository
 import com.project.mynoize.core.data.repositories.SongRepository
 import com.project.mynoize.core.data.repositories.UserRepository
 import com.project.mynoize.core.domain.onSuccess
+import com.project.mynoize.data_collecting.data.model.SourceType
 import com.project.mynoize.managers.ExoPlayerManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -58,8 +59,8 @@ class SearchScreenViewModel(
             is SearchScreenEvent.OnSearchItemClicked -> {
                 when(event.item){
                     is SearchItem.SongItem -> {
-                        exoPlayerManager.initializePlayer(songs = listOf(event.item.song), play = true,
-                            shuffle = false,viewModelScope, index = 0, playlistId = "")
+                        exoPlayerManager.initializePlayer(songs = listOf(event.item.song), playWhenReady = true,
+                            shuffle = false,viewModelScope, index = 0, playlistId = "", sourceType = SourceType.SEARCH)
                     }
                     else -> {}
                 }

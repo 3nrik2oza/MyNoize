@@ -7,6 +7,7 @@ import com.project.mynoize.core.data.repositories.PlaylistRepository
 import com.project.mynoize.core.data.repositories.SongRepository
 import com.project.mynoize.core.data.repositories.UserRepository
 import com.project.mynoize.core.domain.onSuccess
+import com.project.mynoize.data_collecting.data.model.SourceType
 import com.project.mynoize.managers.ExoPlayerManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -34,7 +35,7 @@ class MusicScreenViewModel(
     fun onEvent(event: MusicScreenEvent){
         when(event){
             is MusicScreenEvent.OnPlaySongsForUser -> {
-                exoPlayerManager.initializePlayer(songs = state.value.songsForUser, play = true, false,viewModelScope, index = 0, playlistId = "")
+                exoPlayerManager.initializePlayer(songs = state.value.songsForUser, playWhenReady = true, false,viewModelScope, index = 0, playlistId = "NOT IMPLEMENTED YET", sourceType = SourceType.RECOMMENDATION)
             }
         }
     }

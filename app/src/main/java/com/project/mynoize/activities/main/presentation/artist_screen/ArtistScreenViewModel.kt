@@ -6,6 +6,7 @@ import com.project.mynoize.core.data.repositories.ArtistRepository
 import com.project.mynoize.core.data.repositories.SongRepository
 import com.project.mynoize.core.data.repositories.UserRepository
 import com.project.mynoize.core.domain.onSuccess
+import com.project.mynoize.data_collecting.data.model.SourceType
 import com.project.mynoize.managers.ExoPlayerManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,8 +42,8 @@ class ArtistScreenViewModel(
                 }
             }
             is ArtistScreenEvent.OnSongClick -> {
-                exoPlayerManager.initializePlayer(songs = state.value.songs, play = true,
-                    shuffle = false,viewModelScope, index = event.index, playlistId = "")
+                exoPlayerManager.initializePlayer(songs = state.value.songs, playWhenReady = true,
+                    shuffle = false,viewModelScope, index = event.index, playlistId = state.value.artist.id, sourceType = SourceType.ARTIST_PLAYLIST)
             }
             else -> {}
         }

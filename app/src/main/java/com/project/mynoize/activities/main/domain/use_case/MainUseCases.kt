@@ -5,5 +5,6 @@ data class MainUseCases(
     val syncFavoritePlaylistUseCase: SyncFavoritePlaylistUseCase,
     val syncFavoriteSongsUseCase: SyncFavoriteSongsUseCase,
     val syncFavoriteAlbumsUseCase: SyncFavoriteAlbumsUseCase,
-    val removeLocalNonFavoriteSongsUseCase: RemoveLocalNonFavoriteSongsUseCase
+    val removeLocalNonFavoriteSongsUseCase: RemoveLocalNonFavoriteSongsUseCase,
+    val syncListeningEventsUseCase: SyncListeningEventsUseCase,
 )

@@ -3,9 +3,12 @@ package com.project.mynoize.core.data.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.project.mynoize.data_collecting.data.database.ListeningEventDao
+import com.project.mynoize.data_collecting.data.database.LocalListeningEvent
 
 @Database(
-    entities = [LocalSongsEntity::class, LocalAlbumEntity::class, LocalArtistEntity::class, LocalPlaylistEntity::class],
+    entities = [LocalSongsEntity::class, LocalAlbumEntity::class, LocalArtistEntity::class,
+        LocalPlaylistEntity::class, LocalListeningEvent::class],
     version = 1
 )
 
@@ -18,5 +21,6 @@ abstract class MusicDatabase: RoomDatabase() {
     abstract val albumDao: AlbumDao
     abstract val artistDao: ArtistDao
     abstract val playlistDao: PlaylistDao
+    abstract val eventDao: ListeningEventDao
 
 }

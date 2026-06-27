@@ -13,6 +13,7 @@ import com.project.mynoize.core.data.repositories.UserRepository
 import com.project.mynoize.core.domain.entities.Song
 import com.project.mynoize.core.domain.onSuccess
 import com.project.mynoize.core.presentation.AlertDialogState
+import com.project.mynoize.data_collecting.data.model.SourceType
 import com.project.mynoize.managers.ExoPlayerManager
 import com.project.mynoize.network.NetworkMonitor
 import com.project.mynoize.util.BottomSheetType
@@ -75,10 +76,12 @@ class PlaylistScreenViewModel(
             is PlaylistScreenEvent.OnRemoveSongClick -> removeSongFromPlaylist()
             is PlaylistScreenEvent.OnDismissAlertDialog -> _state.update { it.copy(isSheetOpen = false) }
             is PlaylistScreenEvent.OnSongClicked ->{
-                exoPlayerManager.initializePlayer(songs = state.value.songs, play = true, false,viewModelScope, index = event.index, playlistId = state.value.playlist.id)
+                val state = state.value
+                exoPlayerManager.initializePlayer(songs = state.songs, playWhenReady = true, false,viewModelScope, index = event.index, playlistId = state.playlist.id, sourceType = state.type)
             }
             is PlaylistScreenEvent.OnPlayRandom -> {
-                exoPlayerManager.initializePlayer(songs = state.value.songs, play = true, true,viewModelScope, index = 0, playlistId = state.value.playlist.id)
+                val state = state.value
+                exoPlayerManager.initializePlayer(songs = state.songs, playWhenReady = true, true,viewModelScope, index = 0, playlistId = state.playlist.id, sourceType = state.type)
             }
             is PlaylistScreenEvent.OnToggleDeletePlaylist -> { _state.update { it.copy(deletePlaylistSheetOpen = !it.deletePlaylistSheetOpen) } }
             is PlaylistScreenEvent.OnDeletePlaylist -> { deletePlaylist() }
@@ -147,6 +150,7 @@ class PlaylistScreenViewModel(
     }
 
     private fun setPlaylistData(playlistId: String, isPlaylist: Boolean){
+        _state.update { it.copy(type = if(isPlaylist) SourceType.PLAYLIST else SourceType.ALBUM) }
         if(isPlaylist){
             viewModelScope.launch {
                 playlistRepository.getPlaylist(playlistId).collect { playlist ->

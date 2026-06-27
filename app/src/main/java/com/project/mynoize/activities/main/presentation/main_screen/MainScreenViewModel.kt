@@ -55,6 +55,8 @@ class MainScreenViewModel (
         syncFavoriteAlbums()
 
         removeLocalNonFavoriteSongs()
+
+        syncListeningEvents()
     }
 
     fun onEventUi(event: MainActivityUiEvent)
@@ -114,13 +116,15 @@ class MainScreenViewModel (
     private fun restoreLastSession(){
         viewModelScope.launch {
             val playlistId = dataStore.playlistId.first() ?: return@launch
+            val sourceType = dataStore.sourceType.first() ?: return@launch
             mainUseCases.restoreLastSessionUseCase.invoke(playlistId).onSuccess { songs ->
                 _state.update {
                     it.copy(songList = songs)
                 }
 
-                playerManager.initializePlayer(songs = songs, play = false,
-                    scope = viewModelScope, playlistId = playlistId)
+                playerManager.initializePlayer(songs = songs, playWhenReady = false,
+                    scope = viewModelScope, playlistId = playlistId, sourceType = sourceType
+                )
             }
         }
     }
@@ -140,6 +144,12 @@ class MainScreenViewModel (
     private fun syncFavoriteAlbums(){
         viewModelScope.launch {
             mainUseCases.syncFavoriteAlbumsUseCase(null)
+        }
+    }
+
+    private fun syncListeningEvents(){
+        viewModelScope.launch {
+            mainUseCases.syncListeningEventsUseCase()
         }
     }
 

@@ -10,6 +10,7 @@ import com.project.mynoize.activities.main.domain.use_case.RestoreLastSessionUse
 import com.project.mynoize.activities.main.domain.use_case.SyncFavoriteAlbumsUseCase
 import com.project.mynoize.activities.main.domain.use_case.SyncFavoritePlaylistUseCase
 import com.project.mynoize.activities.main.domain.use_case.SyncFavoriteSongsUseCase
+import com.project.mynoize.activities.main.domain.use_case.SyncListeningEventsUseCase
 import com.project.mynoize.activities.main.presentation.artist_screen.ArtistScreenViewModel
 import com.project.mynoize.activities.main.presentation.create_artist.CreateArtistViewModel
 import com.project.mynoize.activities.main.presentation.create_artist.domain.CreateArtistValidation
@@ -39,6 +40,8 @@ import com.project.mynoize.core.data.remote_data_source.PlaylistRemoteDataSource
 import com.project.mynoize.core.data.remote_data_source.SongRemoteDataSource
 import com.project.mynoize.core.data.repositories.PlaylistRepository
 import com.project.mynoize.core.data.repositories.UserRepository
+import com.project.mynoize.data_collecting.data.firebase.ListeningEventRemoteDataSource
+import com.project.mynoize.data_collecting.data.repository.ListeningEventRepository
 import com.project.mynoize.managers.ExoPlayerManager
 import com.project.mynoize.network.NetworkMonitor
 import com.project.mynoize.util.UserInformation
@@ -73,6 +76,7 @@ val userScopeModule = module {
         scoped { PlaylistRepository(get(), get(), get(), get(), get()) }
         scoped { AlbumRepository(get(),get(), get(), get()) }
         scoped { StorageRepository(get()) }
+        scoped { ListeningEventRepository(get(), get(), get()) }
 
         scoped { CreateArtistValidation() }
 
@@ -100,12 +104,14 @@ val userScopeModule = module {
         scoped { get<MusicDatabase>().albumDao }
         scoped { get<MusicDatabase>().artistDao }
         scoped { get<MusicDatabase>().playlistDao }
+        scoped { get<MusicDatabase>().eventDao }
 
         // Remote sources
         scoped { PlaylistRemoteDataSource(get()) }
         scoped { SongRemoteDataSource(get()) }
         scoped { AlbumRemoteDataSource(get()) }
         scoped { ArtistRemoteDataSource(get()) }
+        scoped { ListeningEventRemoteDataSource(get()) }
 
         //use cases
         scoped { RestoreLastSessionUseCase(get(), get()) }
@@ -114,10 +120,11 @@ val userScopeModule = module {
         scoped { SyncFavoriteSongsUseCase(get(), get()) }
         scoped { SyncFavoriteAlbumsUseCase(get(), get(), get()) }
         scoped { RemoveLocalNonFavoriteSongsUseCase(get(),get(),get()) }
-        scoped { MainUseCases(get(), get(), get(), get(), get()) }
+        scoped { SyncListeningEventsUseCase(get()) }
+        scoped { MainUseCases(get(), get(), get(), get(), get(), get()) }
 
 
-        scoped { ExoPlayerManager(context = get<Application>(), get()) }
+        scoped { ExoPlayerManager(context = get<Application>(), get(), get()) }
 
         viewModel { MusicScreenViewModel(get(), get(), get(), get()) }
 

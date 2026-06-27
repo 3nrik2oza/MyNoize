@@ -8,4 +8,6 @@ object Constants{
     val PLAYLIST_COLLECTION = "playlists"
     val USER_COLLECTION = "users"
 
+    val LISTENING_EVENT_COLLECTION = "listeningEvents"
+
 }

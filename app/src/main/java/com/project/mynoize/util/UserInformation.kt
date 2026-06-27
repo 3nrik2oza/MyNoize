@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.project.mynoize.data_collecting.data.model.SourceType
 import kotlinx.coroutines.flow.map
 
 class UserInformation(
@@ -21,6 +22,16 @@ class UserInformation(
 
     val playlistId = context.dataStore.data.map { preferences ->
         preferences[playlistKey]
+    }
+
+    val sourceType = context.dataStore.data.map { preferences ->
+        val sourceTypeString = preferences[sourceTypeKey]
+        when{
+             sourceTypeString != null -> {
+                SourceType.fromDisplayName(sourceTypeString)
+            }
+            else -> { null }
+        }
     }
 
     val lastModifiedArtist = context.dataStore.data.map { preferences ->
@@ -54,6 +65,11 @@ class UserInformation(
             settings[playlistKey] = playlistId
         }
 
+    suspend fun updateSource(sourceType: SourceType) =
+        context.dataStore.edit { settings ->
+            settings[sourceTypeKey] = sourceType.displayName
+        }
+
     suspend fun updateLastModifiedArtist(lastModified: Long) =
         context.dataStore.edit { settings ->
             settings[lastModifiedArtistKey] = lastModified.toString()
@@ -84,6 +100,7 @@ class UserInformation(
         val mediaKey = stringPreferencesKey("media_id_key")
         val positionKey = stringPreferencesKey("position_key")
         val playlistKey = stringPreferencesKey("playlist_id_key")
+        val sourceTypeKey = stringPreferencesKey("source_key")
 
         val lastModifiedArtistKey = stringPreferencesKey("last_modified_artist_key")
         val lastModifiedSongKey = stringPreferencesKey("last_modified_song_key")
